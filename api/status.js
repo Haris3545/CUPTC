@@ -12,6 +12,8 @@ export default function handler(req, res) {
     COMMITTEE_DISCOUNT_CODE: !!p.discount,
     AUTH_SECRET: !!env('AUTH_SECRET'),
     storage: storageReady(),
-    stripe: key ? (key.startsWith('sk_live') ? 'live' : 'test') : false
+    stripe: key ? (key.startsWith('sk_live') ? 'live' : 'test') : false,
+    // Names only (never values) of settings that look password-related, to spot a misspelt name.
+    similarNames: Object.keys(process.env).filter((k) => /PASSWORD|PASWORD|MEMBER|COMMITTEE|DISCOUNT|FULL_?CODE/i.test(k) && !/ASKPASS|^(npm_|VERCEL_|NODE_|CLAUDE)/i.test(k)).sort()
   });
 }
