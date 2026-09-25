@@ -1348,7 +1348,15 @@
       list.appendChild(row);
     });
   }
-  loadShop();
+  // A saved sign-in is only kept if the server still accepts it.
+  (async () => {
+    if (!state.token) return loadShop();
+    const res = await api('me');
+    const role = res.ok ? res.data.role : null;
+    if (!role) signOut();
+    else if ((role === 'committee') !== state.admin) signIn(role, state.token);
+    else loadShop();
+  })();
 
   // ---------------------------------------------------------------- committee photos: custom uploads
   async function loadCommitteePhotos() {
