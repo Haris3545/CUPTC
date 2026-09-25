@@ -209,7 +209,7 @@
   .center .actions { justify-content: center; }
 
   /* Home: hero */
-  .hero { position: relative; height: calc(100svh - var(--bar)); min-height: 520px; overflow: hidden; background: #1c2a24; }
+  .hero { position: relative; height: calc(100svh - var(--bar) - var(--sbar, 0px)); min-height: 520px; overflow: hidden; background: #1c2a24; }
   .hero .slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s ease; }
   .hero .slides img.on { opacity: 1; }
   .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.12) 30%, rgba(0,0,0,.66) 100%); pointer-events: none; }
@@ -321,10 +321,49 @@
 
   /* ================================================================ Members area */
   .gate { width: min(520px, 100%); margin: 0 auto; display: grid; gap: 10px; text-align: left; }
-  .signed { width: min(720px, 100%); margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 16px 22px; background: var(--green-soft); font-size: 17px; }
-  .signed button { border: 0; background: none; cursor: pointer; text-decoration: underline; padding: 0; }
   .shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 28px; }
-  .product { display: flex; flex-direction: column; gap: 10px; }
+  .product { display: flex; flex-direction: column; gap: 8px; cursor: pointer; outline: none; }
+  .product:focus-visible .pimg { outline: 2px solid var(--green-dark); outline-offset: 4px; }
+  .pimg { position: relative; }
+  .pcount { position: absolute; left: 10px; bottom: 10px; background: rgba(255, 255, 255, .9); border-radius: 99px; padding: 2px 10px; font-size: 13px; color: var(--ink-2); }
+  .pview { font-size: 15px; color: var(--green-dark); font-style: italic; }
+  /* Expanded product view */
+  .sheet.wide { width: min(980px, calc(100% - 32px)); }
+  .pd { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: start; }
+  /* The gallery never gets taller than the screen allows, so price and Buy now stay beside it */
+  .pd-gallery { display: grid; gap: 10px; min-width: 0; width: 100%; max-width: max(260px, calc((100svh - 230px) * .8)); justify-self: center; }
+  .pd-main { position: relative; aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden; background: #fff; touch-action: pan-y; }
+  .pd-main.none { background: var(--green-soft); }
+  .pd-main img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .45s ease; user-select: none; -webkit-user-drag: none; }
+  .pd-main img.cover { object-fit: cover; }
+  .pd-main img.on { opacity: 1; }
+  .pd-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .88); font-size: 26px; line-height: 1; cursor: pointer; color: var(--ink); display: grid; place-items: center; padding-bottom: 3px; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, .35); }
+  .pd-arrow.prev { left: 10px; }
+  .pd-arrow.next { right: 10px; }
+  .pd-thumbs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .pd-thumbs button { flex: none; width: 64px; aspect-ratio: 4 / 5; border: 0; padding: 0; border-radius: 8px; overflow: hidden; cursor: pointer; background: #fff; opacity: .55; outline: 2px solid transparent; outline-offset: -2px; transition: opacity .25s, outline-color .25s; }
+  .pd-thumbs button[aria-current="true"] { opacity: 1; outline-color: var(--green-dark); }
+  .pd-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+  .pd-info { display: grid; gap: 14px; align-content: start; }
+  .pd-price { font-size: 30px; font-variant-numeric: tabular-nums; }
+  .pd-price.lock, .pd-info .lock { font-size: 17px; }
+  .pd-chart h4 { margin: 4px 0 8px; font-weight: 400; font-size: 18px; }
+  .size-chart { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .size-chart th, .size-chart td { text-align: left; padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); }
+  .size-chart th { font-weight: 400; font-style: italic; color: var(--ink-3); }
+  .pd-buy { display: grid; gap: 12px; }
+  .pd-buy .pdeliv { text-align: left; }
+  @media (max-width: 720px) {
+    .pd { grid-template-columns: 1fr; gap: 18px; }
+    .sheet.wide { width: 100%; }
+  }
+  /* Signed-in bar across the top of the screen, just under the header */
+  .signed-bar { position: fixed; top: var(--bar); left: 0; right: 0; z-index: 39; height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 var(--gutter); background: #eef4f1; color: var(--ink-2); font-size: 15px; border-bottom: 1px solid #dbe6e0; transition: opacity .5s ease .95s, transform .5s var(--out) .95s; }
+  .signed-bar b { font-weight: 400; color: var(--ink); }
+  .signed-bar button { border: 0; background: none; cursor: pointer; text-decoration: underline; padding: 4px 0; color: var(--ink); font-size: 15px; }
+  html.at-start .signed-bar { opacity: 0; transform: translateY(-100%); pointer-events: none; transition: opacity .2s ease, transform .3s ease; }
+  html.signed-in { --sbar: 38px; }
+  html.signed-in .pages { padding-top: calc(var(--bar) + var(--sbar)); }
   .pimg { aspect-ratio: 4 / 5; background: #f4f6f5; display: grid; place-items: center; overflow: hidden; margin-bottom: 6px; }
   .pimg img { width: 100%; height: 100%; object-fit: contain; transition: transform 1s var(--out); }
   .pimg.cover img { object-fit: cover; }
@@ -347,10 +386,10 @@
   .admin-row .del { color: #b3261e; }
 
   /* ================================================================ Checkout sheet */
-  .scrim { position: fixed; inset: 0; z-index: 80; background: rgba(12, 18, 15, .45); display: grid; align-items: end; justify-items: center; animation: fade .3s ease both; }
+  .scrim { position: fixed; inset: 0; z-index: 80; background: rgba(12, 18, 15, .45); display: grid; align-items: end; justify-items: center; animation: fade .3s ease both; overflow-y: auto; overscroll-behavior: contain; }
   @keyframes fade { from { opacity: 0; } }
   .sheet { width: min(460px, 100%); background: #f6f6f6; border-radius: 22px 22px 0 0; padding: 18px 20px calc(24px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; animation: up .55s var(--out) both; box-shadow: 0 -12px 40px rgba(0,0,0,.18); }
-  @media (min-width: 600px) { .scrim { align-items: center; } .sheet { border-radius: 22px; } }
+  @media (min-width: 600px) { .scrim { align-items: safe center; padding: 16px 0; } .sheet { border-radius: 22px; } }
   @keyframes up { from { transform: translateY(40px); opacity: 0; } }
   .scrim.closing { animation: fadeOut .28s ease both; pointer-events: none; }
   .scrim.closing .sheet { animation: down .28s ease-in both; }
@@ -461,10 +500,16 @@
   .person:not(.custom) [data-photo="reset"] { display: none; }
   .photo-tools button { border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer; font-size: 14px; background: var(--green-soft); color: var(--ink); transition: background-color .3s; }
   .sh-main { display: grid; }
-  .crop { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: #e8ece9; touch-action: none; cursor: grab; }
+  /* The crop area shrinks on short screens so the Save button always fits */
+  .crop { position: relative; width: min(100%, max(200px, calc((100svh - 330px) / var(--ratio, 1)))); margin-inline: auto; aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: #e8ece9; touch-action: none; cursor: grab; }
   .crop:active { cursor: grabbing; }
   .crop img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; }
   .zoom { width: 100%; accent-color: var(--green-dark); }
+  .check { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 17px; font-style: normal !important; color: var(--ink) !important; }
+  .check input { width: 18px; height: 18px; accent-color: var(--green-dark); margin: 0; flex: none; }
+  .customise { display: grid; gap: 4px; }
+  .customise em { font-style: normal; color: var(--green-dark); margin-left: 4px; }
+  .customise .msg { min-height: 0; }
   /* Image picker: drop, paste or choose */
   .drop { border: 1.5px dashed #b6c9bf; border-radius: 14px; padding: 36px 20px 30px; display: grid; gap: 8px; justify-items: center; text-align: center; background: #fff; transition: background-color .25s, border-color .25s; outline: none; }
   .drop:focus-visible { border-color: var(--green-dark); }
@@ -483,6 +528,11 @@
   .eye svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .eye .slash { transition: stroke-dashoffset .3s var(--out); stroke-dasharray: 24; stroke-dashoffset: 0; }
   .eye[aria-pressed="true"] .slash { stroke-dashoffset: 24; }
+  .m-extra { display: flex; flex-wrap: wrap; gap: 10px; }
+  .m-extra:empty { display: none; }
+  .m-thumb { position: relative; width: 84px; aspect-ratio: 4 / 5; border-radius: 10px; overflow: hidden; background: #fff; }
+  .m-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .m-thumb button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); cursor: pointer; font-size: 16px; line-height: 1; }
   .m-preview { width: 120px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 10px; margin-top: 8px; }
 </style>
 </head>
@@ -515,6 +565,8 @@
   </nav>
   <button class="hdr-menu" id="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
 </header>
+
+<div class="signed-bar" id="member-bar" hidden><span id="member-bar-text">Signed in</span><button type="button" id="sign-out">Sign out</button></div>
 
 <div class="menu" id="menu" role="dialog" aria-label="Menu">
   <nav aria-label="Pages">
@@ -696,7 +748,6 @@
           <p class="msg" id="gate-msg" role="status"></p>
           <p class="small">Not a member yet? <a class="link" href="#membership">See membership</a></p>
         </form>
-        <div class="signed" id="member-bar" hidden><span id="member-bar-text">You're signed in.</span><button type="button" id="sign-out">Sign out</button></div>
       </div>
     </section>
 
@@ -717,7 +768,7 @@
           <p class="msg" id="admin-msg" role="status"></p>
         </form>
         <div class="admin" id="admin" hidden>
-          <p class="muted center">Add items, set prices and delivery times. Changes show for everyone straight away.</p>
+          <p class="muted center">Add items, set prices, photos and delivery times. Changes show for everyone straight away. To change a committee photo, use Change photo on the home page, or drag a picture onto someone.</p>
           <form id="merch-form">
             <input type="hidden" id="m-id">
             <div class="field"><label for="m-name">Item name</label><input class="input" id="m-name" required maxlength="80"></div>
@@ -725,7 +776,11 @@
             <div class="field"><label for="m-delivery">Delivery time</label><input class="input" id="m-delivery" placeholder="e.g. 3 to 4 weeks" maxlength="60"></div>
             <div class="field"><label for="m-sizes">Sizes (comma separated)</label><input class="input" id="m-sizes" placeholder="XS, S, M, L, XL" maxlength="80"></div>
             <div class="field"><label for="m-image">Image</label><div class="inline"><select class="input" id="m-image"></select><button class="btn line sm" type="button" id="m-upload">Upload photo</button></div><img id="m-preview" class="m-preview" alt="" hidden></div>
+            <div class="field full"><label class="check"><input type="checkbox" id="m-custom"> <span>Offer customisation: buyers can add a name on the back</span></label></div>
+            <div class="field" id="m-custom-price-f" hidden><label for="m-custom-price">Customisation price (£)</label><input class="input" id="m-custom-price" type="number" min="0" step="0.5" value="2"></div>
             <div class="field"><label for="m-order">Position in shop</label><input class="input" id="m-order" type="number" step="1" value="10"></div>
+            <div class="field full"><label>More photos</label><div class="m-extra" id="m-extra"></div><div><button class="btn line sm" type="button" id="m-add-photo">Add photo</button></div></div>
+            <div class="field full"><label for="m-chart">Size chart</label><textarea class="input" id="m-chart" maxlength="1200" placeholder="Size | Chest (cm) | Length (cm)&#10;S | 96 | 70&#10;M | 102 | 72"></textarea><span class="note" style="text-align:left">One row per line. Separate columns with | or commas. The first row is the heading.</span></div>
             <div class="field full"><label for="m-desc">Description</label><textarea class="input" id="m-desc" maxlength="400"></textarea></div>
             <div class="full actions">
               <button class="btn sm" type="submit" id="m-save">Add item</button>
@@ -1013,6 +1068,7 @@
     return { ok: r.ok, status: r.status, data };
   }
   const ERR = {
+    custom_name: 'That name can only use up to 16 letters, numbers, spaces or . \' - &',
     offline: 'Couldn’t reach the club’s server. Check your connection and try again.',
     payments_not_configured: 'Online payments open soon. Message us on Instagram or email secretary@cuptc.com to join now.',
     storage_not_configured: 'Saving isn’t switched on yet (the site needs its storage connecting in Vercel).',
@@ -1021,7 +1077,7 @@
   const errText = (res, fallback) => ERR[res.data.error] || (res.status === 404 && !res.data.error ? ERR.offline : fallback);
 
   // ---------------------------------------------------------------- checkout
-  function sheet(title) {
+  function sheet(title, opts = {}) {
     const host = $('#modal-root');
     $$('.scrim', host).forEach((old) => old.remove());
     const scrim = document.createElement('div');
@@ -1029,6 +1085,8 @@
     scrim.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"><div class="sh-head"><span></span><button class="sh-x" type="button" aria-label="Close">&times;</button></div><div class="sh-main"></div></div>';
     $('.sh-head span', scrim).textContent = title;
     $('.sheet', scrim).setAttribute('aria-label', title);
+    if (opts.wide) $('.sheet', scrim).classList.add('wide');
+    const keys = [];
     let closed = false;
     const close = () => {
       if (closed) return;
@@ -1038,12 +1096,12 @@
       scrim.classList.add('closing');
       setTimeout(() => scrim.remove(), 300);
     };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); else keys.forEach((f) => f(e)); };
     document.addEventListener('keydown', onKey);
     $('.sh-x', scrim).addEventListener('click', close);
     scrim.addEventListener('click', (e) => { if (e.target === scrim) close(); });
     host.appendChild(scrim);
-    return { main: $('.sh-main', scrim), close };
+    return { main: $('.sh-main', scrim), close, onKey: (f) => keys.push(f) };
   }
   const spin = (el, text) => { el.innerHTML = '<div class="sh-state"><div class="spinner"></div><span></span></div>'; $('span', el).textContent = text; };
 
@@ -1086,7 +1144,7 @@
     const d = res.data;
     if (d.kind === 'merch') {
       s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:21px;font-weight:400">Order placed</b><span class="muted"></span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
-      $('.muted', s.main).textContent = d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.';
+      $('.muted', s.main).textContent = (d.custom ? 'Name on the back: ' + d.custom + '. ' : '') + (d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.');
       $('button', s.main).addEventListener('click', s.close);
       return;
     }
@@ -1194,7 +1252,9 @@
     $('#member-bar').hidden = !state.member;
     $('#admin').hidden = !state.admin;
     $('#admin-gate').hidden = state.admin;
-    $('#member-bar-text').textContent = state.admin ? 'Signed in as committee. Manage merch below. To change a committee photo, use Change photo on the home page, or drag a picture onto someone.' : "You're signed in. Prices and ordering are unlocked.";
+    $('#member-bar-text').innerHTML = 'Signed in as <b></b>';
+    $('#member-bar-text b').textContent = state.admin ? 'committee' : 'a member';
+    root.classList.toggle('signed-in', state.member);
     $('#members-lede').textContent = state.member ? 'Club kit and merch, just for members.' : 'Club kit and merch, for members only. Sign in with the password you got when you joined.';
     root.classList.toggle('is-committee', state.admin);
     renderShop();
@@ -1210,6 +1270,22 @@
     renderShop();
     renderAdminList();
   }
+  const money = (v) => '£' + Number(v || 0).toFixed(2).replace(/\.00$/, '');
+  const photosOf = (m) => [m.image].concat(m.images || []).filter(Boolean);
+  // Size chart typed by the committee: one row per line, columns split by | , or tab. First row is the header.
+  function sizeTable(text) {
+    const rows = String(text || '').split('\n').map((r) => r.trim()).filter(Boolean).map((r) => r.split(/\s*[|,\t]\s*/));
+    if (!rows.length) return null;
+    const t = document.createElement('table');
+    t.className = 'size-chart';
+    rows.forEach((cells, i) => {
+      const tr = document.createElement('tr');
+      cells.forEach((c) => { const td = document.createElement(i ? 'td' : 'th'); td.textContent = c; tr.appendChild(td); });
+      (i ? (t.tBodies[0] || t.createTBody()) : t.createTHead()).appendChild(tr);
+    });
+    return t;
+  }
+
   function renderShop() {
     const shop = $('#shop');
     shop.innerHTML = '';
@@ -1217,9 +1293,13 @@
     if (state.merch == null) return empty('Loading the shop…');
     if (state.shopError) return empty(state.shopError);
     if (!state.merch.length) return empty('No merch yet. Check back soon.');
+    const priced = state.member && state.pricesShown;
     state.merch.forEach((m) => {
       const card = document.createElement('article');
       card.className = 'product';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', 'View ' + (m.name || 'item'));
       const pimg = document.createElement('div');
       pimg.className = 'pimg' + (/^(p\d|https:|\/)/.test(m.image || '') ? ' cover' : '');
       if (m.image) {
@@ -1229,49 +1309,141 @@
         img.loading = 'lazy';
         pimg.appendChild(img);
       }
+      const n = photosOf(m).length;
+      if (n > 1) { const c = document.createElement('span'); c.className = 'pcount'; c.textContent = n + ' photos'; pimg.appendChild(c); }
       const h = document.createElement('h3');
       h.textContent = m.name || 'Untitled item';
-      card.append(pimg, h);
-      if (m.description) {
-        const d = document.createElement('p');
-        d.className = 'd';
-        d.textContent = m.description;
-        card.appendChild(d);
-      }
-      if (state.member && state.pricesShown) {
-        const meta = document.createElement('div');
-        meta.className = 'pmeta';
-        const pr = document.createElement('span');
-        pr.className = 'pprice';
-        pr.textContent = '£' + Number(m.price || 0).toFixed(2).replace(/\.00$/, '');
-        const dl = document.createElement('span');
-        dl.className = 'pdeliv';
-        dl.textContent = m.delivery ? 'Delivery: ' + m.delivery : '';
-        meta.append(pr, dl);
-        card.appendChild(meta);
-        const sizes = String(m.sizes || '').split(',').map((s) => s.trim()).filter(Boolean);
-        let sel = null;
-        if (sizes.length) {
-          sel = document.createElement('select');
-          sel.className = 'input';
-          sel.setAttribute('aria-label', 'Size for ' + (m.name || 'item'));
-          sizes.forEach((s) => { const o = document.createElement('option'); o.textContent = s; sel.appendChild(o); });
-          card.appendChild(sel);
-        }
-        const buy = document.createElement('button');
-        buy.className = 'apple';
-        buy.type = 'button';
-        buy.textContent = 'Buy now';
-        buy.addEventListener('click', () => startCheckout({ kind: 'merch', itemId: m.id, size: sel ? sel.value : '' }, buy));
-        card.appendChild(buy);
-      } else {
-        const lock = document.createElement('p');
-        lock.className = 'lock';
-        lock.textContent = 'Members only. Sign in to see prices and order.';
-        card.appendChild(lock);
-      }
+      const meta = document.createElement('div');
+      meta.className = 'pmeta';
+      const pr = document.createElement('span');
+      pr.className = priced ? 'pprice' : 'lock';
+      pr.textContent = priced ? money(m.price) : 'Members only';
+      const view = document.createElement('span');
+      view.className = 'pview';
+      view.textContent = m.customisable ? 'Customisable · View' : 'View';
+      meta.append(pr, view);
+      card.append(pimg, h, meta);
+      const open = () => openProduct(m);
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
       shop.appendChild(card);
     });
+  }
+
+  // Expanded view: photo gallery, details, size chart, and (for members) size, customisation and Buy now.
+  function openProduct(m) {
+    const s = sheet(m.name || 'Item', { wide: true });
+    const priced = state.member && state.pricesShown;
+    const photos = photosOf(m);
+    s.main.innerHTML =
+      '<div class="pd"><div class="pd-gallery"><div class="pd-main"></div><div class="pd-thumbs"></div></div>' +
+      '<div class="pd-info"><p class="pd-price"></p><p class="d pd-desc"></p><div class="pd-chart"></div><div class="pd-buy"></div></div></div>';
+    // gallery
+    const main = $('.pd-main', s.main), thumbs = $('.pd-thumbs', s.main);
+    let at = 0;
+    const imgs = photos.map((k, i) => {
+      const im = document.createElement('img');
+      im.src = imgSrc(k);
+      im.alt = (m.name || 'Item') + ', photo ' + (i + 1) + ' of ' + photos.length;
+      im.className = (/^(p\d|https:|\/)/.test(k) ? 'cover' : '') + (i ? '' : ' on');
+      main.appendChild(im);
+      return im;
+    });
+    if (!photos.length) main.classList.add('none');
+    const go = (i) => {
+      if (!imgs.length) return;
+      at = (i + imgs.length) % imgs.length;
+      imgs.forEach((im, k) => im.classList.toggle('on', k === at));
+      $$('button', thumbs).forEach((b, k) => b.setAttribute('aria-current', String(k === at)));
+    };
+    if (photos.length > 1) {
+      photos.forEach((k, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Photo ' + (i + 1));
+        b.setAttribute('aria-current', String(!i));
+        b.innerHTML = '<img alt="">';
+        $('img', b).src = imgSrc(k);
+        b.addEventListener('click', () => go(i));
+        thumbs.appendChild(b);
+      });
+      ['prev', 'next'].forEach((dir) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pd-arrow ' + dir;
+        b.setAttribute('aria-label', dir === 'prev' ? 'Previous photo' : 'Next photo');
+        b.innerHTML = dir === 'prev' ? '&#8249;' : '&#8250;';
+        b.addEventListener('click', () => go(at + (dir === 'prev' ? -1 : 1)));
+        main.appendChild(b);
+      });
+      let sx = null;
+      main.addEventListener('pointerdown', (e) => { if (!e.target.closest('button')) sx = e.clientX; });
+      main.addEventListener('pointerup', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 40) go(at + (e.clientX < sx ? 1 : -1)); sx = null; });
+      s.onKey((e) => { if (e.key === 'ArrowLeft') go(at - 1); if (e.key === 'ArrowRight') go(at + 1); });
+    }
+    // details
+    $('.pd-price', s.main).textContent = priced ? money(m.price) : 'Members only';
+    $('.pd-desc', s.main).textContent = m.description || '';
+    const chart = sizeTable(m.sizeChart);
+    if (chart) { const h = document.createElement('h4'); h.textContent = 'Size chart'; $('.pd-chart', s.main).append(h, chart); }
+    const buyBox = $('.pd-buy', s.main);
+    if (!priced) {
+      buyBox.innerHTML = '<p class="lock"></p><a class="btn sm" href="#members">Sign in</a>';
+      $('p', buyBox).textContent = 'Sign in as a member to see the price and order.' + (m.customisable ? ' This item can be customised with a name on the back.' : '');
+      $('a', buyBox).addEventListener('click', () => { s.close(); setTimeout(() => { const g = $('#gate'); if (g) g.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); }, 350); });
+      return;
+    }
+    if (m.delivery) { const d = document.createElement('p'); d.className = 'pdeliv'; d.textContent = 'Delivery: ' + m.delivery; buyBox.appendChild(d); }
+    const sizes = String(m.sizes || '').split(',').map((x) => x.trim()).filter(Boolean);
+    let sel = null;
+    if (sizes.length) {
+      const f = document.createElement('div');
+      f.className = 'field';
+      f.innerHTML = '<label for="pd-size">Size</label><select class="input" id="pd-size"></select>';
+      sel = $('select', f);
+      sizes.forEach((x) => { const o = document.createElement('option'); o.textContent = x; sel.appendChild(o); });
+      buyBox.appendChild(f);
+    }
+    // Optional name on the back, for items the committee has marked customisable
+    let custom = null;
+    if (m.customisable) {
+      const extra = Number(m.customPrice ?? 2);
+      const wrap = document.createElement('div');
+      wrap.className = 'customise';
+      wrap.innerHTML = '<label class="check"><input type="checkbox"> <span>Customise <em></em></span></label><div class="field custom-name" hidden><label for="pd-name">Name on the back</label><input class="input" id="pd-name" maxlength="16" autocomplete="off" placeholder="e.g. KHAN"></div><p class="msg err" role="status"></p>';
+      $('em', wrap).textContent = '+' + money(extra);
+      const tick = $('input[type=checkbox]', wrap), box = $('.custom-name', wrap), nameIn = $('#pd-name', wrap);
+      tick.addEventListener('change', () => {
+        box.hidden = !tick.checked;
+        $('.pd-price', s.main).textContent = money(Number(m.price || 0) + (tick.checked ? extra : 0));
+        $('.msg', wrap).textContent = '';
+        if (tick.checked) nameIn.focus();
+      });
+      nameIn.addEventListener('input', () => { $('.msg', wrap).textContent = ''; });
+      buyBox.appendChild(wrap);
+      custom = { tick, nameIn, msg: $('.msg', wrap) };
+    }
+    const buy = document.createElement('button');
+    buy.className = 'apple';
+    buy.type = 'button';
+    buy.textContent = 'Buy now';
+    buy.addEventListener('click', () => {
+      const req = { kind: 'merch', itemId: m.id, size: sel ? sel.value : '' };
+      if (custom && custom.tick.checked) {
+        const v = custom.nameIn.value.trim();
+        if (!/^[\p{L}\p{N} .'&-]{1,16}$/u.test(v)) {
+          custom.msg.textContent = v ? 'Use up to 16 letters, numbers, spaces or . \' - &' : 'Add the name for the back, or untick Customise.';
+          custom.nameIn.focus();
+          return;
+        }
+        req.custom = v;
+      }
+      startCheckout(req, buy);
+    });
+    const note = document.createElement('p');
+    note.className = 'note';
+    note.textContent = 'Secure checkout by Stripe. Card, Apple Pay and Google Pay.';
+    buyBox.append(buy, note);
   }
 
   // ---- committee: manage merch
@@ -1312,9 +1484,36 @@
     if (f) { e.preventDefault(); merchCrop(f); }
   });
 
+  $('#m-custom').addEventListener('change', () => { $('#m-custom-price-f').hidden = !$('#m-custom').checked; });
+  // Extra photos for the expanded view
+  let extra = [];
+  function renderExtra() {
+    const box = $('#m-extra');
+    box.innerHTML = '';
+    extra.forEach((k, i) => {
+      const d = document.createElement('div');
+      d.className = 'm-thumb';
+      d.innerHTML = '<img alt=""><button type="button" aria-label="Remove photo">&times;</button>';
+      $('img', d).src = imgSrc(k);
+      $('button', d).addEventListener('click', () => { extra.splice(i, 1); renderExtra(); });
+      box.appendChild(d);
+    });
+  }
+  $('#m-add-photo').addEventListener('click', () => chooseImage('Another photo', (file) => cropImage(file, {
+    title: 'Another photo', hint: 'Drag and zoom to frame it.', ratio: 1.25, outW: 1000,
+    save: async (data) => {
+      const res = await api('merch-image', { body: { image: data } });
+      if (res.ok) { extra.push(res.data.url); renderExtra(); $('#m-msg').className = 'msg full ok'; $('#m-msg').textContent = 'Photo added. Save the item to use it in the shop.'; }
+      return res;
+    }
+  })));
+
   function resetForm() {
+    extra = [];
+    renderExtra();
     useImage('');
     $('#merch-form').reset();
+    $('#m-custom-price-f').hidden = true;
     $('#m-id').value = '';
     $('#m-order').value = String(((state.merch || []).length + 1) * 10);
     $('#m-save').textContent = 'Add item';
@@ -1333,7 +1532,11 @@
       sizes: $('#m-sizes').value.trim(),
       image: imgSel.value,
       description: $('#m-desc').value.trim(),
-      order: Number($('#m-order').value) || 0
+      order: Number($('#m-order').value) || 0,
+      customisable: $('#m-custom').checked,
+      images: extra.slice(),
+      sizeChart: $('#m-chart').value.trim(),
+      customPrice: $('#m-custom-price').value
     };
     if (!item.name) { msg.textContent = 'Give the item a name.'; return; }
     $('#m-save').disabled = true;
@@ -1352,7 +1555,7 @@
       const row = document.createElement('div');
       row.className = 'admin-row';
       const name = document.createElement('span');
-      name.textContent = m.name || 'Untitled';
+      name.textContent = (m.name || 'Untitled') + (m.customisable ? ' · customisable' : '');
       const price = document.createElement('span');
       price.textContent = '£' + Number(m.price || 0).toFixed(2);
       const edit = document.createElement('button');
@@ -1367,6 +1570,12 @@
         useImage(m.image || '');
         $('#m-desc').value = m.description || '';
         $('#m-order').value = m.order || 0;
+        $('#m-custom').checked = !!m.customisable;
+        extra = (m.images || []).slice();
+        renderExtra();
+        $('#m-chart').value = m.sizeChart || '';
+        $('#m-custom-price').value = m.customPrice ?? 2;
+        $('#m-custom-price-f').hidden = !m.customisable;
         $('#m-save').textContent = 'Save changes';
         $('#m-cancel').hidden = false;
         $('#m-name').focus();
@@ -1517,6 +1726,7 @@
     $('.note', s.main).textContent = hint;
     const view = $('.crop', s.main), img = $('img', view), zoom = $('.zoom', s.main);
     view.style.aspectRatio = '1 / ' + ratio;
+    view.style.setProperty('--ratio', ratio);
     const url = URL.createObjectURL(file);
     let W = 0, H = 0, base = 1, z = 1, x = 0, y = 0;
     const V = () => view.clientWidth, VH = () => view.clientWidth * ratio;

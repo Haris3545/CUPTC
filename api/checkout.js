@@ -1,8 +1,12 @@
-// POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size? }
+// POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size?, custom? }
+// custom: the name to print on the back, for items the committee has marked customisable.
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
 import { PASSWORDS, matches, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
 import { DEFAULT_MERCH } from './_lib/merch.js';
+
+// Letters (any language), numbers, spaces and . ' - &, up to 16 characters.
+const NAME_OK = /^[\p{L}\p{N} .'&-]{1,16}$/u;
 
 export default async function handler(req, res) {
   fromRequest(req);
@@ -10,6 +14,7 @@ export default async function handler(req, res) {
   try {
     const b = body(req);
     let title, name, amount, meta = { kind: b.kind };
+    const lines = [];
     if (b.kind === 'social') {
       amount = membershipPrice('social', b.code);
       title = 'CUPTC Social membership';
@@ -28,7 +33,15 @@ export default async function handler(req, res) {
       title = 'CUPTC shop';
       name = item.name + (size ? ' (' + size + ')' : '');
       meta = { kind: 'merch', item: item.id, size, delivery: item.delivery || '' };
+      if (b.custom != null && String(b.custom).trim() !== '') {
+        const custom = String(b.custom).trim().replace(/\s+/g, ' ');
+        if (!item.customisable) return send(res, 400, { error: 'not_customisable' });
+        if (!NAME_OK.test(custom)) return send(res, 400, { error: 'custom_name' });
+        lines.push(['Name on the back: ' + custom, Number(item.customPrice ?? 2)]);
+        meta.custom = custom;
+      }
     } else return send(res, 400, { error: 'kind' });
+    lines.unshift([name, amount]);
 
     const key = env('STRIPE_SECRET_KEY');
     if (key) {
@@ -37,7 +50,7 @@ export default async function handler(req, res) {
       const back = origin(req) + '/';
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
-        line_items: [{ quantity: 1, price_data: { currency: 'gbp', unit_amount: Math.round(amount * 100), product_data: { name } } }],
+        line_items: lines.map(([n, a]) => ({ quantity: 1, price_data: { currency: 'gbp', unit_amount: Math.round(a * 100), product_data: { name: n } } })),
         metadata: meta,
         customer_creation: 'always',
         shipping_address_collection: meta.kind === 'merch' ? { allowed_countries: ['GB'] } : undefined,
@@ -46,7 +59,7 @@ export default async function handler(req, res) {
       });
       return send(res, 200, { url: session.url });
     }
-    if (env('DEMO_PAYMENTS') === 'on') return send(res, 200, { demo: true, title, lines: [[name, amount]], meta });
+    if (env('DEMO_PAYMENTS') === 'on') return send(res, 200, { demo: true, title, lines, meta });
     return send(res, 503, { error: 'payments_not_configured' });
   } catch (e) {
     console.error(e);
