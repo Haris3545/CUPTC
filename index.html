@@ -2104,7 +2104,7 @@
   // ---------------------------------------------------------------- phones: swipe up from the start screen
   // The start screen turns into Home in place, under your finger: the green shrinks into the header bar, the
   // big logo shrinks into the header logo, and the photo grows into Home's big photo, then hands over to the
-  // slideshow as "Padel at Cambridge." rises in. Letting go carries on at your speed, or settles back.
+  // slideshow as "Padel at Cambridge." rises in. It plays as one animation once a swipe starts it.
   (() => {
     const pimg = $('.sphoto img'), heroEl = $('.hero'), heroCopy = $('.hero-copy');
     const curtain = $('.curtain'), photo = $('.sphoto'), logo = $('.start-logo'), em = $('.start-logo .em'), wm = $('.start-logo .wm');
@@ -2160,21 +2160,6 @@
       root.classList.remove('morph');
       geo = null;
     }
-    function animateTo(target, speed) {
-      busy = true;
-      cancelAnimationFrame(anim);
-      const from = p, dist = Math.abs(target - from) * geo.T;
-      const dur = Math.min(520, Math.max(240, dist / Math.max(Math.abs(speed) * 1.4, 1.3)));
-      const t0 = performance.now();
-      const step = (now) => {
-        const t = clamp01((now - t0) / dur), k = 1 - Math.pow(1 - t, 3);
-        draw(from + (target - from) * k);
-        if (t < 1) { anim = requestAnimationFrame(step); return; }
-        busy = false;
-        if (target === 1) arrive(); else clear();
-      };
-      anim = requestAnimationFrame(step);
-    }
     function arrive() {
       root.classList.add('no-anim');
       quietEnter = true;
@@ -2183,6 +2168,22 @@
       clear();
       void root.offsetWidth;
       requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
+    }
+    // One smooth, self-playing animation: a swipe up (or tapping "home") starts it and it plays through.
+    const ease = (t) => (1 - Math.cos(Math.PI * t)) / 2;     // gentle in and out, even through the middle
+    function play() {
+      if (busy) return;
+      busy = true;
+      measure();
+      const t0 = performance.now(), DUR = 1500;
+      const step = (now) => {
+        const t = clamp01((now - t0) / DUR);
+        draw(ease(t));
+        if (t < 1) { anim = requestAnimationFrame(step); return; }
+        busy = false;
+        arrive();
+      };
+      anim = requestAnimationFrame(step);
     }
     document.addEventListener('touchstart', (e) => {
       if (!active() || e.touches.length > 1) return;
@@ -2195,20 +2196,18 @@
         if (Math.abs(d) < 6) return;
         if (d > 0) { y0 = null; return; }                    // only upward swipes
         armed = true;
-        measure();
       }
       e.preventDefault();
-      draw(-Math.min(0, d) / geo.T);
       samples.push([performance.now(), y]);
       if (samples.length > 6) samples.shift();
+      if (d < -28) { y0 = null; play(); }
     }, { passive: false });
     const end = () => {
       if (y0 == null) return;
       y0 = null;
       if (!armed) return;
       const [t1, ya] = samples[0], [t2, yb] = samples[samples.length - 1];
-      const v = (yb - ya) / Math.max(1, t2 - t1);           // px per ms, negative = upwards
-      if (p > 0.3 || v < -0.35) animateTo(1, v); else animateTo(0, v);
+      if ((yb - ya) / Math.max(1, t2 - t1) < -0.25) play();   // a quick little flick counts too
     };
     document.addEventListener('touchend', end);
     document.addEventListener('touchcancel', end);
@@ -2217,8 +2216,15 @@
       wheel += e.deltaY;
       clearTimeout(wheelTimer);
       wheelTimer = setTimeout(() => { wheel = 0; }, 220);
-      if (wheel > 60) { wheel = 0; measure(); draw(0); animateTo(1, 1.2); }
+      if (wheel > 60) { wheel = 0; play(); }
     }, { passive: true });
+    // on phones, tapping "home" plays the same animation
+    $('.start-nav .s-home').addEventListener('click', (e) => {
+      if (!active()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      play();
+    });
   })();
 
   // ---------------------------------------------------------------- donations
