@@ -12,6 +12,8 @@ export default async function handler(req, res) {
     FULL_MEMBER_CODE: !!p.full,
     COMMITTEE_DISCOUNT_CODE: !!p.discount,
     AUTH_SECRET: !!env('AUTH_SECRET'),
+    // If these match, the members password signs people in as committee.
+    passwordsDifferent: !!p.member && !!p.committee && p.member.replace(/\s+/g, '').toUpperCase() !== p.committee.replace(/\s+/g, '').toUpperCase(),
     storage: await storageCheck(),
     stripe: key ? (key.startsWith('sk_live') ? 'live' : 'test') : false,
     // Names only (never values) of settings that look password-related, to spot a misspelt name.
