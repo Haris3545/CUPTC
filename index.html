@@ -58,9 +58,10 @@
   .sphoto {
     position: fixed; inset: 0; z-index: 41; overflow: hidden; pointer-events: none;
     clip-path: inset(0 100% 0 0);
-    transition: clip-path 1s var(--ease) .18s;
+    translate: 0 var(--drag, 0px);
+    transition: clip-path 1s var(--ease) .18s, translate .6s var(--out), opacity .5s ease;
   }
-  html.at-start .sphoto { clip-path: inset(0 47.5% 0 0); transition-delay: .12s; }
+  html.at-start .sphoto { clip-path: inset(0 47.5% 0 0); transition-delay: .12s, 0s, 0s; }
   .sphoto img { position: absolute; top: 0; left: 0; width: 52.5%; height: 100%; object-fit: cover; object-position: 42% 50%; transform: translateX(-16%) scale(1.04); transition: transform 1.1s var(--ease) .18s; }
   html.at-start .sphoto img { transform: none; transition-delay: .12s; }
 
@@ -68,9 +69,22 @@
   .start {
     position: fixed; inset: 0; z-index: 45; color: #fff; pointer-events: none;
     opacity: 0; visibility: hidden;
-    transition: opacity .38s ease, visibility 0s .6s;
+    translate: 0 var(--drag, 0px);
+    transition: opacity .38s ease, visibility 0s .6s, translate .6s var(--out);
   }
-  html.at-start .start { opacity: 1; visibility: visible; transition: opacity .8s ease .75s, visibility 0s; }
+  html.at-start .start { opacity: 1; visibility: visible; transition: opacity .8s ease .75s, visibility 0s, translate .6s var(--out); }
+  /* Phones: swiping up on the start screen carries you into the home page */
+  html.dragging .sphoto, html.dragging .start { transition: none !important; }
+  html.swipe-out .start { translate: 0 -60px; }
+  html.swipe-out .sphoto { clip-path: inset(50% 0 0 0); translate: 0 -55%; opacity: 0; transition: translate .8s var(--out), opacity .6s ease .1s; }
+  /* A swipe keeps its momentum: words go at once, the green folds straight away and Home rises in from below */
+  html.swipe-out .curtain { transition: clip-path .75s var(--ease); }
+  html.swipe-out .start { transition: opacity .18s ease, visibility 0s .2s, translate .6s var(--out); }
+  html.swipe-out.entering { --base: .3s; }
+  html.swipe-out.entering .pages { transition: opacity .55s ease .25s; }
+  html.swipe-out .pages { animation: pagesUp 1s var(--out) .2s both; }
+  @keyframes pagesUp { from { transform: translateY(80px); } }
+  .swipe-hint { display: none; }
   .start a { pointer-events: auto; }
   .start-logo {
     position: absolute; top: clamp(18px, 4vh, 40px); left: clamp(18px, 2.4vw, 36px); margin: 0;
@@ -475,6 +489,9 @@
     .start-nav .s-area { bottom: calc(50% + 26px); }
     .start-nav .s-mem { bottom: calc(50% + 26px + 1em + 12px); }
     .start-nav .s-home { top: auto; bottom: calc(50% + 26px + 2em + 24px); }
+    .swipe-hint { display: grid; justify-items: center; gap: 2px; position: absolute; left: 50%; bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); translate: -50% 0; margin: 0; color: #fff; font: 500 20px/1 "Caveat", cursive; text-shadow: 0 0 12px rgba(0, 0, 0, .6), 0 1px 3px rgba(0, 0, 0, .5); pointer-events: none; }
+    .swipe-hint svg { width: 22px; height: 14px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); animation: nudge 2.2s ease-in-out infinite; }
+    @keyframes nudge { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-6px); opacity: 1; } }
     .hdr-nav { display: none; }
     .hdr-menu { display: block; }
     .hdr-logo img { height: 36px; }
@@ -565,6 +582,7 @@
     <div class="tag" data-mode="edge" data-box="640 555 195 395" data-pin="772 640"><svg class="arrow" aria-hidden="true"><path class="shaft" pathLength="1"/><path class="head" pathLength="1"/></svg><span class="label" style="--rot:-2deg"><b>Haris Khan</b><i>President</i></span></div>
     <p class="hint">Hover over the committee</p>
   </div>
+  <p class="swipe-hint" aria-hidden="true"><svg viewBox="0 0 22 14"><path d="M2 12l9-9 9 9"/></svg>swipe up</p>
   <nav class="start-nav" aria-label="Enter the site">
     <a class="ul s-home" href="#home">home</a>
     <a class="ul s-mem" href="#membership">membership</a>
@@ -1973,6 +1991,53 @@
     let placing = 0;
     addEventListener('resize', () => { cancelAnimationFrame(placing); placing = requestAnimationFrame(place); }, { passive: true });
     $$('.tag', box).forEach((t) => t.addEventListener('mouseenter', () => box.classList.add('seen'), { once: true }));
+  })();
+
+  // ---------------------------------------------------------------- phones: swipe up from the start screen
+  // The start screen follows your finger a little; a long enough (or quick enough) swipe carries on into Home,
+  // a short one springs back. A scroll-wheel/trackpad scroll does the same.
+  (() => {
+    let y0 = null, t0 = 0, dy = 0, armed = false, wheel = 0, wheelTimer = 0, leaving = false;
+    const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !leaving;
+    const drag = (v) => root.style.setProperty('--drag', v + 'px');
+    function commit() {
+      leaving = true;
+      root.classList.remove('dragging');
+      root.classList.add('swipe-out');
+      drag(0);
+      location.hash = '#home';
+      setTimeout(() => { root.classList.remove('swipe-out'); leaving = false; }, 1400);
+    }
+    document.addEventListener('touchstart', (e) => {
+      if (!active() || e.touches.length > 1) return;
+      y0 = e.touches[0].clientY; t0 = performance.now(); dy = 0; armed = false;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (y0 == null) return;
+      const d = e.touches[0].clientY - y0;
+      if (!armed && Math.abs(d) < 8) return;
+      armed = true;
+      e.preventDefault();
+      root.classList.add('dragging');
+      dy = d;
+      drag(d < 0 ? Math.max(d * 0.55, -240) : Math.min(d * 0.15, 28));
+    }, { passive: false });
+    const end = () => {
+      if (y0 == null) return;
+      const v = dy / Math.max(1, performance.now() - t0);
+      y0 = null;
+      root.classList.remove('dragging');
+      if (armed && (dy < -90 || (dy < -30 && v < -0.45))) commit(); else drag(0);
+    };
+    document.addEventListener('touchend', end);
+    document.addEventListener('touchcancel', end);
+    addEventListener('wheel', (e) => {
+      if (!active()) return;
+      wheel += e.deltaY;
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => { wheel = 0; }, 220);
+      if (wheel > 60) { wheel = 0; commit(); }
+    }, { passive: true });
   })();
 
   // ---------------------------------------------------------------- resizing
