@@ -51,16 +51,16 @@
   // Hand positions (h), racket angle in degrees (a) and free hand (f), in body space:
   // metres, +x towards the racket side, +y up.
   const POSES = {
-    ready:     { h: [0.33, 0.96], a: 58, f: [-0.27, 0.87] },
-    fh_prep:   { h: [0.46, 1.24], a: 70, f: [-0.36, 1.02] },
-    fh_hit:    { h: [0.52, 1.12], a: 8, f: [-0.34, 0.98] },
-    fh_follow: { h: [-0.14, 1.46], a: 150, f: [-0.30, 0.92] },
-    bh_prep:   { h: [-0.40, 1.22], a: 110, f: [-0.36, 1.10] },
-    bh_hit:    { h: [-0.52, 1.12], a: 172, f: [-0.28, 0.92] },
-    bh_follow: { h: [0.26, 1.46], a: 30, f: [-0.30, 0.90] },
+    ready:     { h: [0.30, 0.88], a: -78, f: [-0.29, 0.86] },
+    fh_prep:   { h: [0.46, 1.24], a: 70, f: [-0.40, 0.98] },
+    fh_hit:    { h: [0.52, 1.12], a: 8, f: [-0.40, 0.96] },
+    fh_follow: { h: [-0.14, 1.46], a: 150, f: [-0.30, 0.87] },
+    bh_prep:   { h: [-0.40, 1.22], a: 110, f: [-0.31, 0.87] },
+    bh_hit:    { h: [-0.52, 1.12], a: 172, f: [-0.30, 0.87] },
+    bh_follow: { h: [0.26, 1.46], a: 30, f: [-0.30, 0.87] },
     sm_prep:   { h: [0.30, 1.76], a: -105, f: [-0.24, 1.90] },
     sm_hit:    { h: [0.18, 2.10], a: 84, f: [-0.26, 1.50] },
-    sm_follow: { h: [-0.20, 1.00], a: 230, f: [-0.30, 0.95] },
+    sm_follow: { h: [-0.20, 1.00], a: 230, f: [-0.30, 0.87] },
     cheer:     { h: [0.30, 1.98], a: 80, f: [-0.30, 1.98] }
   };
   const RUN_FRAMES = 6;
@@ -197,8 +197,8 @@
     let hand = base.h.slice(), free = base.f.slice();
     if (legsMode === 'run' && poseName === 'ready') {
       const sw = Math.sin((frame / RUN_FRAMES) * Math.PI * 2) * 0.08;
-      hand = [0.33, 0.96 + sw];
-      free = [-0.27, 0.9 - sw];
+      hand = [0.30, 0.88 + sw];
+      free = [-0.29, 0.86 - sw];
     }
 
     // ---- legs, socks, shoes
@@ -275,7 +275,9 @@
 
     // At rest the racket is held at the side, partly behind the body, so it goes
     // under the torso instead of showing through it.
-    const racketBehind = poseName === 'ready';
+    // Seen from behind, a racket arm that crosses the body is in front of the player,
+    // so it goes under the torso; only the racket head showing past the body is seen.
+    const racketBehind = back && hand[0] < 0.1;
     if (racketBehind) drawRacket(drawArm(0.2, hand), base.a);
 
     // ---- torso
