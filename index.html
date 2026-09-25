@@ -1410,7 +1410,7 @@
       const extra = Number(m.customPrice ?? 2);
       const wrap = document.createElement('div');
       wrap.className = 'customise';
-      wrap.innerHTML = '<label class="check"><input type="checkbox"> <span>Customise <em></em></span></label><div class="field custom-name" hidden><label for="pd-name">Name on the back</label><input class="input" id="pd-name" maxlength="16" autocomplete="off" placeholder="e.g. KHAN"></div><p class="msg err" role="status"></p>';
+      wrap.innerHTML = '<label class="check"><input type="checkbox"> <span>Customise <em></em></span></label><div class="field custom-name" hidden><label for="pd-name">Name on the back</label><input class="input" id="pd-name" maxlength="16" autocomplete="off" placeholder="e.g. BIGHAM"></div><p class="msg err" role="status"></p>';
       $('em', wrap).textContent = '+' + money(extra);
       const tick = $('input[type=checkbox]', wrap), box = $('.custom-name', wrap), nameIn = $('#pd-name', wrap);
       tick.addEventListener('change', () => {
