@@ -1,30 +1,41 @@
-# CUPTC — Cambridge University Padel Club
+# CUPTC — Cambridge University Padel Tennis Club
 
-Placeholder website for the Cambridge University Padel Club, with a small retro game to tide visitors over until the full site launches.
+The club website, with a small retro game.
 
-- **`/`**: landing page with the logo, "Full Website Coming Soon", and a **To Tide You Over** button.
-- **`/play/`**: **Padel Pong**, a 16-bit padel rally game with a behind-the-player camera, glass walls, a crowd in club colours and a Cambridge skyline.
+- **`/`**: the site. A split-screen start page opens into **Home**, **Membership** and the **Members Area**.
+- **`/play/`**: **Padel Pong**, a 16-bit padel rally game.
 
-It's a plain static site with no build step and no dependencies.
+The pages are plain HTML with no build step. A few small server functions in `api/` handle what can't be public:
+
+| Function | What it does |
+|---|---|
+| `api/login.js` | Checks the members and committee passwords and signs people in. |
+| `api/code.js` | Checks the full-member code and the committee discount code. |
+| `api/checkout.js`, `api/confirm.js` | Payments through Stripe Checkout (card, Apple Pay, Google Pay). After a paid membership, shows the members password. |
+| `api/merch.js` | The members' shop. Prices are only sent to signed-in members; the committee can add, edit and remove items. |
+| `api/committee.js` | Committee photo uploads. Signed in as committee, each person on the home page gets **Change photo**. |
+
+## Put it live on Vercel
+
+1. Import the repository in Vercel (no framework, no build command).
+2. **Storage → Create → Blob**, and connect it to the project. This stores the shop and uploaded photos.
+3. **Settings → Environment Variables**, add:
+   - `MEMBER_PASSWORD`, `COMMITTEE_PASSWORD`, `FULL_MEMBER_CODE`, `COMMITTEE_DISCOUNT_CODE`
+   - `AUTH_SECRET`: any long random string
+   - `STRIPE_SECRET_KEY`: from the Stripe dashboard, when you're ready to take payments. Until then the buy buttons say payments open soon.
+4. Redeploy.
+
+Payments show up in the Stripe dashboard, including the size chosen for merch (in the payment's metadata) and the delivery address.
 
 ## Run it locally
 
-Any static file server works, for example:
-
 ```sh
-python3 -m http.server 8000
-# then open http://localhost:8000
+npm install
+npm run dev
+# then open http://localhost:3000
 ```
 
-(Opening `index.html` straight from disk works for the landing page. The link to `play/` needs a server so the folder resolves to `play/index.html`.)
-
-## Publish with GitHub Pages
-
-1. Merge into `main`.
-2. In the repository go to **Settings → Pages**.
-3. Under **Build and deployment**, choose **Deploy from a branch**, then pick `main` and `/ (root)`.
-
-The site will be served at `https://<user>.github.io/<repo>/`. All links are relative, so it also works at a custom domain.
+Locally, uploads are saved to `.data/`, payments are simulated, and any setting not in a `.env` file (see `.env.example`) gets a dev-only default. The dev passwords are printed when it starts.
 
 ## Padel Pong
 
@@ -70,6 +81,6 @@ For development, `play/?debug&autoplay` lets a bot play the game.
 
 ## Credits
 
-- Logo © Cambridge University Padel Club.
-- [Old Standard TT](https://fonts.google.com/specimen/Old+Standard+TT) (landing page, via Google Fonts).
+- Logo © Cambridge University Padel Tennis Club.
+- [Old Standard TT](https://fonts.google.com/specimen/Old+Standard+TT) and [Caveat](https://fonts.google.com/specimen/Caveat) via Google Fonts.
 - [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38, self-hosted under the SIL Open Font License (`play/fonts/OFL.txt`).
