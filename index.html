@@ -74,7 +74,7 @@
   /* Phones: swiping up on the start screen carries you into the home page */
   /* Phones: while swiping from the start screen, JS drives these directly (green shrinks into the header,
      big logo becomes the header logo, photo scrolls away, Home arrives underneath). */
-  html.morph .curtain, html.morph .sphoto, html.morph .start, html.morph .start *, html.morph .pages,
+  html.morph .curtain, html.morph .sphoto, html.morph .sphoto *, html.morph .hero-copy, html.morph .start, html.morph .start *, html.morph .pages,
   html.morph .hdr, html.morph .hdr *, html.morph .signed-bar { transition: none !important; animation: none !important; }
   .swipe-hint { display: none; }
   /* Phones: pulling Home down from the top takes you back to the start screen */
@@ -2095,13 +2095,14 @@
   })();
 
   // ---------------------------------------------------------------- phones: swipe up from the start screen
-  // One continuous motion under your finger: the green top half shrinks into the header bar, the big logo
-  // shrinks into the header logo (the wordmark hands over to "cuptc"), the photo scrolls away and Home
-  // arrives underneath. Letting go carries on at your speed, or settles back after a nudge.
+  // The start screen turns into Home in place, under your finger: the green shrinks into the header bar, the
+  // big logo shrinks into the header logo, and the photo grows into Home's big photo, then hands over to the
+  // slideshow as "Padel at Cambridge." rises in. Letting go carries on at your speed, or settles back.
   (() => {
+    const pimg = $('.sphoto img'), heroEl = $('.hero'), heroCopy = $('.hero-copy');
     const curtain = $('.curtain'), photo = $('.sphoto'), logo = $('.start-logo'), em = $('.start-logo .em'), wm = $('.start-logo .wm');
     const nav = $('.start-nav'), tags = $('#tags'), pages = $('#pages'), hdr = $('.hdr'), hdrImg = $('.hdr-logo img'), sbar = $('#member-bar');
-    const touched = [curtain, photo, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
+    const touched = [curtain, photo, pimg, heroCopy, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
     let geo = null, p = 0, y0 = null, armed = false, samples = [], anim = 0, busy = false, wheel = 0, wheelTimer = 0;
     const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !busy;
     const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -2112,7 +2113,7 @@
       // Line the lions up exactly. The lion is the same size in both image files, but sits at (7, 45) in
       // emblem.png (460 x 294) and at (6, 58) in logo-cuptc.png (1312 x 353).
       const ku = e.height / 294, kh = h.height / 353, s = kh / ku;
-      geo = { vh, bar, T: vh - bar, s, ox: e.left - l.left, oy: e.top - l.top,
+      geo = { vh, bar, T: vh - bar, heroB: bar + (heroEl.offsetHeight || vh * 0.8), s, ox: e.left - l.left, oy: e.top - l.top,
         dx: h.left + 6 * kh - (e.left + 7 * ku * s), dy: h.top + 58 * kh - (e.top + 45 * ku * s) };
       root.classList.add('morph');
     }
@@ -2121,12 +2122,15 @@
       const { vh, bar, T, s, dx, dy, ox, oy } = geo;
       const e = 1 - Math.pow(1 - clamp01(p / 0.6), 2);        // logo gets into place first, then hands over to the header's
       const G = vh / 2 + (bar - vh / 2) * p;                  // bottom edge of the green
-      const shift = -p * T;                                   // how far the page has scrolled
+      const B = vh + (geo.heroB - vh) * p;                    // bottom edge of the photo: ends where Home's photo ends
       curtain.style.clipPath = `inset(0 0 ${vh - G}px 0)`;
-      photo.style.translate = `0 ${shift}px`;
-      photo.style.clipPath = `inset(${Math.max(vh / 2, G - shift)}px 0 0 0)`;
-      tags.style.translate = `0 ${shift}px`;
-      tags.style.opacity = 1 - p * 3;
+      // the photo grows into the space the green gives up, becoming Home's big photo
+      photo.style.clipPath = `inset(${G}px 0 ${vh - B}px 0)`;
+      pimg.style.top = G + 'px';
+      pimg.style.height = (B - G) + 'px';
+      const f = clamp01((p - 0.55) / 0.4);                    // then crossfades into Home's slideshow
+      photo.style.opacity = 1 - f;
+      tags.style.opacity = clamp01(1 - p * 3);
       nav.style.translate = `0 ${G - vh / 2}px`;
       nav.style.opacity = clamp01(1 - p * 2.6);
       logo.style.transformOrigin = `${ox}px ${oy}px`;
@@ -2139,8 +2143,8 @@
       hdrImg.style.opacity = q;
       $('.hdr-menu', hdr).style.opacity = q;
       if (sbar) sbar.style.opacity = q;
-      pages.style.opacity = 1;
-      pages.style.translate = `0 ${T * (1 - p)}px`;
+      pages.style.opacity = f;
+      heroCopy.style.translate = `0 ${(1 - f) * 28}px`;
     }
     function clear() {
       touched.forEach((el) => el && el.removeAttribute('style'));
