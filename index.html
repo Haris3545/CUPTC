@@ -85,6 +85,13 @@
   html.swipe-out .pages { animation: pagesUp 1s var(--out) .2s both; }
   @keyframes pagesUp { from { transform: translateY(80px); } }
   .swipe-hint { display: none; }
+  /* Phones: pulling Home down from the top takes you back to the start screen */
+  .page { translate: 0 var(--pull, 0px); transition: translate .5s var(--out); }
+  html.pulling .page { transition: none; }
+  .pull-hint { position: fixed; z-index: 38; left: 0; right: 0; top: calc(var(--bar) + var(--sbar, 0px) + 14px); display: grid; justify-items: center; gap: 4px; color: var(--green-dark); font: 500 22px/1 "Caveat", cursive; pointer-events: none; opacity: var(--pullp, 0); transition: opacity .3s ease; }
+  html.pulling .pull-hint { transition: none; }
+  .pull-hint svg { width: 22px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s var(--out); }
+  .pull-hint.ready svg { transform: rotate(180deg); }
   .start a { pointer-events: auto; }
   .start-logo {
     position: absolute; top: clamp(18px, 4vh, 40px); left: clamp(18px, 2.4vw, 36px); margin: 0;
@@ -103,17 +110,18 @@
   .ul[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
 
   /* Who's who: hover the people in the start photo (computers with a mouse only) */
-  .tags { position: absolute; inset: 0 47.5% 0 0; display: none; }
-  @media (hover: hover) and (min-width: 721px) { .tags { display: block; } }
+  .tags { position: absolute; inset: 0 47.5% 0 0; }
   .tag { position: absolute; pointer-events: auto; }
   /* A short hand-drawn arrow draws itself to the person, then the name is "written" in.
      Positions are worked out in JS so labels always stay on screen. */
   .arrow { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
   .arrow path { stroke-dasharray: 1 2; stroke-dashoffset: 1.01; transition: stroke-dashoffset .2s ease; }
   .arrow, .label { opacity: 0; visibility: hidden; }
-  .tag:hover .arrow { opacity: 1; visibility: visible; transition: opacity .1s ease, visibility 0s; }
-  .tag:hover .shaft { stroke-dashoffset: 0; transition: stroke-dashoffset .42s cubic-bezier(.5, 0, .3, 1); }
-  .tag:hover .head { stroke-dashoffset: 0; transition: stroke-dashoffset .18s ease-out .38s; }
+  .tag.open .arrow { opacity: 1; visibility: visible; transition: opacity .1s ease, visibility 0s; }
+  .tag:not(.open) .arrow { transition: opacity .22s ease, visibility 0s linear .22s; }
+  .tag { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .tag.open .shaft { stroke-dashoffset: 0; transition: stroke-dashoffset .42s cubic-bezier(.5, 0, .3, 1); }
+  .tag.open .head { stroke-dashoffset: 0; transition: stroke-dashoffset .18s ease-out .38s; }
   .label {
     position: absolute; left: 0; top: 0; transform: rotate(var(--rot, -3deg)); white-space: nowrap; text-align: center; pointer-events: none;
     color: #fff; font-family: "Caveat", "Bradley Hand", cursive; line-height: 1; text-shadow: 0 0 14px rgba(0, 0, 0, .65), 0 1px 3px rgba(0, 0, 0, .55);
@@ -122,7 +130,7 @@
   .label b { display: block; font-weight: 600; font-size: clamp(24px, 2.2vw, 32px); }
   .label i { display: block; font-style: normal; font-weight: 500; font-size: clamp(17px, 1.5vw, 22px); margin-top: 2px; }
   .label small { display: block; font-weight: 500; font-size: clamp(15px, 1.25vw, 18px); margin-top: 3px; opacity: .92; }
-  .tag:hover .label { opacity: 1; visibility: visible; clip-path: inset(-30% -5% -30% -5%); transition: clip-path .7s cubic-bezier(.45, 0, .25, 1) .4s, opacity .1s ease .4s, visibility 0s .4s; }
+  .tag.open .label { opacity: 1; visibility: visible; clip-path: inset(-30% -5% -30% -5%); transition: clip-path .7s cubic-bezier(.45, 0, .25, 1) .4s, opacity .1s ease .4s, visibility 0s .4s; }
   .hint { position: absolute; left: clamp(18px, 2.4vw, 36px); bottom: clamp(18px, 3.4vh, 34px); margin: 0; color: #fff; font: 500 24px/1 "Caveat", cursive; text-shadow: 0 0 14px rgba(0, 0, 0, .7), 0 1px 3px rgba(0, 0, 0, .6); display: flex; align-items: center; gap: 10px; transition: opacity .6s ease; }
   .hint::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255, 255, 255, .3); animation: pulse 2.4s ease-in-out infinite; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); } }
@@ -267,11 +275,13 @@
   .arcade .h2 { color: var(--red); }
 
   .sponsors { display: grid; grid-template-columns: 1fr 1fr; margin-top: 56px; border-top: 1px solid var(--line); }
-  .sponsors > div { padding: 44px 24px 8px; display: grid; justify-items: center; gap: 16px; text-align: center; }
-  .sponsors > div + div { border-left: 1px solid var(--line); }
+  .sponsors > .sponsor { padding: 44px 24px 8px; display: grid; justify-items: center; gap: 16px; text-align: center; }
+  .sponsors > .sponsor + .sponsor { border-left: 1px solid var(--line); }
   .sponsors .logo { height: 100px; display: grid; place-items: center; }
   .sponsors .logo img { max-height: 100px; width: auto; }
-  .sponsors p { color: var(--ink-2); font-size: 17px; }
+  .sponsors a { text-decoration: none; color: inherit; }
+  .sponsors .logo img { transition: transform .5s var(--out), opacity .3s; }
+  .sponsors .visit { font-size: 15px; font-style: italic; color: var(--green-dark); opacity: .75; transition: opacity .3s; }
 
   /* Footer */
   .foot { background: var(--green); color: #fff; padding: clamp(64px, 10vh, 110px) 0 36px; }
@@ -441,8 +451,9 @@
 
   /* Hover effects: only where there is a mouse, so taps on phones don't leave them stuck on */
   @media (hover: hover) and (pointer: fine) {
+    .sponsors a:hover .logo img { transform: scale(1.05); }
+    .sponsors a:hover .visit { opacity: 1; }
     .ul:hover::after { transform: scaleX(1); transform-origin: left; }
-    .tag:not(:hover) .arrow { transition: opacity .22s ease, visibility 0s linear .22s; }
     .hdr-logo:hover { opacity: .85; }
     .ri.shown:hover { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
     .product:hover .pimg { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
@@ -485,6 +496,8 @@
     @keyframes inGreen { from { clip-path: inset(0 0 100% 0); } }
     .start-logo { width: calc(100vw - 40px); left: 20px; top: max(24px, calc(env(safe-area-inset-top) + 14px)); }
     .sphoto::after { display: none; }
+    .tags { inset: 50% 0 0 0; }
+    .hint { top: 14px; bottom: auto; left: 16px; font-size: 21px; }
     .start-nav a { right: 24px; font-size: clamp(34px, 10vw, 48px); }
     .start-nav .s-area { bottom: calc(50% + 26px); }
     .start-nav .s-mem { bottom: calc(50% + 26px + 1em + 12px); }
@@ -505,7 +518,7 @@
     .team { grid-template-columns: 1fr 1fr; gap: 36px 16px; margin-top: 44px; }
     .person b { font-size: 19px; }
     .sponsors { grid-template-columns: 1fr; }
-    .sponsors > div + div { border-left: 0; border-top: 1px solid var(--line); margin-top: 28px; }
+    .sponsors > .sponsor + .sponsor { border-left: 0; border-top: 1px solid var(--line); margin-top: 28px; }
     .plans { grid-template-columns: 1fr; }
     .countdown div { min-width: 66px; }
     .countdown strong { font-size: 32px; }
@@ -600,6 +613,7 @@
   <button class="hdr-menu" id="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
 </header>
 
+<p class="pull-hint" id="pull-hint" aria-hidden="true"><svg viewBox="0 0 22 14"><path d="M2 12l9-9 9 9"/></svg><span>pull down for the start</span></p>
 <div class="signed-bar" id="member-bar" hidden><span id="member-bar-text">Signed in</span><button type="button" id="sign-out">Sign out</button></div>
 
 <div class="menu" id="menu" role="dialog" aria-label="Menu">
@@ -684,8 +698,8 @@
       </div>
       <div class="wrap">
         <div class="sponsors rv" style="--d:.1s">
-          <div><div class="logo"><img src="img/mill.png" alt="mill, Mediterranean coffee spot" width="250" height="96"></div><p>Mill Mediterranean funds our socials.</p></div>
-          <div><div class="logo"><img src="img/mantis.png" alt="Mantis Sport" width="164" height="96"></div><p>Mantis Sport is our sole equipment sponsor.</p></div>
+          <a class="sponsor" href="https://www.millmediterraneancoffeespot.co.uk/" target="_blank" rel="noopener"><div class="logo"><img src="img/mill.png" alt="mill, Mediterranean coffee spot" width="250" height="96"></div><span class="visit">Visit Mill Mediterranean</span></a>
+          <a class="sponsor" href="https://mantissport.com/" target="_blank" rel="noopener"><div class="logo"><img src="img/mantis.png" alt="Mantis Sport" width="164" height="96"></div><span class="visit">Visit Mantis Sport</span></a>
         </div>
       </div>
     </section>
@@ -1115,6 +1129,9 @@
   }
   window.addEventListener('hashchange', () => route(false));
 
+  function goStart() {
+    if (location.hash) { history.pushState(null, '', location.pathname + location.search); route(false); }
+  }
   // "Back to the start" links clear the hash; links to the page you're on scroll to the top.
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href^="#"]');
@@ -1122,7 +1139,7 @@
     const target = a.getAttribute('href');
     if (target === '#') {
       e.preventDefault();
-      if (location.hash) { history.pushState(null, '', location.pathname + location.search); route(false); }
+      goStart();
     } else if (target === location.hash) {
       e.preventDefault();
       setMenu(false);
@@ -1950,10 +1967,12 @@
   // ---------------------------------------------------------------- who's who on the start photo
   // Hotspots are stored in the photo's own pixels (1080 x 1350) and mapped onto however the photo is cropped.
   (() => {
-    const box = $('#tags'), W = 1080, H = 1350, POS_X = 0.42, POS_Y = 0.5;
+    const box = $('#tags'), W = 1080, H = 1350;
     const place = () => {
       const bw = box.clientWidth, bh = box.clientHeight;
       if (!bw) return;
+      // same crop as the photo: object-position 42% 50% on computers, 50% 40% on phones
+      const POS_X = phoneMq.matches ? 0.5 : 0.42, POS_Y = phoneMq.matches ? 0.4 : 0.5;
       const s = Math.max(bw / W, bh / H), ox = (bw - W * s) * POS_X, oy = (bh - H * s) * POS_Y;
       $$('.tag', box).forEach((t) => {
         const [x, y, w, h] = t.dataset.box.split(' ').map(Number);
@@ -1963,20 +1982,21 @@
         const L = $('.label', t), lw = L.offsetWidth, lh = L.offsetHeight;
         const px = ox + px0 * s, py = oy + py0 * s;           // the point the arrow lands on
         let lx, ly, sx, sy;
-        if (t.dataset.mode === 'edge') {                      // label straddles the photo/green border, arrow comes in from the side
+        const mode = t.dataset.mode === 'edge' && phoneMq.matches ? 'right' : t.dataset.mode;  // no green border to straddle on phones
+        if (mode === 'edge') {                                // label straddles the photo/green border, arrow comes in from the side
           lx = bw - lw * 0.62; ly = py - lh * 0.95;
           sx = lx - 8; sy = ly + lh * 0.6;
         } else {                                              // label above, nudged left or right, never off the photo
-          const dir = t.dataset.mode === 'left' ? -1 : 1;
+          const dir = mode === 'left' ? -1 : 1;
           lx = Math.max(14, Math.min(bw - 14 - lw, px + dir * 46 - lw / 2));
           ly = py - 54 - lh;
           sx = Math.max(lx + 12, Math.min(lx + lw - 12, px + dir * 22)); sy = ly + lh + 6;
         }
-        let ex = px + (t.dataset.mode === 'edge' ? 4 : 0), ey = py - (t.dataset.mode === 'edge' ? 0 : 4);
+        let ex = px + (mode === 'edge' ? 4 : 0), ey = py - (mode === 'edge' ? 0 : 4);
         const far = Math.hypot(ex - sx, ey - sy), MAX = 100;   // keep arrows short: past this they just point towards the person
         if (far > MAX) { ex = sx + (ex - sx) * MAX / far; ey = sy + (ey - sy) * MAX / far; }
         // a gentle hand-drawn curve: slight bow, then a two-stroke arrowhead along the final direction
-        const dx = ex - sx, dy = ey - sy, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len, bow = Math.min(14, len * 0.16) * (t.dataset.mode === 'left' ? 1 : -1);
+        const dx = ex - sx, dy = ey - sy, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len, bow = Math.min(14, len * 0.16) * (mode === 'left' ? 1 : -1);
         const c1x = sx + dx * 0.35 + nx * bow, c1y = sy + dy * 0.35 + ny * bow, c2x = sx + dx * 0.75 + nx * bow * 0.5, c2y = sy + dy * 0.75 + ny * bow * 0.5;
         const ang = Math.atan2(ey - c2y, ex - c2x), hl = 10;
         const hx1 = ex - hl * Math.cos(ang - 0.5), hy1 = ey - hl * Math.sin(ang - 0.5), hx2 = ex - hl * Math.cos(ang + 0.5), hy2 = ey - hl * Math.sin(ang + 0.5);
@@ -1990,7 +2010,20 @@
     place();
     let placing = 0;
     addEventListener('resize', () => { cancelAnimationFrame(placing); placing = requestAnimationFrame(place); }, { passive: true });
-    $$('.tag', box).forEach((t) => t.addEventListener('mouseenter', () => box.classList.add('seen'), { once: true }));
+    // Hover on computers, tap on phones. One label at a time; tapping elsewhere closes it.
+    const open = (t, on) => {
+      $$('.tag', box).forEach((o) => o.classList.toggle('open', on && o === t));
+      if (on) box.classList.add('seen');
+    };
+    $$('.tag', box).forEach((t) => {
+      t.addEventListener('mouseenter', (e) => { if (e.pointerType !== 'touch' && matchMedia('(hover: hover)').matches) open(t, true); });
+      t.addEventListener('mouseleave', () => { if (matchMedia('(hover: hover)').matches) open(t, false); });
+      t.addEventListener('click', (e) => { e.stopPropagation(); open(t, !t.classList.contains('open')); });
+    });
+    document.addEventListener('click', () => open(null, false));
+    const setHint = () => { $('.hint', box).textContent = phoneMq.matches ? 'Tap the committee' : 'Hover over the committee'; };
+    setHint();
+    if (phoneMq.addEventListener) phoneMq.addEventListener('change', () => { setHint(); place(); });
   })();
 
   // ---------------------------------------------------------------- phones: swipe up from the start screen
@@ -2006,7 +2039,14 @@
       root.classList.add('swipe-out');
       drag(0);
       location.hash = '#home';
-      setTimeout(() => { root.classList.remove('swipe-out'); leaving = false; }, 1400);
+      // tidy up without animating the (already hidden) start photo back into place
+      setTimeout(() => {
+        root.classList.add('no-anim');
+        root.classList.remove('swipe-out');
+        void root.offsetWidth;
+        requestAnimationFrame(() => root.classList.remove('no-anim'));
+        leaving = false;
+      }, 1400);
     }
     document.addEventListener('touchstart', (e) => {
       if (!active() || e.touches.length > 1) return;
@@ -2038,6 +2078,51 @@
       wheelTimer = setTimeout(() => { wheel = 0; }, 220);
       if (wheel > 60) { wheel = 0; commit(); }
     }, { passive: true });
+  })();
+
+  // ---------------------------------------------------------------- phones: pull Home down to go back to the start
+  (() => {
+    const hint = $('#pull-hint'), label = $('#pull-hint span');
+    const GO = 110;
+    let y0 = null, t0 = 0, dy = 0, armed = false;
+    const active = () => phoneMq.matches && !reduce && current === 'home' && !root.classList.contains('at-start') &&
+      !root.classList.contains('menu-open') && !$('.scrim') && window.scrollY <= 0;
+    const set = (d) => {
+      root.style.setProperty('--pull', d + 'px');
+      root.style.setProperty('--pullp', Math.min(1, d / GO * 1.3).toFixed(2));
+      const ready = d >= GO * 0.45;
+      hint.classList.toggle('ready', ready);
+      label.textContent = ready ? 'let go for the start' : 'pull down for the start';
+    };
+    document.addEventListener('touchstart', (e) => {
+      if (!active() || e.touches.length > 1) return;
+      y0 = e.touches[0].clientY; t0 = performance.now(); dy = 0; armed = false;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (y0 == null) return;
+      const d = e.touches[0].clientY - y0;
+      if (!armed) {
+        if (d < -4 || window.scrollY > 0) { y0 = null; return; }   // scrolling down the page as normal
+        if (d < 8) return;
+        armed = true;
+      }
+      e.preventDefault();                                         // stop the browser's own pull-to-refresh
+      root.classList.add('pulling');
+      dy = Math.max(0, d);
+      set(Math.min(dy * 0.45, 200));
+    }, { passive: false });
+    const end = () => {
+      if (y0 == null) return;
+      const v = dy / Math.max(1, performance.now() - t0);
+      y0 = null;
+      root.classList.remove('pulling');
+      const go = armed && (dy * 0.45 >= GO * 0.45 || (dy > 40 && v > 0.5));
+      if (go) { set(0); root.style.setProperty('--pullp', '0'); goStart(); }
+      else set(0);
+      armed = false;
+    };
+    document.addEventListener('touchend', end);
+    document.addEventListener('touchcancel', end);
   })();
 
   // ---------------------------------------------------------------- resizing
