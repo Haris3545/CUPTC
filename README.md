@@ -20,7 +20,7 @@ The pages are plain HTML with no build step. A few small server functions in `ap
 ## Put it live on Vercel
 
 1. Import the repository in Vercel (no framework, no build command).
-2. **Storage → Create → Blob**, and connect it to the project. This stores the shop and uploaded photos.
+2. **Storage → Create → Blob**, and connect it to the project. This stores the shop and uploaded photos. Vercel adds either `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID`; both work.
 3. **Settings → Environment Variables**, add:
    - `MEMBER_PASSWORD`, `COMMITTEE_PASSWORD`, `FULL_MEMBER_CODE`, `COMMITTEE_DISCOUNT_CODE`
    - `AUTH_SECRET`: any long random string
