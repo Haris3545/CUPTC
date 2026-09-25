@@ -67,7 +67,8 @@
     feedTimer: 1.0,
     scorePop: 0,
     newBest: false,
-    cheerT: 0
+    cheerT: 0,
+    hits: 0
   };
 
   function makeFig(who, home) {
@@ -87,6 +88,34 @@
   };
   const trail = [];
   let marker = null;
+
+  // ------------------------------------------------------------------ power-ups
+  // Pickups appear on your half and are collected by running over them; events are
+  // triggered by the game. Both are scheduled by rally hits once the rally gets going.
+  const PICKUPS = {
+    espresso: { name: 'ESPRESSO SHOT', color: '#ffe14d', shots: 5 },
+    big: { name: 'BIG RACKET', color: '#b8dccb', shots: 4 },
+    guardian: { name: 'GLASS GUARDIAN', color: '#ffc93a' },
+    golden: { name: 'GOLDEN BALL', color: '#ffc93a', shots: 6 }
+  };
+  const EVENTS = {
+    mirror: { name: 'MIRROR MATCH', color: '#ff7eb6' },
+    weather: { name: 'RAIN!', color: '#7fd6ff', dur: 15 },
+    night: { name: 'NIGHT SESSION', color: '#b8dccb', dur: 15 },
+    rage: { name: 'RIVAL RAGE', color: '#ff4d6d' },
+    doubles: { name: 'DOUBLES!', color: '#e9ff3b', dur: 20 },
+    wave: { name: 'CROWD WAVE X2', color: '#ffb86b', dur: 10 },
+    zone: { name: 'SMASH ZONE', color: '#ffc93a', dur: 16 }
+  };
+  const freshPU = () => ({
+    espresso: 0, big: 0, guardian: false, golden: 0, mirror: 0, rage: 0, rageFinal: false,
+    pickup: null, event: null, eventT: 0, zone: null, streak: 0, bandeja: 0,
+    nextPickup: 6, nextEvent: 10, lastEvent: null, winnerT: 0
+  });
+  const pu = freshPU();
+  const phys = { bV: 1, bH: 1 };
+  let mate = null, opp2 = null;
+  const rain = [];
 
   const fx = { parts: [], rings: [], labels: [], banner: null, shakeAmp: 0, shakeT: 0, flash: 0 };
 
@@ -185,9 +214,9 @@
     }
     if (b.y < BALL_R && b.vy < 0) {
       b.y = BALL_R + (BALL_R - b.y) * b.bV;
-      b.vy = -b.vy * b.bV;
-      b.vx *= b.bH;
-      b.vz *= b.bH;
+      b.vy = -b.vy * b.bV * phys.bV;
+      b.vx *= Math.min(0.97, b.bH * phys.bH);
+      b.vz *= Math.min(0.97, b.bH * phys.bH);
       b.bV = 0.7;
       b.bH = 0.86;
       b.bounces++;
@@ -251,8 +280,10 @@
 
   // ------------------------------------------------------------------ shots
   function playerMaxV() {
-    return 7.6 * (0.84 + 0.16 * state.speed);
+    return 7.6 * (0.84 + 0.16 * state.speed) * (pu.espresso > 0 ? 1.55 : 1);
   }
+  const reach = () => REACH * (pu.big > 0 ? 1.5 : 1);
+  const reachH = () => REACH_H + (pu.big > 0 ? 0.4 : 0);
 
   function planOpp() {
     const p = predict(ball, oppContact, 5);
@@ -284,25 +315,28 @@
     marker = p ? { x: p.x, z: p.z, fatal: target >= 2 } : null;
   }
 
-  function playerHit() {
-    const dx = ball.x - player.x;
-    const off = clamp(dx / REACH, -1, 1);
+  function playerHit(hitter) {
+    const who = hitter || player;
+    const dx = ball.x - who.x;
+    const off = clamp(dx / reach(), -1, 1);
     const high = ball.y > 1.75;
+    const overhead = ball.y > 1.5;
     const volley = ball.bounces === 0;
     const glass = ball.wallHits > 0;
-    const tx = clamp(ball.x * 0.3 + off * 3.4 + player.vx * 0.14 + rand(-0.4, 0.4), -4.3, 4.3);
+    const powerSmash = high && pu.bandeja >= 1 && state.mode === 'play';
+    const tx = clamp(ball.x * 0.3 + off * 3.4 + who.vx * 0.14 + rand(-0.4, 0.4), -4.3, 4.3);
     const tz = high ? rand(7, 9) : rand(5.8, 8.8);
-    launch(ball, tx, tz, high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
+    launch(ball, tx, tz, powerSmash ? 0.55 : high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
     ball.lastHit = 'player';
     ball.bV = 0.72;
     ball.bH = 0.86;
     ball.wallHits = 0;
-    player.swing = high ? 'sm' : off >= 0 ? 'fh' : 'bh';
-    player.swingT = 0;
-    player.prep = null;
+    who.swing = high ? 'sm' : off >= 0 ? 'fh' : 'bh';
+    who.swingT = 0;
+    who.prep = null;
 
     const p = scene.project(ball.x, ball.y, ball.z);
-    sparks(p.x, p.y, high ? 18 : 10, ['#ffffff', '#e9ff3b', '#85b4a0'], 50, high ? 170 : 120);
+    sparks(p.x, p.y, high ? 18 : 10, pu.golden > 0 ? ['#ffffff', '#ffc93a', '#fff4c2'] : ['#ffffff', '#e9ff3b', '#85b4a0'], 50, high ? 170 : 120);
     ring(p.x, p.y, high ? 16 : 10, '#ffffff', 0.22);
 
     if (state.mode === 'attract') {
@@ -313,31 +347,77 @@
       return;
     }
 
-    state.score++;
+    // ---- scoring: base point, golden ball, crowd wave, combo multiplier, bonuses
+    state.hits++;
+    pu.streak = glass || volley || high ? pu.streak + 1 : 0;
+    const mult = pu.streak >= 10 ? 3 : pu.streak >= 5 ? 2 : 1;
+    if (pu.streak === 5 || pu.streak === 10) worldLabel('COMBO X' + mult + '!', who, '#e9ff3b');
+    let pts = pu.golden > 0 ? 3 : 1;
+    if (pu.event === 'wave') pts *= 2;
+    pts *= mult;
+    let bonus = 0;
+    if (high && pu.zone && Math.hypot(who.x - pu.zone.x, who.z - pu.zone.z) < pu.zone.r) {
+      bonus += 5;
+      pu.zone.left--;
+      worldLabel('ZONE SMASH +5', who, '#ffc93a');
+      state.cheerT = Math.max(state.cheerT, 1.2);
+      if (pu.zone.left <= 0) endEvent();
+    }
+    if (powerSmash) {
+      bonus += 5;
+      pu.bandeja = 0;
+      ball.winner = true;
+      banner('WINNER!', { color: '#ffc93a', life: 1.2 });
+      state.cheerT = Math.max(state.cheerT, 1.6);
+      confetti(W > 400 ? 50 : 30);
+    } else if (overhead && pu.bandeja < 1) {
+      pu.bandeja = Math.min(1, pu.bandeja + 0.34);
+      if (pu.bandeja >= 1) { worldLabel('BANDEJA READY!', who, '#ffc93a'); sfx.powerup(); }
+    }
+    if (pu.rageFinal) {
+      bonus += 3;
+      pu.rageFinal = false;
+      worldLabel('SURVIVED! +3', who, '#ff7eb6');
+      endEvent();
+    }
+    if (pu.golden > 0 && --pu.golden === 0) worldLabel('GOLDEN BALL OVER', who, '#ffc93a');
+    if (pu.espresso > 0) pu.espresso--;
+    if (pu.big > 0) pu.big--;
+    if (pu.mirror > 0 && --pu.mirror === 0 && pu.event === 'mirror') endEvent();
+    const gained = pts + bonus;
+    state.score += gained;
     state.scorePop = 0.16;
+    if (gained > 1) scorePlus(gained);
+
     if (high) {
       sfx.smash();
-      shake(4, 0.28);
-      fx.flash = 0.12;
-      state.hitstop = 0.09;
+      shake(powerSmash ? 6 : 4, 0.28);
+      fx.flash = powerSmash ? 0.2 : 0.12;
+      state.hitstop = powerSmash ? 0.14 : 0.09;
       vibrate(28);
-      worldLabel('SMASH!', player, '#ffe14d');
+      if (!powerSmash) worldLabel('SMASH!', who, '#ffe14d');
       state.cheerT = Math.max(state.cheerT, 0.6);
     } else {
-      sfx.hit(state.score);
+      sfx.hit(state.hits);
       shake(1.5, 0.12);
       state.hitstop = 0.045;
       vibrate(12);
-      if (glass) worldLabel('OFF THE GLASS!', player, '#7fd6ff');
-      else if (volley && player.z > -5 && Math.random() < 0.6) worldLabel('VOLLEY!', player, '#85b4a0');
+      if (glass) worldLabel('OFF THE GLASS!', who, '#7fd6ff');
+      else if (volley && who.z > -5 && Math.random() < 0.6) worldLabel('VOLLEY!', who, '#85b4a0');
     }
     updateSpeed();
-    planOpp();
+    schedulePowerUps();
+    if (ball.winner) {
+      opp.tx = clamp(-ball.x * 0.5, OB.x0, OB.x1);
+      opp.plan = null;
+    } else {
+      planOpp();
+    }
     marker = null;
   }
 
   function updateSpeed() {
-    const s = state.score;
+    const s = state.hits;
     state.speed = 1.12 + 1.2 * (1 - Math.exp(-s / 40));
     const milestone = MILESTONES.indexOf(s) >= 0 || (s > 100 && s % 50 === 0);
     if (milestone) {
@@ -349,12 +429,89 @@
     const lvl = Math.floor(s / 5);
     if (lvl > state.level) {
       state.level = lvl;
-      if (!milestone) {
+      if (!milestone && !fx.banner) {
         banner('SPEED UP!', { life: 1.1 });
         sfx.speedUp();
         state.cheerT = Math.max(state.cheerT, 0.9);
       }
     }
+  }
+
+  // ---- power-up scheduling
+  function schedulePowerUps() {
+    if (state.hits >= pu.nextPickup && !pu.pickup) {
+      spawnPickup();
+      pu.nextPickup = state.hits + 9 + Math.floor(Math.random() * 5);
+    }
+    if (state.hits >= pu.nextEvent && !pu.event) {
+      startEvent();
+      pu.nextEvent = state.hits + 11 + Math.floor(Math.random() * 6);
+    }
+  }
+
+  function spawnPickup(force) {
+    const types = Object.keys(PICKUPS).filter((t) => (t === 'guardian' ? !pu.guardian : !pu[t]));
+    if (!types.length) return;
+    let x = rand(-3.8, 3.8);
+    if (Math.abs(x - player.x) < 1.5) x = clamp(player.x + (player.x > 0 ? -2.5 : 2.5), -3.8, 3.8);
+    pu.pickup = { type: force || pick(types), x: x, z: rand(-8.2, -3.4), t: 0, life: 9 };
+    sfx.spawn();
+  }
+
+  function collectPickup() {
+    const k = pu.pickup.type, info = PICKUPS[k];
+    if (k === 'guardian') pu.guardian = true;
+    else pu[k] = info.shots;
+    const p = scene.project(pu.pickup.x, 0.6, pu.pickup.z);
+    sparks(p.x, p.y, 16, [info.color, '#ffffff'], 40, 110);
+    ring(p.x, p.y, 14, info.color, 0.3);
+    banner(info.name, { color: info.color, life: 1.1 });
+    sfx.powerup();
+    vibrate(20);
+    pu.pickup = null;
+  }
+
+  function startEvent(force) {
+    const pool = Object.keys(EVENTS).filter((e) => e !== pu.lastEvent);
+    const e = force || pick(pool), info = EVENTS[e];
+    pu.event = e;
+    pu.lastEvent = e;
+    pu.eventT = info.dur || 30;
+    banner(info.name, { color: info.color, life: 1.4 });
+    sfx.event();
+    if (e === 'mirror') pu.mirror = 3;
+    else if (e === 'weather') { phys.bV = 0.62; phys.bH = 1.1; }
+    else if (e === 'rage') { pu.rage = 3; worldLabel('VAMOS!', opp, '#ff4d6d'); }
+    else if (e === 'wave') state.cheerT = info.dur;
+    else if (e === 'zone') pu.zone = { x: rand(-3, 3), z: rand(-3.4, -2.2), r: 1.15, left: 3 };
+    else if (e === 'doubles') {
+      const side = player.x > 0 ? -1 : 1;
+      mate = makeFig('player', { x: side * 6, z: -4.6 });
+      mate.side = side;
+      mate.tx = side * 2.6;
+      opp2 = makeFig('opp', { x: -side * 6, z: 4.8 });
+      opp2.side = -side;
+      opp2.tx = -side * 2.6;
+    }
+  }
+
+  function endEvent() {
+    const e = pu.event;
+    pu.event = null;
+    phys.bV = 1;
+    phys.bH = 1;
+    pu.zone = null;
+    pu.mirror = 0;
+    pu.rage = 0;
+    pu.rageFinal = false;
+    if (e === 'doubles') {
+      if (mate) { mate.leaving = 1.2; mate.tx = mate.side * 6.5; }
+      if (opp2) { opp2.leaving = 1.2; opp2.tx = opp2.side * 6.5; }
+    }
+  }
+
+  function scorePlus(n) {
+    fx.labels.push({ text: '+' + n, x: W / 2 + (W >= 400 ? 34 : 24), y: hudTop + 4, c: '#e9ff3b', life: 0.8, max: 0.8 });
   }
 
   function oppHit(feed) {
@@ -383,8 +540,19 @@
     else tx = player.x + rand(-1.5, 1.5);
     tx = clamp(clamp(tx, player.x - maxShift, player.x + maxShift), -4.2, 4.2);
 
+    if (!feed && state.mode === 'play' && pu.rage > 0) {
+      kind = 'rage';
+      tx = clamp(away * rand(2.4, 4.3), player.x - maxShift - 1.5, player.x + maxShift + 1.5);
+      if (--pu.rage === 0) pu.rageFinal = true;
+    } else if (!feed && state.mode === 'play' && pu.zone && Math.random() < 0.65) {
+      kind = 'floater';
+      tx = pu.zone.x + rand(-0.4, 0.4);
+    }
+
     let tz = -6.8, T = 1.55, bV = 0.72, bH = 0.86, label = null;
-    if (kind === 'drive') { tz = rand(-7.8, -5.2); T = lerp(1.4, 1.22, d); }
+    if (kind === 'rage') { tz = rand(-7.6, -5.4); T = 1.0; label = pu.rage === 2 ? null : 'VAMOS!'; }
+    else if (kind === 'floater') { tz = pu.zone.z + rand(-0.3, 0.3); T = 1.75; }
+    else if (kind === 'drive') { tz = rand(-7.8, -5.2); T = lerp(1.4, 1.22, d); }
     else if (kind === 'lob') { tz = rand(-9.3, -8.5); T = 2.15; bV = 0.66; label = 'GLOBO!'; }
     else if (kind === 'drop') { tz = rand(-4.2, -3.0); T = 1.3; bV = 0.55; bH = 0.62; label = 'DEJADA!'; }
     else if (kind === 'smash') { tz = rand(-6.5, -4.2); T = 0.86; bV = 0.8; label = pick(['VIBORA!', 'BANDEJA!', 'REMATE!']); }
@@ -407,7 +575,7 @@
 
     if (state.mode !== 'attract') {
       if (kind === 'smash') { sfx.smash(); shake(2, 0.15); } else sfx.oppHit();
-      if (label && (kind !== 'lob' || Math.random() < 0.6)) worldLabel(label, opp, kind === 'smash' ? '#ff7eb6' : '#ffb86b');
+      if (label && (kind !== 'lob' || Math.random() < 0.6)) worldLabel(label, opp, kind === 'smash' || kind === 'rage' ? '#ff7eb6' : '#ffb86b');
     }
     const p = scene.project(ball.x, ball.y, ball.z);
     sparks(p.x, p.y, 6, ['#ffffff', '#ff7eb6'], 30, 70);
@@ -425,6 +593,7 @@
     ball.wallHits = 0;
     ball.live = true;
     ball.visible = true;
+    ball.winner = false;
     trail.length = 0;
     oppHit(true);
   }
@@ -471,8 +640,9 @@
     resetCourt();
     Object.assign(state, {
       mode: 'countdown', paused: false, score: 0, speed: 1.12, level: 0, hitstop: 0, slowmo: 1, cheerT: 0,
-      countdown: 1.8, lastCount: 0, newBest: false, scorePop: 0
+      countdown: 1.8, lastCount: 0, newBest: false, scorePop: 0, hits: 0
     });
+    resetPowerUps();
     fx.labels.length = 0;
     fx.banner = null;
     input.drag = null;
@@ -486,6 +656,7 @@
     ball.live = false;
     $('over-reason').textContent = state.missReason;
     $('over-score').textContent = state.score;
+    $('over-hits').textContent = state.hits;
     $('over-new').hidden = !state.newBest;
     setBestText();
     showScreen('over');
@@ -494,9 +665,18 @@
     if (again && !matchMedia('(pointer: coarse)').matches) again.focus({ preventScroll: true });
   }
 
+  function resetPowerUps() {
+    Object.assign(pu, freshPU());
+    phys.bV = 1;
+    phys.bH = 1;
+    mate = null;
+    opp2 = null;
+  }
+
   function toAttract() {
     showScreen('title');
     resetCourt();
+    resetPowerUps();
     state.mode = 'attract';
     state.feedTimer = 0.8;
     updateHudButtons();
@@ -549,7 +729,7 @@
 
   function setTargetFromScreen(sx, sy) {
     const w = scene.unproject(sx, sy);
-    player.tx = clamp(w ? w.x : player.tx, PB.x0, PB.x1);
+    player.tx = clamp(w ? w.x * (pu.mirror > 0 ? -1 : 1) : player.tx, PB.x0, PB.x1);
     player.tz = clamp(w ? w.z : PB.z1, PB.z0, PB.z1);
   }
 
@@ -605,7 +785,7 @@
     const d = input.drag;
     if (!d || d.id !== e.pointerId) return;
     e.preventDefault();
-    const w = scene.unproject(d.ax + (g.x - d.fx) * DRAG_GAIN, d.ay + (g.y - d.fy) * DRAG_GAIN);
+    const w = scene.unproject(d.ax + (g.x - d.fx) * DRAG_GAIN * (pu.mirror > 0 ? -1 : 1), d.ay + (g.y - d.fy) * DRAG_GAIN);
     const tx = w ? w.x : player.tx;
     const tz = w ? w.z : PB.z1;
     const cx = clamp(tx, PB.x0, PB.x1), cz = clamp(tz, PB.z0, PB.z1);
@@ -647,7 +827,7 @@
     shareBtn.addEventListener('click', () => {
       navigator.share({
         title: 'CUPTC Padel Pong',
-        text: 'I kept a ' + state.score + '-hit rally alive in CUPTC Padel Pong. Beat that!',
+        text: 'I scored ' + state.score + ' in CUPTC Padel Pong with a ' + state.hits + '-hit rally. Beat that!',
         url: location.href
       }).catch(() => {});
     });
@@ -767,7 +947,7 @@
     if (state.mode === 'attract' || (DEBUG_AUTO && state.mode === 'play')) {
       dv = towards(player, state.mode === 'attract' ? 7.2 : maxV);
     } else if (controllable()) {
-      const kx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+      const kx = ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)) * (pu.mirror > 0 ? -1 : 1);
       const kz = (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
       if (kx || kz) {
         input.src = 'keys';
@@ -824,19 +1004,45 @@
       if (!ball.live) break;
       const canPlay = state.mode === 'play' || state.mode === 'attract';
       if (canPlay && ball.lastHit === 'opp') {
-        if (ball.z < 0.2 && ball.y < REACH_H && Math.hypot(ball.x - player.x, ball.z - player.z) < REACH) {
-          playerHit();
+        if (ball.z < 0.2 && ball.y < reachH() && Math.hypot(ball.x - player.x, ball.z - player.z) < reach()) {
+          playerHit(player);
           continue;
         }
-        if (ball.side < 0 && ball.bounces >= 2) { miss('DOUBLE BOUNCE!'); continue; }
+        if (mate && !mate.leaving && ball.z < 0.2 && ball.y < REACH_H && Math.hypot(ball.x - mate.x, ball.z - mate.z) < REACH) {
+          playerHit(mate);
+          continue;
+        }
+        if (ball.side < 0 && ball.bounces >= 2) {
+          if (pu.guardian && state.mode === 'play') guardianSave();
+          else { miss('DOUBLE BOUNCE!'); continue; }
+        }
       } else if (canPlay && ball.lastHit === 'player') {
-        if (oppContact(ball) || (ball.side > 0 && ball.bounces >= 2)) oppHit(false);
+        if (ball.winner) {
+          if (!pu.winnerT && (ball.z > 9.5 || (ball.side > 0 && ball.bounces >= 2))) pu.winnerT = 1.1;
+        } else if (oppContact(ball) || (ball.side > 0 && ball.bounces >= 2)) oppHit(false);
       }
       if (ball.y < -1 || Math.abs(ball.x) > 12 || Math.abs(ball.z) > 16) {
         if (ball.lastHit === 'opp') miss('MISSED!');
         ball.live = false;
       }
     }
+  }
+
+  // Glass Guardian: the ball that would have died pops back up off the glass.
+  function guardianSave() {
+    pu.guardian = false;
+    ball.bounces = 1;
+    ball.y = Math.max(ball.y, 0.3);
+    ball.vy = 6.2;
+    ball.vz = Math.max(ball.vz, 1.6);
+    ball.vx *= 0.5;
+    const p = scene.project(ball.x, ball.y, ball.z);
+    sparks(p.x, p.y, 18, ['#ffc93a', '#fff4c2', '#ffffff'], 40, 120);
+    ring(p.x, p.y, 16, '#ffc93a', 0.35);
+    worldLabel('SAVED!', player, '#ffc93a');
+    sfx.glass();
+    sfx.powerup();
+    updateMarker();
   }
 
   function handleEvent(ev) {
@@ -891,11 +1097,12 @@
     }
 
     const dtLocal = dt * state.slowmo;
-    const worldDt = dtLocal * state.speed;
+    const worldDt = dtLocal * state.speed * (pu.golden > 0 ? 1.25 : 1);
     updatePlayer(dtLocal);
     updateOpp(worldDt);
-    for (const f of [player, opp]) {
-      if (f.swing) {
+    updatePowerUps(dt, dtLocal, worldDt);
+    for (const f of [player, opp, mate, opp2]) {
+      if (f && f.swing) {
         f.swingT += f === opp ? worldDt : dtLocal;
         if (f.swingT > 0.3) f.swing = null;
       }
@@ -904,6 +1111,72 @@
     if (ball.visible) {
       trail.push({ x: ball.x, y: ball.y, z: ball.z });
       if (trail.length > 10) trail.shift();
+    }
+  }
+
+  function updatePowerUps(dt, dtLocal, worldDt) {
+    if (state.mode !== 'play') return;
+    // pickups
+    if (pu.pickup) {
+      pu.pickup.t += dt;
+      if (pu.pickup.t > pu.pickup.life) pu.pickup = null;
+      else if (Math.hypot(player.x - pu.pickup.x, player.z - pu.pickup.z) < 0.8) collectPickup();
+    }
+    // timed events
+    if (pu.event && EVENTS[pu.event].dur) {
+      pu.eventT -= dt;
+      if (pu.eventT <= 0) endEvent();
+    }
+    // Bandeja winner: the opponent can't reach it, so start a fresh point
+    if (pu.winnerT > 0) {
+      pu.winnerT -= dt;
+      if (pu.winnerT <= 0) { pu.winnerT = 0; feed(); }
+    }
+    // doubles partners
+    for (const f of [mate, opp2]) {
+      if (!f) continue;
+      if (f.leaving) {
+        f.leaving -= dt;
+        if (f.leaving <= 0) { if (f === mate) mate = null; else opp2 = null; continue; }
+      } else if (f === mate) {
+        const lo = f.side > 0 ? 0.4 : -4.6, hi = f.side > 0 ? 4.6 : -0.4;
+        f.tx = ball.lastHit === 'opp' && ball.live ? clamp(ball.x, lo, hi) : f.side * 2.6;
+        f.tz = -4.6;
+      } else {
+        const lo = f.side > 0 ? 0.4 : -4.6, hi = f.side > 0 ? 4.6 : -0.4;
+        f.tx = ball.lastHit === 'player' && ball.live ? clamp(ball.x, lo, hi) : f.side * 2.6;
+        f.tz = 4.8;
+      }
+      const dv = towards(f, f === mate ? 7.5 : 8);
+      steerFig(f, dv[0], dv[1], f === mate ? dtLocal : worldDt, 60);
+      if (f === mate && !f.swing && ball.live && ball.lastHit === 'opp' && ball.z < 2) f.prep = ball.x >= f.x ? 'fh' : 'bh';
+      else if (!f.swing) f.prep = null;
+    }
+    // espresso steam
+    if (pu.espresso > 0 && Math.random() < dt * 14) {
+      const p = scene.project(player.x + rand(-0.2, 0.2), 2.3 * EXAG / 1.45, player.z);
+      fx.parts.push({ x: p.x, y: p.y, vx: rand(-6, 6), vy: rand(-26, -14), g: -8, life: 0.6, max: 0.6, c: '#ffffff', s: 1 });
+    }
+    // rival rage fumes
+    if ((pu.rage > 0 || pu.rageFinal) && Math.random() < dt * 10) {
+      const p = scene.project(opp.x + rand(-0.2, 0.2), 2.4, opp.z);
+      fx.parts.push({ x: p.x, y: p.y, vx: rand(-8, 8), vy: rand(-20, -10), g: -5, life: 0.5, max: 0.5, c: pick(['#ff4d6d', '#ffb86b']), s: 1 });
+    }
+    // rain
+    if (pu.event === 'weather') {
+      const want = Math.floor((W * H) / 700);
+      while (rain.length < want) rain.push({ x: rand(0, W + 40), y: rand(-H, H), v: rand(150, 230) });
+      for (const d of rain) {
+        d.y += d.v * dt;
+        d.x -= d.v * 0.22 * dt;
+        if (d.y > H) {
+          if (Math.random() < 0.15 && d.y > scene.hb) dust(d.x, H - rand(0, H * 0.6), 1, '#dce9ff');
+          d.y = rand(-40, 0);
+          d.x = rand(0, W + 40);
+        }
+      }
+    } else if (rain.length) {
+      rain.length = 0;
     }
   }
 
@@ -937,6 +1210,130 @@
     return { pose: pose, legs: running ? 'run' : 'ready', frame: frame, hop: 0 };
   }
 
+  // 9x9 pixel icons for pickups and the HUD
+  const ICON_PAL = { k: '#1a1c2c', w: '#ffffff', s: '#d9e2ec', b: '#6b3e26', g: '#85b4a0', G: '#4f8069', y: '#ffc93a', Y: '#c98a12', l: '#fff4c2' };
+  const ICON_ART = {
+    espresso: ['..s.s....', '.s.s.....', '.........', 'kkkkkkk..', 'kbbbbbkkk', 'kwwwwwk.k', 'kwwwwwkkk', '.kwwwk...', 'kGGGGGGk.'],
+    big: ['..kkkk...', '.kgGgGk..', 'kgGgGgGk.', 'kGgGgGgk.', 'kgGgGgGk.', '.kgGgGk..', '..kkkk...', '...kk....', '...kk....'],
+    guardian: ['.kkkkkkk.', 'kyyyyyyYk', 'kylyyyyYk', 'kyylyyyYk', 'kyyylyyYk', 'kyyyyyyYk', '.kyyyyYk.', '..kyyYk..', '...kkk...'],
+    golden: ['...kkk...', '.kkyyykk.', '.kyllyyk.', 'kyylyyyYk', 'kyyyyyyYk', 'kyyyyyYYk', '.kyyyYYk.', '.kkYYYkk.', '...kkk...']
+  };
+  const iconCache = {};
+  function icon(name) {
+    if (iconCache[name]) return iconCache[name];
+    const art = ICON_ART[name];
+    const c = document.createElement('canvas');
+    c.width = 9;
+    c.height = 9;
+    const g = c.getContext('2d');
+    art.forEach((row, y) => {
+      for (let x = 0; x < 9; x++) {
+        if (row[x] === '.') continue;
+        g.fillStyle = ICON_PAL[row[x]];
+        g.fillRect(x, y, 1, 1);
+      }
+    });
+    iconCache[name] = c;
+    return c;
+  }
+
+  function floorRing(x, z, R, color, n) {
+    ctx.fillStyle = color;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const p = scene.project(x + Math.cos(a) * R, 0, z + Math.sin(a) * R);
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
+    }
+  }
+
+  function drawPickup(ox, oy) {
+    const pk = pu.pickup;
+    const left = pk.life - pk.t;
+    if (left < 2 && Math.floor(state.time * 10) % 2) return;
+    const info = PICKUPS[pk.type];
+    ctx.save();
+    ctx.translate(ox, oy);
+    floorRing(pk.x, pk.z, 0.45 + 0.08 * Math.sin(state.time * 6), info.color, 18);
+    const g = scene.project(pk.x, 0, pk.z);
+    ellipse(g.x, g.y, 5, 2, 'rgba(10, 16, 60, 0.35)');
+    const p = scene.project(pk.x, 0.55 + 0.12 * Math.sin(state.time * 4), pk.z);
+    const sc = W >= 400 ? 3 : 2;
+    ctx.drawImage(icon(pk.type), Math.round(p.x - 4.5 * sc), Math.round(p.y - 9 * sc), 9 * sc, 9 * sc);
+    ctx.restore();
+  }
+
+  function drawZone(ox, oy) {
+    const z = pu.zone;
+    ctx.save();
+    ctx.translate(ox, oy);
+    const pulse = Math.floor(state.time * 8) % 2;
+    floorRing(z.x, z.z, z.r, pulse ? '#ffc93a' : '#fff4c2', 36);
+    floorRing(z.x, z.z, z.r * 0.6, '#ffc93a', 20);
+    ctx.restore();
+  }
+
+  function drawGuardian(ox, oy) {
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.fillStyle = Math.floor(state.time * 6) % 2 ? '#ffc93a' : '#fff4c2';
+    for (let x = -5; x <= 5; x += 0.2) {
+      const a = scene.project(x, 0, -9.92), b = scene.project(x, 1.2 + 0.2 * Math.sin(x * 2 + state.time * 5), -9.92);
+      ctx.fillRect(Math.round(a.x), Math.round(b.y), 1, Math.max(1, Math.round(a.y - b.y)));
+    }
+    ctx.restore();
+  }
+
+  let nightCanvas = null;
+  function drawNight(ox, oy) {
+    if (!nightCanvas || nightCanvas.width !== W || nightCanvas.height !== H) {
+      nightCanvas = document.createElement('canvas');
+      nightCanvas.width = W;
+      nightCanvas.height = H;
+    }
+    const g = nightCanvas.getContext('2d');
+    g.globalCompositeOperation = 'source-over';
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = 'rgba(6, 12, 28, 0.76)';
+    g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'destination-out';
+    const hole = (x, z, R) => {
+      const c = scene.project(x, 0, z);
+      [[1.35, 'rgba(0,0,0,0.45)'], [1, '#000']].forEach(([k, col]) => {
+        const rx = R * k * c.s, ry = Math.max(2, rx * floorSquash(x, z)) + 10 * k;
+        g.fillStyle = col;
+        const rr = Math.round(ry);
+        for (let j = -rr; j <= rr; j++) {
+          const half = rx * Math.sqrt(Math.max(0, 1 - (j / (rr + 0.5)) ** 2));
+          g.fillRect(Math.round(c.x - half + ox), Math.round(c.y - ry * 0.55 + j + oy), Math.max(1, Math.round(half * 2)), 1);
+        }
+      });
+    };
+    [player, opp, mate, opp2].forEach((f) => f && hole(f.x, f.z, 1.3));
+    if (ball.visible) {
+      const b = scene.project(ball.x, ball.y, ball.z);
+      g.fillStyle = '#000';
+      g.beginPath();
+      g.arc(b.x + ox, b.y + oy, 7, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
+    ctx.drawImage(nightCanvas, 0, 0);
+    // floodlights on the four corners of the court
+    ctx.fillStyle = '#fff4c2';
+    [[-5, 10], [5, 10], [-5, -10], [5, -10]].forEach(([x, z]) => {
+      const p = scene.project(x, 4.4, z);
+      ctx.fillRect(Math.round(p.x) - 1 + ox, Math.round(p.y) - 1 + oy, 3, 2);
+    });
+    if (ball.visible) drawBall(ox, oy);
+  }
+
+  function drawRain() {
+    ctx.fillStyle = 'rgba(40, 52, 66, 0.16)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(214, 226, 240, 0.8)';
+    for (const d of rain) ctx.fillRect(Math.round(d.x), Math.round(d.y), 1, 3);
+  }
+
   function drawFigShadow(f, ox, oy) {
     const p = scene.project(f.x, 0, f.z);
     const rx = 0.36 * p.s * EXAG;
@@ -946,7 +1343,9 @@
   function drawFig(f, ox, oy) {
     const p = scene.project(f.x, 0, f.z);
     const ps = figPose(f);
-    const spr = Sprites.get(f.who, p.s * EXAG, ps.pose, ps.legs, ps.frame);
+    let who = f.who;
+    if (f === opp && (pu.rage > 0 || pu.rageFinal) && Math.floor(state.time * 6) % 2) who = 'oppRage';
+    const spr = Sprites.get(who, p.s * EXAG, ps.pose, ps.legs, ps.frame, f === player && pu.big > 0);
     ctx.drawImage(spr.c, Math.round(p.x - spr.ax) + ox, Math.round(p.y - spr.ay) + oy - ps.hop * 2);
   }
 
@@ -971,10 +1370,10 @@
       const tp = scene.project(t.x, t.y, t.z);
       const k = (i + 1) / n;
       const s = Math.max(1, Math.round(r * (0.3 + 0.9 * k)));
-      ctx.fillStyle = k > 0.7 ? '#f4ff9a' : k > 0.4 ? '#ffe14d' : '#ffb86b';
+      ctx.fillStyle = pu.golden > 0 ? (k > 0.5 ? '#fff4c2' : '#ffc93a') : k > 0.7 ? '#f4ff9a' : k > 0.4 ? '#ffe14d' : '#ffb86b';
       ctx.fillRect(Math.round(tp.x - s / 2) + ox, Math.round(tp.y - s / 2) + oy, s, s);
     }
-    const spr = Sprites.ball(r);
+    const spr = Sprites.ball(r, pu.golden > 0);
     ctx.drawImage(spr.c, Math.round(p.x - spr.a) + ox, Math.round(p.y - spr.a) + oy);
   }
 
@@ -1035,6 +1434,7 @@
         scale: big + pop, color: '#ffffff', color2: pop ? '#e9ff3b' : '#cfeee0'
       });
       drawText('BEST ' + Math.max(state.best, state.score), W / 2, hudTop + 7 * big + 5, { scale: 1, color: '#b6d8c9' });
+      drawPowerHud(hudTop + 7 * big + 16, big);
     }
 
     const midY = Math.round(H * 0.4);
@@ -1063,12 +1463,66 @@
     }
   }
 
+  // Active power-ups, event timer, combo multiplier and the Bandeja gauge.
+  function drawPowerHud(y, big) {
+    const mult = pu.streak >= 10 ? 3 : pu.streak >= 5 ? 2 : 1;
+    if (mult > 1) {
+      const sw = Font.width(String(state.score), big);
+      drawText('X' + mult, W / 2 + sw / 2 + 6, hudTop + 2, { scale: 2, color: '#e9ff3b' }, 'left');
+    }
+    const items = [];
+    if (pu.espresso > 0) items.push({ icon: 'espresso', n: pu.espresso });
+    if (pu.big > 0) items.push({ icon: 'big', n: pu.big });
+    if (pu.golden > 0) items.push({ icon: 'golden', n: pu.golden });
+    if (pu.guardian) items.push({ icon: 'guardian', n: '' });
+    if (pu.event) {
+      const info = EVENTS[pu.event];
+      let label = info.name.replace('!', '').split(' ')[0];
+      let n = info.dur ? Math.ceil(pu.eventT) : '';
+      if (pu.event === 'mirror') n = pu.mirror;
+      if (pu.event === 'rage') n = pu.rage + (pu.rageFinal ? 1 : 0);
+      if (pu.event === 'zone') { label = 'ZONE'; n = pu.zone ? pu.zone.left : ''; }
+      items.push({ text: label, n: n, color: info.color });
+    }
+    const parts = items.map((it) => {
+      const t = it.n === '' ? null : Font.render(String(it.n), { scale: 1, color: '#ffffff' });
+      const lbl = it.text ? Font.render(it.text, { scale: 1, color: it.color }) : null;
+      const w = (it.icon ? 9 : lbl.width) + (t ? t.width + 2 : 0);
+      return { it: it, t: t, lbl: lbl, w: w };
+    });
+    const total = parts.reduce((a, p) => a + p.w, 0) + Math.max(0, parts.length - 1) * 6;
+    let x = Math.round(W / 2 - total / 2);
+    for (const p of parts) {
+      if (p.it.icon) { ctx.drawImage(icon(p.it.icon), x, y); x += 9; }
+      else { ctx.drawImage(p.lbl, x, y); x += p.lbl.width; }
+      if (p.t) { ctx.drawImage(p.t, x + 2, y + 1); x += p.t.width + 2; }
+      x += 6;
+    }
+    if (pu.bandeja > 0) {
+      const gy = y + (parts.length ? 12 : 0);
+      const ready = pu.bandeja >= 1;
+      const lbl = Font.render('BANDEJA', { scale: 1, color: ready && Math.floor(state.time * 8) % 2 ? '#ffffff' : '#ffc93a' });
+      const bw = 30, tw = lbl.width + 4 + bw;
+      const bx = Math.round(W / 2 - tw / 2);
+      ctx.drawImage(lbl, bx, gy);
+      const gx = bx + lbl.width + 4;
+      ctx.fillStyle = '#1a1c2c';
+      ctx.fillRect(gx, gy + 2, bw, 5);
+      ctx.fillStyle = ready ? '#ffc93a' : '#c98a12';
+      ctx.fillRect(gx + 1, gy + 3, Math.round((bw - 2) * pu.bandeja), 3);
+    }
+  }
+
   function render() {
     if (!scene) return;
     const M = scene.M;
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(scene.sky, 0, 0);
     for (const c of clouds) ctx.drawImage(c.c, Math.round(c.x), c.y);
+    if (pu.event === 'weather') {
+      ctx.fillStyle = 'rgba(96, 108, 120, 0.4)';
+      ctx.fillRect(0, 0, W, scene.hb);
+    }
 
     let ox = 0, oy = 0;
     if (fx.shakeT > 0) {
@@ -1082,6 +1536,7 @@
     const add = (z, shadow, draw) => (z >= 0 ? far : near).push({ z: z, shadow: shadow, draw: draw });
     add(opp.z, () => drawFigShadow(opp, ox, oy), () => drawFig(opp, ox, oy));
     add(player.z, () => drawFigShadow(player, ox, oy), () => drawFig(player, ox, oy));
+    [mate, opp2].forEach((f) => f && add(f.z, () => drawFigShadow(f, ox, oy), () => drawFig(f, ox, oy)));
     if (ball.visible) add(ball.z, () => drawBallShadow(ox, oy), () => drawBall(ox, oy));
     const drawSide = (list) => {
       list.sort((a, b) => b.z - a.z);
@@ -1091,8 +1546,13 @@
     drawSide(far);
     ctx.drawImage(scene.net, -M + ox, -M + oy);
     if (marker && state.mode !== 'attract') drawMarker(ox, oy);
+    if (pu.zone) drawZone(ox, oy);
+    if (pu.guardian) drawGuardian(ox, oy);
+    if (pu.pickup) near.push({ z: pu.pickup.z, shadow: () => {}, draw: () => drawPickup(ox, oy) });
     drawSide(near);
+    if (pu.event === 'night') drawNight(ox, oy);
     drawFx(ox, oy);
+    if (pu.event === 'weather') drawRain();
 
     if (fx.flash > 0 && !REDUCED_MOTION) {
       ctx.globalAlpha = clamp(fx.flash * 4, 0, 0.55);
@@ -1164,7 +1624,11 @@
   if (/[?&]debug\b/.test(location.search)) {
     window.__padel = {
       state: state, ball: ball, player: player, opp: opp, startGame: startGame, scene: () => scene,
-      predict: (fn) => predict(ball, fn || aiPlayerContact, 5)
+      predict: (fn) => predict(ball, fn || aiPlayerContact, 5),
+      pu: pu,
+      startEvent: (e) => { if (pu.event) endEvent(); startEvent(e); },
+      spawnPickup: (t) => spawnPickup(t),
+      collect: () => { if (pu.pickup) { player.tx = pu.pickup.x; player.tz = pu.pickup.z; } }
     };
   }
 })();

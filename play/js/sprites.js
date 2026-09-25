@@ -27,7 +27,10 @@
     '#2a1d16',  // 18 hair 2
     '#e9ff3b',  // 19 ball
     '#a9c40c',  // 20 ball shade
-    '#fbffd6'   // 21 ball highlight
+    '#fbffd6',  // 21 ball highlight
+    '#ffc93a',  // 22 gold ball
+    '#c98a12',  // 23 gold shade
+    '#fff4c2'   // 24 gold highlight
   ];
   const RGB = PAL.map((h) => (h ? [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)] : null));
   const OUTLINE = 1;
@@ -44,6 +47,7 @@
       panel: 4, crest: 10, sponsor: 1
     }
   };
+  KITS.oppRage = Object.assign({}, KITS.opp, { shirt: 10, shirtS: 11, panel: 11, collar: 2, crest: 2 });
 
   // Hand positions (h), racket angle in degrees (a) and free hand (f), in body space:
   // metres, +x towards the racket side, +y up.
@@ -175,11 +179,12 @@
     };
   }
 
-  function drawFigure(who, k, poseName, legsMode, frame) {
+  function drawFigure(who, k, poseName, legsMode, frame, bigRacket) {
     const kit = KITS[who];
-    const back = who === 'player'; // player is seen from behind, opponent from the front
+    const back = who === 'player';
+    const rs = bigRacket ? 1.6 : 1; // player is seen from behind, opponent from the front
     const mir = back ? 1 : -1;     // screen direction of the racket hand
-    const W = Math.ceil(k * 2.5) + 8, H = Math.ceil(k * 2.95) + 8;
+    const W = Math.ceil(k * (bigRacket ? 3.3 : 2.5)) + 8, H = Math.ceil(k * (bigRacket ? 3.4 : 2.95)) + 8;
     const px = new Pix(W, H);
     const ox = Math.floor(W / 2), oy = H - 3;
     const X = (x) => ox + x * k;
@@ -246,9 +251,9 @@
       const th = (deg * Math.PI) / 180;
       const dx = Math.cos(th) * mir, dy = Math.sin(th);
       px.capsule(X(Hd[0] - dx * 0.04), Y(Hd[1] - dy * 0.04), X(Hd[0] + dx * 0.14), Y(Hd[1] + dy * 0.14), R(0.026, 0.55), 14);
-      const c = [Hd[0] + dx * 0.29, Hd[1] + dy * 0.29];
+      const c = [Hd[0] + dx * (0.13 + 0.16 * rs), Hd[1] + dy * (0.13 + 0.16 * rs)];
       const ang = Math.atan2(-dy, dx);
-      const ra = Math.max(1.6, 0.165 * k), rb = Math.max(1.2, 0.135 * k);
+      const ra = Math.max(1.6, 0.165 * k * rs), rb = Math.max(1.2, 0.135 * k * rs);
       px.ellipse(X(c[0]), Y(c[1]), ra, rb, ang, kit.face);
       if (ra >= 3) px.ellipse(X(c[0]) + 0.6 * Math.cos(ang), Y(c[1]) + 0.6 * Math.sin(ang), ra - 1.4, rb - 1.2, ang, kit.faceS);
       if (ra >= 3.4) {
@@ -342,12 +347,12 @@
 
   const cache = new Map();
 
-  function get(who, k, pose, legs, frame) {
+  function get(who, k, pose, legs, frame, bigRacket) {
     const kq = Math.max(5, Math.round(k * 2) / 2);
-    const key = who + '|' + kq + '|' + pose + '|' + legs + '|' + frame;
+    const key = who + '|' + kq + '|' + pose + '|' + legs + '|' + frame + '|' + (bigRacket ? 1 : 0);
     let s = cache.get(key);
     if (!s) {
-      s = drawFigure(who, kq, pose, legs, frame);
+      s = drawFigure(who, kq, pose, legs, frame, bigRacket);
       if (cache.size > 900) cache.delete(cache.keys().next().value);
       cache.set(key, s);
     }
@@ -356,20 +361,22 @@
 
   const ballCache = new Map();
 
-  function ball(r) {
+  function ball(r, gold) {
     const rq = Math.max(1.5, Math.round(r * 2) / 2);
-    let s = ballCache.get(rq);
+    const key = rq + (gold ? 'g' : '');
+    let s = ballCache.get(key);
     if (s) return s;
     const size = Math.ceil(rq * 2) + 4;
     const px = new Pix(size, size);
     const c = size / 2;
-    px.circle(c, c, rq, 19);
-    if (rq >= 2) px.ellipse(c + rq * 0.25, c + rq * 0.3, rq * 0.75, rq * 0.55, 0.6, 20);
-    if (rq >= 2) px.circle(c - rq * 0.2, c - rq * 0.25, rq * 0.55, 19);
-    px.put(Math.floor(c - rq * 0.45), Math.floor(c - rq * 0.45), 21);
+    const base = gold ? 22 : 19, shade = gold ? 23 : 20, hi = gold ? 24 : 21;
+    px.circle(c, c, rq, base);
+    if (rq >= 2) px.ellipse(c + rq * 0.25, c + rq * 0.3, rq * 0.75, rq * 0.55, 0.6, shade);
+    if (rq >= 2) px.circle(c - rq * 0.2, c - rq * 0.25, rq * 0.55, base);
+    px.put(Math.floor(c - rq * 0.45), Math.floor(c - rq * 0.45), hi);
     px.outline(OUTLINE);
     s = { c: px.toCanvas(), a: c };
-    ballCache.set(rq, s);
+    ballCache.set(key, s);
     return s;
   }
 

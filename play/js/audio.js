@@ -117,6 +117,21 @@
       tone('square', 1320, 1320, 0.22, 0.1);
       tone('square', 990, 990, 0.22, 0.06);
     },
+    powerup: function () {
+      if (!ready()) return;
+      arp([784, 988, 1175, 1568], 0.045, 'square', 0.08);
+      tone('triangle', 1568, 2093, 0.18, 0.06, 0.18);
+    },
+    spawn: function () {
+      if (!ready()) return;
+      tone('triangle', 1319, 1319, 0.07, 0.06);
+      tone('triangle', 1760, 1760, 0.09, 0.05, 0.08);
+    },
+    event: function () {
+      if (!ready()) return;
+      arp([392, 523, 392, 659], 0.08, 'square', 0.08);
+      noise(0.5, 0.05, 900, 'bandpass', 0.05);
+    },
     click: function () {
       if (!ready()) return;
       tone('square', 880, 880, 0.045, 0.07);
