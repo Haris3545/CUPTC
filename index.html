@@ -391,6 +391,8 @@
   }
 
   html.no-anim *, html.no-anim *::before, html.no-anim *::after { transition: none !important; }
+  /* While the window is being resized, layout snaps straight to its new shape instead of animating to it */
+  html.resizing *, html.resizing *::before, html.resizing *::after { transition: none !important; animation-play-state: paused !important; }
 
   /* ================================================================ Tablets */
   @media (max-width: 980px) {
@@ -463,6 +465,16 @@
   .crop:active { cursor: grabbing; }
   .crop img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; }
   .zoom { width: 100%; accent-color: var(--green-dark); }
+  /* Image picker: drop, paste or choose */
+  .drop { border: 1.5px dashed #b6c9bf; border-radius: 14px; padding: 36px 20px 30px; display: grid; gap: 8px; justify-items: center; text-align: center; background: #fff; transition: background-color .25s, border-color .25s; outline: none; }
+  .drop:focus-visible { border-color: var(--green-dark); }
+  .drop.over { background: var(--green-soft); border-color: var(--green-dark); }
+  .drop svg { width: 40px; height: 40px; fill: none; stroke: var(--green-dark); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 4px; }
+  .drop b { font-weight: 400; font-size: 20px; }
+  .drop span { font-size: 15px; color: var(--ink-3); font-style: italic; }
+  .drop .btn { margin-top: 10px; }
+  .person.drop-over .ri, #admin.drop-over { outline: 2px dashed var(--green-dark); outline-offset: 6px; }
+  .person .ri, #admin { transition: outline-color .2s; }
   /* Show / hide password */
   .pw-wrap { position: relative; flex: 1; min-width: 0; display: block; }
   .pw-wrap .input { padding-right: 44px; }
@@ -1182,7 +1194,7 @@
     $('#member-bar').hidden = !state.member;
     $('#admin').hidden = !state.admin;
     $('#admin-gate').hidden = state.admin;
-    $('#member-bar-text').textContent = state.admin ? 'Signed in as committee. You can manage merch below and change committee photos on the home page.' : "You're signed in. Prices and ordering are unlocked.";
+    $('#member-bar-text').textContent = state.admin ? 'Signed in as committee. Manage merch below. To change a committee photo, use Change photo on the home page, or drag a picture onto someone.' : "You're signed in. Prices and ordering are unlocked.";
     $('#members-lede').textContent = state.member ? 'Club kit and merch, just for members.' : 'Club kit and merch, for members only. Sign in with the password you got when you joined.';
     root.classList.toggle('is-committee', state.admin);
     renderShop();
@@ -1280,22 +1292,24 @@
     if (value) pv.src = imgSrc(value);
   }
   imgSel.addEventListener('change', () => useImage(imgSel.value));
-  $('#m-upload').addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.addEventListener('change', () => {
-      if (!input.files[0]) return;
-      cropImage(input.files[0], {
-        title: 'Shop photo', hint: 'Drag and zoom to frame the item.', ratio: 1.25, outW: 1000,
-        save: async (data) => {
-          const res = await api('merch-image', { body: { image: data } });
-          if (res.ok) { useImage(res.data.url); $('#m-msg').className = 'msg full ok'; $('#m-msg').textContent = 'Photo uploaded. Save the item to use it in the shop.'; }
-          return res;
-        }
-      });
+  function merchCrop(file) {
+    cropImage(file, {
+      title: 'Shop photo', hint: 'Drag and zoom to frame the item.', ratio: 1.25, outW: 1000,
+      save: async (data) => {
+        const res = await api('merch-image', { body: { image: data } });
+        if (res.ok) { useImage(res.data.url); $('#m-msg').className = 'msg full ok'; $('#m-msg').textContent = 'Photo uploaded. Save the item to use it in the shop.'; }
+        return res;
+      }
     });
-    input.click();
+  }
+  $('#m-upload').addEventListener('click', () => chooseImage('Shop photo', merchCrop));
+  // Shortcuts while managing merch: drop an image on the form, or paste one (text pastes into fields as normal).
+  dropTarget($('#admin'), () => state.admin, merchCrop);
+  document.addEventListener('paste', async (e) => {
+    if (!state.admin || $('#admin').hidden || !$('#admin').offsetParent || $('.scrim')) return;
+    let f = null;
+    try { f = await imageFrom({ files: e.clipboardData.files, items: e.clipboardData.items }); } catch (err) { return; }
+    if (f) { e.preventDefault(); merchCrop(f); }
   });
 
   function resetForm() {
@@ -1381,6 +1395,74 @@
     else loadShop();
   })();
 
+  // ---------------------------------------------------------------- choosing an image: drop, paste or pick a file
+  const isImage = (f) => f && /^image\//.test(f.type);
+  // Pull an image out of a drop or paste: a file, or failing that an image link (e.g. dragged from another tab).
+  async function imageFrom(dt) {
+    if (!dt) return null;
+    const files = Array.from(dt.files || []);
+    const items = Array.from(dt.items || []);
+    const f = files.find(isImage) || items.filter((i) => i.kind === 'file').map((i) => i.getAsFile()).find(isImage);
+    if (f) return f;
+    const url = (dt.getData && (dt.getData('text/uri-list') || dt.getData('text/plain')) || '').split('\n')[0].trim();
+    if (/^https?:\/\/\S+$/i.test(url)) {
+      try { const r = await fetch(url); const b = await r.blob(); if (isImage(b)) return new File([b], 'image', { type: b.type }); } catch (e) { /* blocked by the other site */ }
+      throw new Error('link');
+    }
+    if (files.length || items.some((i) => i.kind === 'file')) throw new Error('type');
+    return null;
+  }
+  const hasFiles = (e) => Array.from((e.dataTransfer && e.dataTransfer.types) || []).some((t) => t === 'Files' || t === 'text/uri-list');
+  const imageError = (err) => (err && err.message === 'link' ? 'That site won’t let its image be copied. Save it to your device first, then drop or choose it.' : 'That isn’t an image. Try a JPG or PNG photo.');
+
+  function chooseImage(title, onFile) {
+    const s = sheet(title);
+    s.main.innerHTML = '<div class="drop" tabindex="0"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="8" width="30" height="24" rx="3"/><circle cx="14" cy="16" r="3"/><path d="M6 29l9-9 7 7 4-4 8 8"/></svg><b>Drop an image here</b><span></span><button class="btn line sm" type="button">Choose a file</button></div><p class="msg err" role="status" style="margin-top:8px"></p>';
+    const zone = $('.drop', s.main), msg = $('.msg', s.main);
+    $('span', zone).textContent = 'or paste one (' + (/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+') + 'V)';
+    let done = false;
+    const take = (file) => { if (done) return; done = true; document.removeEventListener('paste', onPaste); onFile(file); };
+    const fail = (err) => { msg.textContent = imageError(err); };
+    $('.btn', zone).addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.addEventListener('change', () => { if (input.files[0]) isImage(input.files[0]) ? take(input.files[0]) : fail(); });
+      input.click();
+    });
+    ['dragenter', 'dragover'].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.add('over'); }));
+    ['dragleave', 'dragend'].forEach((t) => zone.addEventListener(t, (e) => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('over'); }));
+    zone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      zone.classList.remove('over');
+      try { const f = await imageFrom(e.dataTransfer); f ? take(f) : fail(); } catch (err) { fail(err); }
+    });
+    const onPaste = async (e) => {
+      if (!document.body.contains(zone)) { document.removeEventListener('paste', onPaste); return; }
+      e.preventDefault();
+      try { const f = await imageFrom(e.clipboardData); f ? take(f) : fail(); } catch (err) { fail(err); }
+    };
+    document.addEventListener('paste', onPaste);
+    zone.focus();
+  }
+
+  // Drag an image straight onto something (a committee photo, the merch form) without opening the picker first.
+  function dropTarget(el, enabled, onFile) {
+    let depth = 0;
+    el.addEventListener('dragenter', (e) => { if (!enabled() || !hasFiles(e)) return; e.preventDefault(); depth++; el.classList.add('drop-over'); });
+    el.addEventListener('dragover', (e) => { if (enabled() && hasFiles(e)) e.preventDefault(); });
+    el.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; el.classList.remove('drop-over'); } });
+    el.addEventListener('drop', async (e) => {
+      if (!enabled()) return;
+      e.preventDefault();
+      depth = 0;
+      el.classList.remove('drop-over');
+      try { const f = await imageFrom(e.dataTransfer); if (f) onFile(f); else alertSheet(imageError()); } catch (err) { alertSheet(imageError(err)); }
+    });
+  }
+  // Dropping an image anywhere else shouldn't make the browser leave the site to show it.
+  ['dragover', 'drop'].forEach((t) => addEventListener(t, (e) => { if (hasFiles(e) && !e.defaultPrevented) e.preventDefault(); }));
+
   // ---------------------------------------------------------------- committee photos: custom uploads
   async function loadCommitteePhotos() {
     const res = await api('committee');
@@ -1410,13 +1492,11 @@
       if (res.ok) setPhoto(fig, null); else alertSheet(errText(res, 'Couldn’t reset that photo.'));
       return;
     }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.addEventListener('change', () => { if (input.files[0]) cropper(input.files[0], fig); });
-    input.click();
+    const p = TEAM.find((t) => t.slug === fig.dataset.slug);
+    chooseImage('Photo for ' + p.name, (file) => cropper(file, fig));
   });
-  function alertSheet(text) { const s = sheet('Committee photo'); s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = text; }
+  function alertSheet(text) { const s = sheet('Photo'); s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = text; }
+  $$('#team .person').forEach((fig) => dropTarget(fig, () => state.admin, (file) => cropper(file, fig)));
 
   // Square crop: drag to position, slider to zoom. Saves a 640 x 640 JPEG.
   function cropper(file, fig) {
@@ -1543,9 +1623,18 @@
     };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
     place();
-    addEventListener('resize', place);
+    let placing = 0;
+    addEventListener('resize', () => { cancelAnimationFrame(placing); placing = requestAnimationFrame(place); }, { passive: true });
     $$('.tag', box).forEach((t) => t.addEventListener('mouseenter', () => box.classList.add('seen'), { once: true }));
   })();
+
+  // ---------------------------------------------------------------- resizing
+  let resizeTimer = 0;
+  addEventListener('resize', () => {
+    root.classList.add('resizing');
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => root.classList.remove('resizing'), 220);
+  }, { passive: true });
 
   // ---------------------------------------------------------------- first paint
   root.classList.add('no-anim');
