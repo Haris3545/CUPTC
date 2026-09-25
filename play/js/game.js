@@ -468,9 +468,28 @@
     phys.bH = 1;
     pu.zone = null;
     if (e === 'doubles') {
-      if (mate) { mate.leaving = 1.2; mate.tx = mate.side * 6.5; }
-      if (opp2) { opp2.leaving = 1.2; opp2.tx = opp2.side * 6.5; }
+      [mate, opp2].forEach((f) => f && startExit(f));
+      banner('DOUBLES OVER!', { color: '#e9ff3b', life: 1.3 });
+      sfx.event();
     }
+  }
+
+  // Doubles partners leave through the gap in the side glass by the net, hop the boards and run up into the crowd.
+  function startExit(f) {
+    const s = f.side, back = f === mate ? -1 : 1, zd = 0.9 * back;
+    f.leaving = true;
+    f.exitT = 0;
+    f.swing = null;
+    f.prep = null;
+    f.path = [[s * 4.3, zd], [s * 6.5, zd], [s * 8.2, zd + 0.5 * back], [s * 10, zd + 1.2 * back], [s * 11.4, zd + 2 * back]];
+    f.pi = 0;
+    worldLabel('SEE YA!', f, '#e9ff3b');
+  }
+  // Height of the ground (boards and stands) at a distance from the centre line.
+  function exitHeight(ax) {
+    if (ax < 6.5) return 0;
+    if (ax < 7.6) { const t = (ax - 6.5) / 1.1; return 0.9 * t + 0.75 * Math.sin(Math.PI * t); }
+    return 0.9 + 0.6 * (ax - 7.6);
   }
 
   function scorePlus(n) {
@@ -1086,8 +1105,32 @@
     for (const f of [mate, opp2]) {
       if (!f) continue;
       if (f.leaving) {
-        f.leaving -= dt;
-        if (f.leaving <= 0) { if (f === mate) mate = null; else opp2 = null; continue; }
+        f.exitT += dt;
+        const gone = () => { if (f === mate) mate = null; else opp2 = null; };
+        if (f.fade != null) {
+          // swallowed by the crowd
+          f.fade -= dt * 1.25;
+          f.y = exitHeight(Math.abs(f.x)) + (1 - f.fade) * 0.25;
+          if (f.fade <= 0) gone();
+          continue;
+        }
+        if (f.exitT > 7) { gone(); continue; }
+        const [wx, wz] = f.path[f.pi];
+        f.tx = wx;
+        f.tz = wz;
+        if (Math.hypot(wx - f.x, wz - f.z) < 0.4) {
+          f.pi++;
+          if (f.pi >= f.path.length) {
+            f.fade = 1;
+            const p = scene.project(f.x, f.y + 1, f.z);
+            sparks(p.x, p.y, 34, ['#df2326', '#ffffff', '#85b4a0', '#e9ff3b'], 70, 190);
+            ring(p.x, p.y, 22, '#ffffff', 0.5);
+            worldLabel('WOO!', f, '#ffffff');
+            state.cheerT = Math.max(state.cheerT, 1.8);
+            continue;
+          }
+        }
+        f.y = exitHeight(Math.abs(f.x));
       } else if (f === mate) {
         const lo = f.side > 0 ? 0.4 : -4.6, hi = f.side > 0 ? 4.6 : -0.4;
         f.tx = ball.lastHit === 'opp' && ball.live ? clamp(ball.x, lo, hi) : f.side * 2.6;
@@ -1097,9 +1140,11 @@
         f.tx = ball.lastHit === 'player' && ball.live ? clamp(ball.x, lo, hi) : f.side * 2.6;
         f.tz = 4.8;
       }
-      const dv = towards(f, f === mate ? 7.5 : 8);
+      // sprint across the court, then a slower scramble up the stands so you can watch them go
+      const dv = towards(f, f.leaving ? (Math.abs(f.x) > 7.6 ? 4.2 : 9.5) : f === mate ? 7.5 : 8);
       steerFig(f, dv[0], dv[1], f === mate ? dtLocal : worldDt, 60);
-      if (f === mate && !f.swing && ball.live && ball.lastHit === 'opp' && ball.z < 2) f.prep = ball.x >= f.x ? 'fh' : 'bh';
+      if (f.leaving) f.prep = null;
+      else if (f === mate && !f.swing && ball.live && ball.lastHit === 'opp' && ball.z < 2) f.prep = ball.x >= f.x ? 'fh' : 'bh';
       else if (!f.swing) f.prep = null;
     }
     // rain
@@ -1229,16 +1274,19 @@
   }
 
   function drawFigShadow(f, ox, oy) {
+    if (f.y > 0.05) return;
     const p = scene.project(f.x, 0, f.z);
     const rx = 0.36 * p.s * EXAG;
     ellipse(p.x + ox, p.y + oy, rx, Math.max(1, rx * floorSquash(f.x, f.z)), 'rgba(10, 16, 60, 0.38)');
   }
 
   function drawFig(f, ox, oy) {
-    const p = scene.project(f.x, 0, f.z);
+    const p = scene.project(f.x, f.y || 0, f.z);
     const ps = figPose(f);
     const spr = Sprites.get(f.who, p.s * EXAG, ps.pose, ps.legs, ps.frame, f === player && pu.big > 0);
+    if (f.fade != null) ctx.globalAlpha = Math.max(0, f.fade);
     ctx.drawImage(spr.c, Math.round(p.x - spr.ax) + ox, Math.round(p.y - spr.ay) + oy - ps.hop * 2);
+    ctx.globalAlpha = 1;
   }
 
   function ballRadius(p) {
@@ -1501,6 +1549,7 @@
       predict: (fn) => predict(ball, fn || aiPlayerContact, 5),
       pu: pu,
       startEvent: (e) => { if (pu.event) endEvent(); startEvent(e); },
+      endEvent: () => { if (pu.event) endEvent(); },
       spawnPickup: (t) => spawnPickup(t),
       collect: () => { if (pu.pickup) { player.tx = pu.pickup.x; player.tz = pu.pickup.z; } }
     };

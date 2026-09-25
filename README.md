@@ -70,7 +70,7 @@ After a few hits, pickups appear on your half (run over them to grab one) and th
 | **Combo Streak** | 5 volleys, smashes or off-the-glass shots in a row doubles your points; 10 triples them. |
 | **Smash Zone** | Smash from inside the gold circle near the net for +5. |
 | **Cambridge Weather** | Rain for 15 seconds: low, skiddy bounces. |
-| **Doubles Rally** | A teammate and a second opponent join for 20 seconds. |
+| **Doubles Rally** | A teammate and a second opponent join for 20 seconds, then run off into the crowd. |
 | **Crowd Wave** | The crowd does a wave and every hit is worth double for 10 seconds. |
 
 The speed-up and milestones still follow the number of hits in the rally, not the score.
