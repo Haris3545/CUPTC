@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Padel Pong — CUPTC</title>
+  <meta name="description" content="A retro 16-bit padel rally game from the Cambridge University Padel Club. How long can you keep the rally alive?">
+  <meta name="theme-color" content="#221852">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="../assets/img/favicon-64.png">
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+
+  <link rel="preload" href="fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="game.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="screen" aria-label="Padel Pong: move your player to return the ball"></canvas>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div id="safe-probe" aria-hidden="true"></div>
+
+    <nav class="hud" aria-label="Game controls">
+      <a class="hud-btn" href="../" aria-label="Back to the CUPTC home page">
+        <svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+          <path fill="currentColor" d="M3 1h2v1H3zM2 2h4v1H2zM1 3h6v1H1zM2 4h4v4H5V6H3v2H2z"/>
+        </svg>
+      </a>
+      <div class="hud-right">
+        <button class="hud-btn" id="btn-sound" type="button" aria-label="Mute sound" aria-pressed="false">
+          <svg class="icon-on" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+            <path fill="currentColor" d="M0 3h2v2H0zM2 2h1v4H2zM3 1h1v6H3zM5 3h1v2H5zM6 1h1v1H6zM7 2h1v4H7zM6 6h1v1H6z"/>
+          </svg>
+          <svg class="icon-off" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+            <path fill="currentColor" d="M0 3h2v2H0zM2 2h1v4H2zM3 1h1v6H3zM5 2h1v1H5zM7 2h1v1H7zM6 3h1v2H6zM5 5h1v1H5zM7 5h1v1H7z"/>
+          </svg>
+        </button>
+        <button class="hud-btn" id="btn-pause" type="button" aria-label="Pause" hidden>
+          <svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+            <path fill="currentColor" d="M1 1h2v6H1zM5 1h2v6H5z"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <section class="overlay" id="scr-title" aria-labelledby="title-heading">
+      <div class="panel panel--title">
+        <div class="crest-wrap"><canvas class="crest" id="crest" width="66" height="42" aria-hidden="true"></canvas></div>
+        <p class="kicker">CUPTC ARCADE</p>
+        <h1 class="title" id="title-heading"><span>PADEL</span> <span>PONG</span></h1>
+        <p class="sub">KEEP THE RALLY ALIVE</p>
+        <ul class="how">
+          <li class="only-touch">DRAG ANYWHERE TO MOVE</li>
+          <li class="only-mouse">MOVE WITH MOUSE OR ARROWS</li>
+          <li>YOUR SWING IS AUTOMATIC</li>
+          <li>DON'T LET IT BOUNCE TWICE</li>
+        </ul>
+        <button class="px-btn px-btn--big" id="btn-play" type="button">PLAY</button>
+        <p class="best">BEST RALLY <span data-best>0</span></p>
+      </div>
+    </section>
+
+    <section class="overlay" id="scr-pause" aria-labelledby="pause-heading" hidden>
+      <div class="panel">
+        <h2 class="title title--small" id="pause-heading">PAUSED</h2>
+        <div class="actions">
+          <button class="px-btn" id="btn-resume" type="button">RESUME</button>
+          <a class="px-btn px-btn--ghost" href="../">HOME</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay" id="scr-over" aria-labelledby="over-heading" hidden>
+      <div class="panel">
+        <p class="kicker kicker--red" id="over-reason">DOUBLE BOUNCE!</p>
+        <h2 class="title title--small" id="over-heading">RALLY OVER</h2>
+        <p class="final"><span class="final-label">HITS</span><span class="final-score" id="over-score">0</span></p>
+        <p class="newbest" id="over-new" hidden>NEW BEST!</p>
+        <p class="best">BEST RALLY <span data-best>0</span></p>
+        <div class="actions">
+          <button class="px-btn" id="btn-again" type="button">PLAY AGAIN</button>
+          <button class="px-btn px-btn--ghost" id="btn-share" type="button" hidden>SHARE</button>
+          <a class="px-btn px-btn--ghost" href="../">HOME</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/font.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/court.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
