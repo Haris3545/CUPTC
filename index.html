@@ -58,7 +58,6 @@
   .sphoto {
     position: fixed; inset: 0; z-index: 41; overflow: hidden; pointer-events: none;
     clip-path: inset(0 100% 0 0);
-    translate: 0 var(--drag, 0px);
     transition: clip-path 1s var(--ease) .18s, translate .6s var(--out), opacity .5s ease;
   }
   html.at-start .sphoto { clip-path: inset(0 47.5% 0 0); transition-delay: .12s, 0s, 0s; }
@@ -69,19 +68,14 @@
   .start {
     position: fixed; inset: 0; z-index: 45; color: #fff; pointer-events: none;
     opacity: 0; visibility: hidden;
-    translate: 0 var(--drag, 0px);
     transition: opacity .38s ease, visibility 0s .6s, translate .6s var(--out);
   }
   html.at-start .start { opacity: 1; visibility: visible; transition: opacity .8s ease .75s, visibility 0s, translate .6s var(--out); }
   /* Phones: swiping up on the start screen carries you into the home page */
-  /* Phones: the start screen and Home behave like two sections of one page. Swiping moves the start screen up
-     with your finger while the header and Home come up right behind it; letting go glides the rest of the way. */
-  html.at-start.swiping .curtain, html.at-start.swiping .sphoto, html.at-start.swiping .start { translate: 0 var(--drag, 0px); transition: none !important; }
-  html.at-start.swiping .pages { opacity: 1 !important; translate: 0 calc(var(--vh, 100vh) + var(--drag, 0px)); transition: none !important; }
-  html.at-start.swiping .hdr, html.at-start.swiping .signed-bar { opacity: 1 !important; visibility: visible !important; transform: none !important; translate: 0 calc(var(--vh, 100vh) + var(--drag, 0px)); transition: none !important; }
-  html.at-start.swiping .hdr { background: var(--green); }
-  html.at-start.swiping.glide .curtain, html.at-start.swiping.glide .sphoto, html.at-start.swiping.glide .start,
-  html.at-start.swiping.glide .pages, html.at-start.swiping.glide .hdr, html.at-start.swiping.glide .signed-bar { transition: translate var(--glide, .45s) cubic-bezier(.2, .8, .25, 1) !important; }
+  /* Phones: while swiping from the start screen, JS drives these directly (green shrinks into the header,
+     big logo becomes the header logo, photo scrolls away, Home arrives underneath). */
+  html.morph .curtain, html.morph .sphoto, html.morph .start, html.morph .start *, html.morph .pages,
+  html.morph .hdr, html.morph .hdr *, html.morph .signed-bar { transition: none !important; animation: none !important; }
   .swipe-hint { display: none; }
   /* Phones: pulling Home down from the top takes you back to the start screen */
   .page { translate: 0 var(--pull, 0px); transition: translate .5s var(--out); }
@@ -510,12 +504,12 @@
     .start-logo { width: calc(100vw - 40px); left: 20px; top: max(24px, calc(env(safe-area-inset-top) + 14px)); }
     .sphoto::after { display: none; }
     .tags { inset: 50% 0 0 0; }
-    .hint { top: 14px; bottom: auto; left: 16px; font-size: 21px; }
+    .hint { display: none; }
     .start-nav a { right: 24px; font-size: clamp(34px, 10vw, 48px); }
     .start-nav .s-area { bottom: calc(50% + 26px); }
     .start-nav .s-mem { bottom: calc(50% + 26px + 1em + 12px); }
     .start-nav .s-home { top: auto; bottom: calc(50% + 26px + 2em + 24px); }
-    .swipe-hint { display: grid; justify-items: center; gap: 2px; position: absolute; left: 50%; bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); translate: -50% 0; margin: 0; color: #fff; font: 500 20px/1 "Caveat", cursive; text-shadow: 0 0 12px rgba(0, 0, 0, .6), 0 1px 3px rgba(0, 0, 0, .5); pointer-events: none; }
+    .swipe-hint { display: none; justify-items: center; gap: 2px; position: absolute; left: 50%; bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); translate: -50% 0; margin: 0; color: #fff; font: 500 20px/1 "Caveat", cursive; text-shadow: 0 0 12px rgba(0, 0, 0, .6), 0 1px 3px rgba(0, 0, 0, .5); pointer-events: none; }
     .swipe-hint svg { width: 22px; height: 14px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); animation: nudge 2.2s ease-in-out infinite; }
     @keyframes nudge { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-6px); opacity: 1; } }
     .hdr-nav { display: none; }
@@ -2101,54 +2095,98 @@
   })();
 
   // ---------------------------------------------------------------- phones: swipe up from the start screen
-  // Feels like scrolling a page: the start screen moves 1:1 with your finger, Home follows right behind it,
-  // and letting go carries on at the speed you were moving (or settles back if it was only a nudge).
+  // One continuous motion under your finger: the green top half shrinks into the header bar, the big logo
+  // shrinks into the header logo (the wordmark hands over to "cuptc"), the photo scrolls away and Home
+  // arrives underneath. Letting go carries on at your speed, or settles back after a nudge.
   (() => {
-    let y0 = null, dy = 0, armed = false, samples = [], busy = false, wheel = 0, wheelTimer = 0;
+    const curtain = $('.curtain'), photo = $('.sphoto'), logo = $('.start-logo'), em = $('.start-logo .em'), wm = $('.start-logo .wm');
+    const nav = $('.start-nav'), tags = $('#tags'), pages = $('#pages'), hdr = $('.hdr'), hdrImg = $('.hdr-logo img'), sbar = $('#member-bar');
+    const touched = [curtain, photo, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
+    let geo = null, p = 0, y0 = null, armed = false, samples = [], anim = 0, busy = false, wheel = 0, wheelTimer = 0;
     const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !busy;
-    const set = (v) => root.style.setProperty('--drag', v + 'px');
-    const vh = () => innerHeight;
-    function glideTo(target, v, done) {
-      busy = true;
-      const cur = dy, dist = Math.abs(target - cur);
-      const dur = Math.min(0.55, Math.max(0.26, dist / Math.max(Math.abs(v) * 1000 * 1.6, 1400)));
-      root.style.setProperty('--glide', dur.toFixed(3) + 's');
-      root.classList.add('glide');
-      void root.offsetWidth;
-      set(target);
-      setTimeout(() => { root.classList.remove('glide'); busy = false; done && done(); }, dur * 1000 + 30);
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    function measure() {
+      touched.forEach((el) => el && el.removeAttribute('style'));
+      const vh = innerHeight, bar = hdr.offsetHeight;
+      const e = em.getBoundingClientRect(), l = logo.getBoundingClientRect(), h = hdrImg.getBoundingClientRect();
+      // Line the lions up exactly. The lion is the same size in both image files, but sits at (7, 45) in
+      // emblem.png (460 x 294) and at (6, 58) in logo-cuptc.png (1312 x 353).
+      const ku = e.height / 294, kh = h.height / 353, s = kh / ku;
+      geo = { vh, bar, T: vh - bar, s, ox: e.left - l.left, oy: e.top - l.top,
+        dx: h.left + 6 * kh - (e.left + 7 * ku * s), dy: h.top + 58 * kh - (e.top + 45 * ku * s) };
+      root.classList.add('morph');
     }
-    function enterHome(v) {
-      root.style.setProperty('--vh', vh() + 'px');
-      root.classList.add('swiping');
-      glideTo(-vh(), v, () => {
-        root.classList.add('no-anim');
-        quietEnter = true;
-        history.pushState(null, '', location.pathname + location.search + '#home');
-        route(false);
-        root.classList.remove('swiping');
-        set(0);
-        dy = 0;
-        void root.offsetWidth;
-        requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
-      });
+    function draw(v) {
+      p = clamp01(v);
+      const { vh, bar, T, s, dx, dy, ox, oy } = geo;
+      const e = 1 - Math.pow(1 - clamp01(p / 0.6), 2);        // logo gets into place first, then hands over to the header's
+      const G = vh / 2 + (bar - vh / 2) * p;                  // bottom edge of the green
+      const shift = -p * T;                                   // how far the page has scrolled
+      curtain.style.clipPath = `inset(0 0 ${vh - G}px 0)`;
+      photo.style.translate = `0 ${shift}px`;
+      photo.style.clipPath = `inset(${Math.max(vh / 2, G - shift)}px 0 0 0)`;
+      tags.style.translate = `0 ${shift}px`;
+      tags.style.opacity = 1 - p * 3;
+      nav.style.translate = `0 ${G - vh / 2}px`;
+      nav.style.opacity = clamp01(1 - p * 2.6);
+      logo.style.transformOrigin = `${ox}px ${oy}px`;
+      logo.style.transform = `translate(${dx * e}px, ${dy * e}px) scale(${1 + (s - 1) * e})`;
+      wm.style.opacity = clamp01(1 - p * 2.2);
+      const q = clamp01((p - 0.62) / 0.3);                    // hand over to the real header logo at the end
+      em.style.opacity = 1 - q;
+      hdr.style.visibility = 'visible';
+      hdr.style.opacity = 1;
+      hdrImg.style.opacity = q;
+      $('.hdr-menu', hdr).style.opacity = q;
+      if (sbar) sbar.style.opacity = q;
+      pages.style.opacity = 1;
+      pages.style.translate = `0 ${T * (1 - p)}px`;
+    }
+    function clear() {
+      touched.forEach((el) => el && el.removeAttribute('style'));
+      $('.hdr-menu', hdr).removeAttribute('style');
+      root.classList.remove('morph');
+      geo = null;
+    }
+    function animateTo(target, speed) {
+      busy = true;
+      cancelAnimationFrame(anim);
+      const from = p, dist = Math.abs(target - from) * geo.T;
+      const dur = Math.min(520, Math.max(240, dist / Math.max(Math.abs(speed) * 1.4, 1.3)));
+      const t0 = performance.now();
+      const step = (now) => {
+        const t = clamp01((now - t0) / dur), k = 1 - Math.pow(1 - t, 3);
+        draw(from + (target - from) * k);
+        if (t < 1) { anim = requestAnimationFrame(step); return; }
+        busy = false;
+        if (target === 1) arrive(); else clear();
+      };
+      anim = requestAnimationFrame(step);
+    }
+    function arrive() {
+      root.classList.add('no-anim');
+      quietEnter = true;
+      history.pushState(null, '', location.pathname + location.search + '#home');
+      route(false);
+      clear();
+      void root.offsetWidth;
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
     }
     document.addEventListener('touchstart', (e) => {
       if (!active() || e.touches.length > 1) return;
-      y0 = e.touches[0].clientY; dy = 0; armed = false; samples = [[performance.now(), y0]];
+      y0 = e.touches[0].clientY; armed = false; samples = [[performance.now(), y0]];
     }, { passive: true });
     document.addEventListener('touchmove', (e) => {
       if (y0 == null) return;
       const y = e.touches[0].clientY, d = y - y0;
       if (!armed) {
         if (Math.abs(d) < 6) return;
+        if (d > 0) { y0 = null; return; }                    // only upward swipes
         armed = true;
-        root.style.setProperty('--vh', vh() + 'px');
-        root.classList.add('swiping');
+        measure();
       }
       e.preventDefault();
-      dy = d < 0 ? d : d * 0.25;                  // up follows the finger exactly; down just gives a little
-      set(dy);
+      draw(-Math.min(0, d) / geo.T);
       samples.push([performance.now(), y]);
       if (samples.length > 6) samples.shift();
     }, { passive: false });
@@ -2157,9 +2195,8 @@
       y0 = null;
       if (!armed) return;
       const [t1, ya] = samples[0], [t2, yb] = samples[samples.length - 1];
-      const v = (yb - ya) / Math.max(1, t2 - t1);    // px per ms, negative = upwards
-      if (dy < -vh() * 0.2 || v < -0.35) enterHome(v);
-      else glideTo(0, v, () => root.classList.remove('swiping'));
+      const v = (yb - ya) / Math.max(1, t2 - t1);           // px per ms, negative = upwards
+      if (p > 0.3 || v < -0.35) animateTo(1, v); else animateTo(0, v);
     };
     document.addEventListener('touchend', end);
     document.addEventListener('touchcancel', end);
@@ -2168,7 +2205,7 @@
       wheel += e.deltaY;
       clearTimeout(wheelTimer);
       wheelTimer = setTimeout(() => { wheel = 0; }, 220);
-      if (wheel > 60) { wheel = 0; dy = 0; enterHome(-1.2); }
+      if (wheel > 60) { wheel = 0; measure(); draw(0); animateTo(1, 1.2); }
     }, { passive: true });
   })();
 
