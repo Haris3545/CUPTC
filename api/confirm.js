@@ -16,6 +16,9 @@ export default async function handler(req, res) {
       meta = b.demo;
     } else return send(res, 400, { error: 'nothing_to_confirm' });
 
+    if (meta.kind === 'donation') {
+      return send(res, 200, { kind: 'donation', amount: Number(meta.amount) || 0, monthly: meta.monthly === 'yes' });
+    }
     if (meta.kind === 'social' || meta.kind === 'full') {
       return send(res, 200, { kind: meta.kind, password: PASSWORDS().member, token: makeToken('member') });
     }
