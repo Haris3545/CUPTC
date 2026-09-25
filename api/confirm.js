@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     if (meta.kind === 'social' || meta.kind === 'full') {
       return send(res, 200, { kind: meta.kind, password: PASSWORDS().member, token: makeToken('member') });
     }
-    return send(res, 200, { kind: 'merch', delivery: meta.delivery || '' });
+    return send(res, 200, { kind: 'merch', delivery: meta.delivery || '', custom: meta.custom || '' });
   } catch (e) {
     console.error(e);
     return send(res, 500, { error: 'server' });
