@@ -110,7 +110,7 @@
   const freshPU = () => ({
     espresso: 0, big: 0, guardian: false, golden: 0, mirror: 0, rage: 0, rageFinal: false,
     pickup: null, event: null, eventT: 0, zone: null, streak: 0, bandeja: 0,
-    nextPickup: 6, nextEvent: 10, lastEvent: null, winnerT: 0
+    nextPickup: 6, nextEvent: 10, lastEvent: null
   });
   const pu = freshPU();
   const phys = { bV: 1, bH: 1 };
@@ -326,7 +326,7 @@
     const powerSmash = high && pu.bandeja >= 1 && state.mode === 'play';
     const tx = clamp(ball.x * 0.3 + off * 3.4 + who.vx * 0.14 + rand(-0.4, 0.4), -4.3, 4.3);
     const tz = high ? rand(7, 9) : rand(5.8, 8.8);
-    launch(ball, tx, tz, powerSmash ? 0.55 : high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
+    launch(ball, tx, tz, powerSmash ? 0.62 : high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
     ball.lastHit = 'player';
     ball.bV = 0.72;
     ball.bH = 0.86;
@@ -366,10 +366,8 @@
     if (powerSmash) {
       bonus += 5;
       pu.bandeja = 0;
-      ball.winner = true;
-      banner('WINNER!', { color: '#ffc93a', life: 1.2 });
-      state.cheerT = Math.max(state.cheerT, 1.6);
-      confetti(W > 400 ? 50 : 30);
+      worldLabel('BANDEJA +5', who, '#ffc93a');
+      state.cheerT = Math.max(state.cheerT, 1.2);
     } else if (overhead && pu.bandeja < 1) {
       pu.bandeja = Math.min(1, pu.bandeja + 0.34);
       if (pu.bandeja >= 1) { worldLabel('BANDEJA READY!', who, '#ffc93a'); sfx.powerup(); }
@@ -407,12 +405,7 @@
     }
     updateSpeed();
     schedulePowerUps();
-    if (ball.winner) {
-      opp.tx = clamp(-ball.x * 0.5, OB.x0, OB.x1);
-      opp.plan = null;
-    } else {
-      planOpp();
-    }
+    planOpp();
     marker = null;
   }
 
@@ -593,7 +586,6 @@
     ball.wallHits = 0;
     ball.live = true;
     ball.visible = true;
-    ball.winner = false;
     trail.length = 0;
     oppHit(true);
   }
@@ -1017,9 +1009,7 @@
           else { miss('DOUBLE BOUNCE!'); continue; }
         }
       } else if (canPlay && ball.lastHit === 'player') {
-        if (ball.winner) {
-          if (!pu.winnerT && (ball.z > 9.5 || (ball.side > 0 && ball.bounces >= 2))) pu.winnerT = 1.1;
-        } else if (oppContact(ball) || (ball.side > 0 && ball.bounces >= 2)) oppHit(false);
+        if (oppContact(ball) || (ball.side > 0 && ball.bounces >= 2)) oppHit(false);
       }
       if (ball.y < -1 || Math.abs(ball.x) > 12 || Math.abs(ball.z) > 16) {
         if (ball.lastHit === 'opp') miss('MISSED!');
@@ -1126,11 +1116,6 @@
     if (pu.event && EVENTS[pu.event].dur) {
       pu.eventT -= dt;
       if (pu.eventT <= 0) endEvent();
-    }
-    // Bandeja winner: the opponent can't reach it, so start a fresh point
-    if (pu.winnerT > 0) {
-      pu.winnerT -= dt;
-      if (pu.winnerT <= 0) { pu.winnerT = 0; feed(); }
     }
     // doubles partners
     for (const f of [mate, opp2]) {

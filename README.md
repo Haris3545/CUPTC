@@ -47,7 +47,7 @@ After a few hits, pickups appear on your half (run over them to grab one) and th
 | **Glass Guardian** | Saves the next ball that would double-bounce. |
 | **Golden Ball** | Each hit scores 3 for 6 shots, but the ball is 25% faster. |
 | **Combo Streak** | 5 volleys, smashes or off-the-glass shots in a row doubles your points; 10 triples them. |
-| **Bandeja Boost** | High balls fill a gauge; when it's full, your next smash is a winner worth +5. |
+| **Bandeja Boost** | High balls fill a gauge; when it's full, your next smash is a power smash worth +5. |
 | **Smash Zone** | Smash from inside the gold circle near the net for +5. |
 | **Mirror Match** | Left and right swap for 3 shots. |
 | **Cambridge Weather** | Rain for 15 seconds: low, skiddy bounces. |
