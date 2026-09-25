@@ -47,7 +47,7 @@
   // Hand positions (h), racket angle in degrees (a) and free hand (f), in body space:
   // metres, +x towards the racket side, +y up.
   const POSES = {
-    ready:     { h: [0.34, 0.98], a: 100, f: [-0.27, 0.87] },
+    ready:     { h: [0.33, 0.96], a: 58, f: [-0.27, 0.87] },
     fh_prep:   { h: [0.46, 1.24], a: 70, f: [-0.36, 1.02] },
     fh_hit:    { h: [0.52, 1.12], a: 8, f: [-0.34, 0.98] },
     fh_follow: { h: [-0.14, 1.46], a: 150, f: [-0.30, 0.92] },
@@ -192,7 +192,7 @@
     let hand = base.h.slice(), free = base.f.slice();
     if (legsMode === 'run' && poseName === 'ready') {
       const sw = Math.sin((frame / RUN_FRAMES) * Math.PI * 2) * 0.08;
-      hand = [0.34, 0.98 + sw];
+      hand = [0.33, 0.96 + sw];
       free = [-0.27, 0.9 - sw];
     }
 
@@ -263,6 +263,11 @@
     // free arm first so the torso overlaps the shoulder
     drawArm(-0.2, free);
 
+    // At rest the racket is held at the side, partly behind the body, so it goes
+    // under the torso instead of showing through it.
+    const racketBehind = poseName === 'ready';
+    if (racketBehind) drawRacket(drawArm(0.2, hand), base.a);
+
     // ---- torso
     px.poly([[X(-0.225), Y(1.4 + U)], [X(0.225), Y(1.4 + U)], [X(0.19), Y(0.86 + U)], [X(-0.19), Y(0.86 + U)]], kit.shirt);
     px.circle(X(-0.19), Y(1.34 + U), R(0.078), kit.shirt);
@@ -302,8 +307,7 @@
     }
 
     // ---- racket arm + racket
-    const Hd = drawArm(0.2, hand);
-    drawRacket(Hd, base.a);
+    if (!racketBehind) drawRacket(drawArm(0.2, hand), base.a);
 
     // ---- shoes get a coloured sole on their bottom row
     for (let y = 0; y < H; y++) {
