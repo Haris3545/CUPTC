@@ -11,22 +11,25 @@
   PP.sideWallHeight = (z) => (Math.abs(z) >= 8 ? 4 : 3);
 
   const C = {
-    court: [46, 108, 214], courtGrain: [40, 98, 198], courtEdge: [30, 74, 160],
+    court: [104, 160, 137], courtGrain: [95, 150, 128], courtEdge: [60, 110, 90],
     line: [246, 249, 255],
-    apron: [52, 66, 108], apronGrain: [46, 58, 96],
-    grass1: [66, 176, 92], grass2: [54, 158, 82], grassMid: [60, 167, 87],
-    glass: [200, 238, 255], frame: [36, 40, 56], frameHi: [96, 104, 130], mesh: [20, 24, 38],
-    netMesh: [14, 20, 34], tape: [255, 255, 255], post: [36, 40, 56],
-    sil: [58, 29, 86], silHi: [80, 44, 110], lit: [255, 206, 112],
-    trees: [42, 24, 70], treesHi: [60, 38, 94],
-    stand: [64, 70, 104], standBack: [44, 38, 82], step: [118, 124, 160], seat: [79, 128, 105],
-    board: [30, 64, 52], boardTop: [16, 28, 26], boardText: [133, 180, 160]
+    apron: [31, 64, 52], apronGrain: [27, 57, 46],
+    grass1: [245, 241, 233], grass2: [233, 227, 215], grassMid: [239, 234, 224],
+    glass: [255, 255, 255], frame: [22, 44, 36], frameHi: [60, 100, 84], mesh: [22, 44, 36],
+    netMesh: [22, 44, 36], tape: [255, 255, 255], post: [22, 44, 36],
+    sil: [62, 112, 90], silHi: [104, 156, 134], lit: [255, 255, 255], far: [150, 194, 175], farHi: [186, 216, 202],
+    trees: [44, 86, 69], treesHi: [79, 128, 105],
+    stand: [236, 232, 224], standBack: [31, 64, 52], step: [255, 255, 255], seat: [133, 180, 160],
+    board: [223, 35, 38], boardTop: [22, 44, 36], boardText: [255, 255, 255], millBoard: [255, 255, 255], millText: [22, 22, 20]
   };
-  const CROWD_SHIRT = [[255, 255, 255], [223, 35, 38], [133, 180, 160], [42, 60, 128], [255, 225, 77],
-    [255, 126, 182], [127, 214, 255], [255, 184, 107], [26, 28, 44]];
+  const CROWD_SHIRT = [[255, 255, 255], [223, 35, 38], [133, 180, 160], [31, 64, 52], [255, 255, 255], [223, 35, 38]];
   const CROWD_SKIN = [[243, 193, 155], [226, 163, 118], [182, 118, 80], [128, 82, 56]];
   const CROWD_HAIR = [[42, 29, 22], [107, 62, 38], [26, 28, 44], [230, 190, 110]];
-  const SKY_LOW = [255, 186, 110];
+  const SKYLINE = { w: 736, h: 174 };
+  const SKYLINE_BITS = Uint8Array.from(atob('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADnwQcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDjAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgP8BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMB/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4B8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAIAAAAAAAAAAAAAAAAAwAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAABwAAAAAAAAAAAAAAAADABwAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAHAAAAAAAAAAAAAAAAAMAHAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAcAAAAAAAAAAAAAAAAAwAcAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAABwAAAAAAAAAAAAAAAADABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAHAAAAAAAAAAAAAAAAAMAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAcAAAAAAAAAAAAAAAAAwA8AAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAABwAAAAAAAAAAAAAAAADADwAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOABAAAAAAAPAAAAAAAAAAAAAAAAAMAPAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AEAAAAAgA8AAAAAAAAAAAAAAAAA4A8AAAAAAAAAAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4AwAAAADAHwAAAAAAAAAAAAAAAADgDwAAAAAAAAAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgDAAAAAMA/AAAAAAAAAAAAAAAAAOAPAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AcAAAAA4D8AAAAAAAAAAAAAAAAA4A8AAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAAAAAAAADAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8BwAAAADgPwAAAAAAAAAAAAAAAADgDwAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAMAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwPAAAAAPA/AAAAAAAAAAAAAAAAAOAfAAAAAAAAAAAAHwAAAAAAAAAAAAAAAAAAAAAAAAAAwAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAQAAAAAAAAAAAAAA/A8AAAAA8H8AAAAAAAAAAAAAAAAA4B8AAAAAAAAAAAAfAAAAAAAAAAAAAAAAAAAAAAAAAADAAQwAAAAAAAAAAAAAAAAADAAAAAAAAOAfAOAPAAAAAAAAAAAAAAD8DwAAAADwfwAAAAAAAAAAAAAAAADwHwAAAAAAAAAAAB8AAAAAAAAAAAAAAAAAAAAAAAAAAMABHAAAAAAAAAAAAAAAAAAPAAAAAAAA8B8A8B8AAAAAAAAAAAAAAPwPAAAAAOA/AAAAAAAAAAAAAAAAAPAfAAAAAAAAAACAHwAAAAAAAAAAAAAAAAAAAAAAAAAA4AMeAAAAAAAAAAAAAAAAgAcAAAAAAADwHwDwHwAAAAAAAAAAAAAA/A8AAAAA4D8AAAAAAAAAAAAAAAAA8B8AAAAAAAAAAIA/AAAAAAAAAAAAAAAAAAAAAAAAAADgAx4AAAAAAAAAAAAAAACAAwAAAAAAAPAfAPAfAAAAAAAAAAAAAAD8DwAAAADgPwAAAAAAAAAAAAAAAADwHwAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAAAAAAAAAOADHgAAAAAAAAAAAAAAAMABAMABAAAA8B8A8B8AAAAAAAAAAAAAAPwPAAAAAOB/AAAAAAAAAAAAAAAAAPAfAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAAAAAAAAA4AMeAAAAAAAAAAAAAAAA8AEAHwAAAADwHwDwHwAAAAAAAAAAAAAA/g8AAAAA4H8AAAAAAAAAAAAAAAAA8B8AAAAAAAAAAMA/AAAAAAAAAAAAAAAAAAAAAAAAAADgAx4AAAAAAAAAAAAAAAD4A4AfAAAAAPAfAPAfAAAAAAAAAAAAAAD+DwAAAADwfwAAAAAAAAAAAAAAAADwPwAAAAAAAACAwX8wAAAAAAAAAAAAAAAAAAAAAAAAAOADHgAAAAAAAAAAAAAAAJwD4A8AAAAA8B8A8B8AAAAAAAAAAAAAAP4fAAAAAPB/AAAAAAAAAAAAAAAAAPA/AAAAAAAAAMDBf3AAAAAAAAAAAAAAAAAAAAAAAAAA4AMeAAAAAAAAAAAAAAAADAAAAAAAAADwHwDwHwAAAAAAAAAAAAAA/x8AAAAA+P8AAAAAAAAAAAAAAAAA8D8AAAAAAAAA4MF/eAAAAAAAAAAAAAAAAAAAAAAAAADgAx4AAAAAAAAAAAAAAAAEAAAAAAAAAPA/APA/AAAAAAAAAAAAAAD/HwAAAAD4/wAAAAAAAAAAAAAAAADwPwAAAAAAAADg4X94AAAAAAAAAAAAAAAAAAAAAAAAAOADHgAAAAAAAAAAAAAAAAQAAAAAAAAA8D8A+D8AAAAAAAAAAAAAAP8fAAAAAPj/AAAAAAAAAAAAAAAAAPg/AAAAAAADAODj/3gAAAAAAAAAAAAAAAAAAAAAAAAA4AMeAAAAAAAAAAAAAAAAAAAAAAAAAADwfxP/PwAAAAAAAAAAAAAA/x8AAAAA+P8AAAAAAAAAAAAAAAAA+D8AAAAAAAcAwOP/eAAAAAAAAAAAAAAAAAAAAAAAAADgAx4AAADAAAAAAAAAAAAAAAAAAAAAAPD/+/8/AAAAAAAAAAAAAAD/HwAAAAD4/wAAAAAAAAAAAAAAAAD4PwAAAAAAHwDA4/94AAAAAAAAAAAAAAAAAAAAAAAAAOADHgAAAPwPAAAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fAAAAAPj/AAAAAAAAAAAAAAAAAPg/AAAAAAB+AMD3/3wAAAAAAAAAAAAAAAAAAAAAAAAA4P8fAAAA/B8AAAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8AAAAA+P8AAAAAAAAAAAAAAAAA+D8AAAAAAP4A4Pf/fAAAAAAAAAAAAAAAAAAAAAAAAADg/x8AAAD+PwAAAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/HwAAAAD4/wAAAAAAAAAAAAAAAAD4PwAAAAAA/gPg9///AAAAAAAAAAAAAAAAAAAAAAAAAOD/HwAAAP9/AAAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fAAAAAPj/AAAAAAAAAAAAAAAAAPg/AAAAAAD+B+D///8AAAAAAAAAAAAAAAAAAAAAAAAA4P8fAACA//8AAAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8AAAAA+P8AAAAAAAAAAAAAAAAA+D8AAAAAAP4H4P///wAAAAAAAAAAAAAAAAAAAAAAAADg/x8AAMD//wEAAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/HwAAAAD4/wAAAAAAAAAAAAAAAAD8fwAAAAAA/wfw////AAAAAAAAAAAAAAAAAAAAAAAAAOD/HwAA4P//AQAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fAAAAAPj/AAAAAAAAAAAAAAAAAPx/AAAAAAD/B/D///8AAAAAAAAAAAAAAAAAAAAAAAAA4P8fAADw//8DAAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8AAAAA+P8AAAAAAAAAAAYAAAAA/H8AAAAAAPgD8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AAPj//wcAAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/HwAAAAD4/wAAAAAAAAAADgAAAAD8fwAAAAAA8APw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwAA+P//DwAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fAAAAAPj/AAAADgAAAAAOAAAAAPx/AAAAAACAA/D///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAAD8//8fAAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8AAAEA+P8AAAAOAAAAAA4AAAAA/H8AAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AAP7//x8AAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/HwCAAQD4/wgAAA4AAAAADgAAAAD8fwAAAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwAA/v//PwAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fAMADAPj/CAAADgAAAAAOAAAAAPz/AAAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAAD+//8/AAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8AwAEA+P8IBAAOAAAAAA8AAAAA/P8AAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AAP7//z8AAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/HwCAAAD4/wgEAA4AAAAAHwAAAAD+/wAAAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwAA/v//PwAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fAMfhAPj/DAYADwAAAIA/AAAAAP7/AAAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAAD///8/AAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8Ax+MA+P8MBoMfAAAAgD8AAAAA/v8AAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AAP///z8AAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/HwD//wD4/xwGgz8AAACAPwAAAAD+/wAAAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwAA////fwAAAAAAAAAAAAAAAAAA8P///z8AAAAAAAAAAAAAAP8fDP//MPj/HAaDPwAAAIA/AAAAAP7/AAAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAADw////PwAAAAAAAAAAAAAA/x8e//95+P8eBsM/AAAAgD8AAAAA/v8AAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAPD///8/AAAAAAAAAAAAAAD/P77//3/8/x8Gwz8AAACAPwAAAAD+/wAAAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA+P///z8AAAAAAAAAAAAAAP8//v//P/z/HwbDPwAAAIA/AAAAAP7/AAAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD4////PwAAAAAAAAAAAAAA/3/+//9//P8fD8M/CAAAgD8AAAAA/v8AAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAPz///9/AAAAAAAAAAAAAAD/f////////x8Pwz8IAADAfwAAAAD//wAAAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP//////////Hw/DPwgAAMB/AAAAAP//AQAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA//////////8fj8N/CAEA4H8AAAAA//8PAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD//////////x+Pw38IAQDgfwAAAAD//w8AAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP//////////H4/nfwwhAOB/AAAAAP//DwAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA//////////8/j+d/DCME4H8AAACA//8fAAAAAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD///////////+P538MYwTgfwAAAID//x8AAAAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP///////////5/nfwxjhOB/AAAAgP//HwAAAAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA/////////////+d/HGOE4H8AAACA//8fAAAwAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD/////////////738eY4zwfwAAAID//x8AADgAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP//////////////fx5jjPB/AAAAgP//HwAAOAAAAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA//////////////9/nmOM8X8AAADA//8/AAAwAAAA8P///wEAAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD///////////////+eY4zx/wAAAID//z8AADAAAADw////AQAAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP///////////////573jPH/AAAAgP//fwAAMQABAPD///8BAAAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA////////////////n/eM8f8AAACA//9/AAD///////////8DAAAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD///////////////+/947x/wAAAID//38AgP///////////wcAAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP/////////////////3nPH/AAAAgP//PwCA////////////DwAAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA///////////////////e8f8AAADo//8/AMD///////////8PAgAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD//////////////////9/7/wAAAP7//z8AwP///////////x8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP//////////////////3/v/AAAA/v//PwDg////////////PwMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA////////////////////+/8AAAD+//8/AOD/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD//////////////////////wAAAP///z8A4P////////////8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8AAAAAAAAAAAAAAP//////////////////////AAAA////PwDw/////////////wMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD+/////wAAAAAAAAAAAAAA//////////////////////8AAAD+//8/APD/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP7/////AAAAAAAAAAAAAAD//////////////////////wAAAP7//z8A+P////////////8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAAAA/v////8BAAAAAAAAAAAAAP//////////////////////AAAA/v//PwD4/////////////wMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAAD//////wEAAAAAAAAAAAAA//////////////////////8AAAD+//8/APz/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAAP//////AQAAAAAAAAAAAAD//////////////////////wAAAP7//38A/P////////////8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAACA//////8DAAAAAAAAAAAAAP//////////////////////AAAA/v//fwD8/////////////wMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAID//////wMAAAAAAAAAAAAA//////////////////////8AAAD+//9/AP7/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAgP//////AwAAAAAAAAAAAAD//////////////////////wAAAP7//38A/v////////////8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAACA//////8DAAAAAAAAAAAAAP//////////////////////AAAA/v//fwD4/////////////wMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAID//////wMAAAAAAAAAAAAA//////////////////////8AAAD+//8/APD/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAgP//////AwAAAAAAAAAAAAD//////////////////////wAAAP7//z8A8P////////////8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAACA//////8DAAAAAAAAAAAAAP//////////////////////AAAA/v//PwDw/////////////wMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAID//////wMAAAAAAAAAAAAA//////////////////////8AAAD+//8/APD/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAgP//////AwAAAAAAAAAAAAD//////////////////////wAAAP7//z8A8P////////////8DAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAACA//////8DAAAAAAAAAAAAAP//////////////////////AAAA/v//PwDw/////////////wMAAAAAAAAAAAAAAAAAAAAA4P8fAID/////AAAAAAAAAAAAAAAAAID//////wMAAAAAAAAAAAAA//////////////////////8AAAD+//8/APD/////////////AwAAAAAAAAAAAAAAAAAAAADg/x8AgP////8AAAAAAAAAAAAAAAAAgP//////AwAAAAAAAAAAAAD//////////////////////wAAAP///z8A8P////////////8HAAAAAAAAAAAAAAAAAAAAAOD/HwCA/////wAAAAAAAAAAAAAAAACA//////8DAAAAAAAAAAAAAP//////////////////////AAAA////PwDw/////////////wcAAAAAAAAAAAAAAAAAAAAA4P8f+O///////////////////wMAAID//////wMAAAAAAAAAAAAA//////////////////////8AAID///8/APD/////////////DwAAAAAAAAAAAAAAAAAAAADg/x/+////////////////////BwAAgP//////AwAAAAAAAAAAAAD//////////////////////wAAgP///z8A8P////////////8fAAAAAAAAAAAAAAAAAAAAAOD/H/7///////////////////8HAACA//////8DAAAAAAAAAAAAAP//////////////////////AACH////fwDw/////////////x8AAAAAAAAAAAAAAAAAAPD///8f/v///////////////////w8AAID//////wMAAAAAAAAAAAAA//////////////////////8ADo////9/APD/////////////PwAAAAAAAAAAAAAAAAAA8P///x/+////////////////////DwAAgP//////AwAAAAAAAAAAAAD//////////////////////wCPv////38A8P////////////8/AAAAAAAAAAAAAAAAAADw////H/7///////////////////8PABCA//////8DIAAAAAAAAAAAAP//////////////////////AM///////wDw/////////////z8AAAAAAAAAAAAAAAAAAPD///8f/v///////////////////x8AEID//////wMwAAAAAAAAAAAA//////////////////////8Az///////APD/////////////PwAAAAAAAAAAAAAA+P///////x/+////////////////////HwAQgP//////AzAAAAAAAAAAAAD//////////////////////wD///////8A8P////////////9/AAAAAAAAAAAAAAD4////////H/7///////////////////8fABiA//////8DcAAAAAAAAAAAAP//////////////////////AP///////wDw/////////////38AAAAAAAAAAAAAAPj///////8f/v///////////////////x+AvYP//////wN7BwAAAAAAAAAA//////////////////////8A////////APD/////////////fwAAAAAAAAAAAAAA+P///////x/+////////////////////P8b/9///////n//PAAAAAAAAAAD//////////////////////wD///////8A8P////////////9/AAAAAAAAAAAAAAD4////////H/7///////////////////8f//////////////8BAAAAAAAAAP//////////////////////AP///////wDw/////////////38AAAAAAAAAAAAAAPj///////8f/v///////////////////w///////////////wEAAAAAAAAA//////////////////////8A////////APD/////////////fwAAAAAAAAAAAAAA+P///////x/+////////////////////B///////////////AQAAAAAAAAD//////////////////////wD///////8A8P////////////9/AAAAAAAAAAAAAAD4////////H/7///////////////////8H//////////////8BAAAAAAAAAP//////////////////////AP///////wDw/////////////38AAAAAAAAAAAAAAPj///////8f/v///////////////////wf//////////////wEAAAAAAAAA//////////////////////8A////////AfD/////////////fwAAAAAAAAAAAAAA+P///////x/+////////////////////B///////////////AQAAAAAAAAD//////////////////////4D///////8D8P////////////9/AAAAAAAAAAAAAAD4////////H/7///////////////////8H//////////////8BAAAAAAAAAP//////////////////////gP///////wPw/////////////38AAAAAAAAAAAAAAPj///////8f/v///////////////////wf//////////////wEAAAAAAAAA///////////////////////A////////B/D/////////////fwAAAAAAAAAAAAAA+P///////x/+////////////////////h///////////////AwAAAAAAAAD//////////////////////8D///////8H8P////////////9/AAAAAAAAAAAAAAD4////////H/7////////////////////H//////////////8HAAAAAAAAAP//////////////////////4P///////w/w/////////////38AAAAAAAAAAAAAAPj///////8f/v///////////////////8f//////////////w8AAAAAAAAA///////////////////////g////////H/D/////////////fwAAAAAAAAAAAAAA+P///////x/+////////////////////x///////////////DwAAAAAAAAD///////////////////////D///////8f8P////////////9/AAAAAAAAAAAAAAD4////////H/7////////////////////H//////////////8PAAAAAAAAAP//////////////////////+P///////z/w/////////////38AAAAAAAAAAAAAAPj///////8f/v///////////////////8f//////////////w8AAAAAAAAA///////////////////////4////////P/D/////////////fwAAAAAAAAAAAAAA+P///////x/+////////////////////x///////////////DwAAAAAAAAD///////////////////////z///////9/8P////////////9/AAAAAAAAAAAAAAD4////////H/7////////////////////H//////////////8PAAAAAAAAAP//////////////////////+P///////3/w/////////////z8AAAAAAAAAAAAAAPj///////8f/v///////////////////8f//////////////w8AAAAAAAAA///////////////////////w//////////D/////////////PwAAAAAAAAAAAAAA+P///////x/+////////////////////x///////////////DwAAAAAAAAD///////////////////////D/////////8P////////////8fAAAAAAAAAAAAAAD4////////H/7////////////////////H//////////////8PAAAAAAAAAP//////////////////////8P/////////w/////////////x8AAAAAAAAAAAAAAPj///////8f/v///////////////////8f//////////////w8AAAAAAAAA///////////////////////w//////////D/////////////DwAAAAAAAAAAAAAA+P///////x/+////////////////////x///////////////DwAAAAAAAAD///////////////////////D/////////8P////////////8HAAAAAAAAAAAAAAD4////////H/7////////////////////H//////////////8PAAAAAAAABP//////////////////////8P/////////w/////////////wcAAAAAAAAAAAAAAPj///////8f/v///////////////////8f//////////////w8AAABAAAAE///////////////////////w//////////D/////////////AwAAAAAAAAAAAAAA+P///////x/+////////////////////x///////////////DwMAIGAAAI7///////////////////////D/////////8P////////////8DAAAAAAAAAAAAAAD4////////H/7////////////////////H////////////////////////////////////////////////8P/////////w/////////////wMAAAAAAAAAAAAAAPj///////8f/v///////////////////8f////////////////////////////////////////////////w//////////D/////////////AwAAAAAAAAAAAAAA+P///////x/+////////////////////x/////////////////////////////////////////////////D/////////8P////////////8DAAAAAAAAAAAAAAD4////////H/7////////////////////H////////////////////////////////////////////////8P/////////w/////////////wMAAAAAAAAAAAAAAPj///////8f/v///////////////////8f////////////////////////////////////////////////w//////////D/////////////AwAAAAAAAAAAAAAA+P///////x/+////////////////////x/////////////////////////////////////////////////D/////////8P////////////8DAAAAAAAAAAAAAAD4////////H/7////////////////////H////////////////Pzx48OHB////////////////////////8P/////////w/////////////wMAAAAAAAAAAAAAAPj///////8f/v///////////////////8f///////////////8fGHjgwYH////////////////////////w//////////D/////////////AwAAAAAAAAAAAAAA+P///////x/+////////////////////x////////////////x8YeODAgf////////////////////////D/////////8P////////////8DAAAAAAAAAAAAAAD4////////H/7////////////////////H////////////////Hxh44MCB////////////////////////8P/////////4/////////////wMAAAAAAAAAAAAAAPj///////8f/v///////////////////8f///////////////8fGHjgwIH/////////////////////////////////////////////////BwAAAAAAAAAAAAAA+P///////x/+////////////////////x////////////////x8YeODAgf////////////////////////////////////////////////8fAAAAAAAAAAAAAAD4////////H/7////////////////////H////////////////Hxh44MGB//////////////////////////////////////////////////8BAAAAAAAAAAAAAPz///////8///////////////////////////////////////8fOP//x4H//////////////////////////////////////////////////wcAAAAAAAAAAAAA/////////////////////////////////////////////////x/8////gf//////////////////////////////////////////////////HwAAAAAAAAAAAPD/////////////////////////////////////////////////////////////////////////////////////////////////////////////AQAAAAAAAAAA/v////////////////////////////////////////////////////////////////////////////////////////////////////////////8HAAAAAAAAAOD//////////////////////////////////////////////////////////////////////////////////////////////////////////////z8AAAAAAAAA/P////////////////////////////////////////////////////8PAP///////////////////////////////////////////////////////wEAAAAAAMD//////////////////////////////////////////////////////wAA+P//////////////////////////////////////////////////////BwAAAAAA/P////////////////////////////////////////////////////8fAADA//////////////////////////////////////////////////////9/AAAAAAD//////////////////////////////////////////////////////w8AAAD///////////////////////////////////////////////////////8BAAAA8P//////////////////////////////////////////////////////AwAAAPz//////////////////////////////////////////////////////w8AAAD///////////////////////////////////////////////////////8AAAAA+P//////////////////////////////////////////////////////fwAA4P//////////////////////////////////////////////////////fwAAAADg////////////////////////////////////////////////////////AQD+//////////////////////////////////////////////////////8/AAAAAMD///////////////////////////////////////////////////////8PAP7//////////////////////////////////////////////////////x8AAAAAgP///////////////////////////////////////////////////////w8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=='), (ch) => ch.charCodeAt(0));
+  const MILL_TEX = { w: 320, h: 113 };
+  const MILL_BITS = Uint8Array.from(atob('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAQAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgDAAAAAAcAAAA4AAAAABgCAAAAQBAAAAAAAAAAAAAAAAAAAAAAAAD+HwAAAPAHAACAPwAAAAAAADAADAAYAAAAAAAAAAAAAAAAAAAAAAAA/x8AAAD8BwAA4D8AAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAgP9/AACA/wcAAPw/AAAAACeAAQCAAJABAAAAAAAAAAAAAAAAAAAAAMD/fwAA+P8HAMD/PwAAAIABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADg//8AAP//BwD4/z8AAACAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4P//AcD//wcA/v8/AAAAAAAGAAAAMIABAAAAAAAAAAAAAAAAAAAAAOD//wH4//8HgP//PwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADw//8B/P//B8D//z8AAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAA8P//AfD//weA//8/AAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAPD//wHA//8HAP//PwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADw//8BgP//BwD8/z8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4P//AQD//wcA+P8/AAAAIAAAAHgAAAACAAAAAAAAAAAAAAAAAAAAAOD//wAA/v8HAPD/PwAAAAAAAAB4AAAAAAAAAAAAAAAAAAAAAAAAAADA/38AAP7/BwDw/z8AAAAQBAAAeAAAEAwAAAAAAAAAAAAAAAAAAAAAwP9/AAD+/wcA8P8/AAAAAAAAAHgAAAAAAAAAAAAAAAAAAAAAAAAAAID/PwAA/v8HAPD/PwAAAAABAAB4AABAEAAAAAAAAAAAAAAAAAAAAAAA/x8AAP7/BwDw/z8AAAAEAPAAeAAAABAAAAAAAAAAAAAAAAAAAAAAAP4PAAD+/wcA8P8/AAAABADwAXgACAAQAAAAAAAAAAAAAAAAAAAAAAD4AQAA/v8HAPD/PwAAAIAA8AE4AByAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7/BwDw/z8AAACAAOAHOAAeAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/wcA8P8/AAAAAgDABzgAHwBAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v8HAPD/PwAAAAMAgA84gA8AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7/BwDw/z8AAAAgAAAfOMAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/wcA8P8/AAAAIAAAPjjgAwAAAAD8AQAAAH8AAADAHwAAAAAAAAAA/v8HAPD/PwAAAAAAADw88AEAAADg/z8AAPD/DwAA/v8DAAAAAOAAAP7/BwDw/z8AAAAAAAD4f/gAAAAA8P//AAD8/z8AAP//DwAAAAD8AAD+/wcA8P8/AAAAAAAA8P9/AAAAAPz//wEA//9/AOD//x8AAACA/wAA/v8HAPD/PwAAgAAAAODnHwAAgAD///8DwP///wHw//8/AAAA+P8AAP7/BwDw/z8AAIAAAAD49w8AAIDA////D+D///8D+P///wAAAP7/AAD+/wcA8P8/AACAAAAA/PcfAACA4PH//x/4/P//Bz7///8BAOD//wAA/v8HAPD/PwAAAADgP/6DfwAAgHCA//8fHMD//wcH+P//AQD4//8AAP7/BwDw/z8AAAAA4P//w/8AAIA4AP7/Pw6A//+PAeD//wMA////AAD+/wcA8P8/AAAAAOD//8H/AQCAHAD4/z8AAP//HwDA//8DAP///wAA/v8HAPD/PwAAAADA/x8Y/v8HgA4A+P9/AAD8/x8AgP//BwD///8AAP7/BwDw/z8AAAAAAAAACPz/B4AGAPD/fwAA/P8/AAD//wcA/P//AAD+/wcA8P8/AAAAAAAAAAD4/wOAAwDg//8AAPj/PwAA/v8PAPD//wAA/v8HAPD/PwAAAAAAgAABAPEBgAMAwP//AADw/z8AAP7/DwDg//8AAP7/BwDw/z8AAAAAAIBwCAEAAIADAMD//wEA8P9/AAD8/x8AwP//AAD+/wcA8P8/AAAAAACAeIgBAQCAAQDA//8BAPD/fwAA/P8fAMD//wAA/v8HAPD/PwAAAAAAADyIAwEAgAEAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAeDAcBAIABAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAACADw4eAQCAAQCA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAwAcOHgAAgAMAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAOADDjwAAIADAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAADwAQ74AACAAwCA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAA+AAO8AEAgAYAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAHwADvABAIAGAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAB8AA7gAwCABACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAGAAOwA8AgBgAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAADoAPAIAgAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAA4ABwCAYACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAPAAAAgAABgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAADwAAAIAAAYD//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAA8AAACAAAyA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAPAAAAgABggP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAADgAAAIAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAAAAAACAAACB//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAAAAAAgAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAAAAAAAIAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAAAAAACAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAAAAAAgAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAAAAAAAIAAAMD//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAAAAAACAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAAAAAAgAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAAAAAAAIAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAAAAAACAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAgAAAAAAAAAAAgAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAIAAAAAAAAAAAIAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAAAAAACAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAAAAAAAAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAAAAAAAAAAAAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAAAAAAAAAAAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAAAAAAAAAAAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAAACAAAAAAAAIAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAgAgAAAAAAAAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAIAIAAAAAAAQAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAACACAAAAAAAEAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAgAAgAAAAAIAAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAIACAEQCAAAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAEACAHwD8AABAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAABAAgBsA/AkAQAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAAIA7APwJAEAAAgP//AQDg/38AAPj/HwDA//8AAP7/BwDw/z8AAAAQACAPwD8AAAAAAID//wEA4P9/AAD4/x8AwP//AAD+/wcA8P8/AAAAAAQAD8A/ABAAAACA//8BAOD/fwAA+P8fAMD//wAA/v8HAPD/PwAAAAAEAAbAPwAAAAAAgP//AwDg//8AAPz/PwDA//8BAP//DwD4/z8AAAAAEAAAwD8ACAAAAMD//wMA8P//AAD8/z8A4P//AQD//w8A+P9/AAAAAAAAAMA/AgAAAADg//8HAPj//wEA/v9/APD//wOA//8fAPz//wAAAAAAAADAPwICAAAA8P//DwD8//8DAP///wD4//8HwP//PwD+//8BAAAAggAAwD8AAAAAAPj//x8A/v//B4D///8B/P//D+D//38A////AwAAAAAAAMA/AAAAAAD4//8/AP///w/A////Af7//x/w////gP///wcAAIAAAQDAP0AMAAAA/v//f4D///8f4P///wf///8/+P///8H///8PAAAAAAgAwD8OAAAAAP7//3+A////H+D///8H////P/j////B////DwAAAAAAAMB/BgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQYADA/wJBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGwH8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBsA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgDgD/AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwBAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQBAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAYACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='), (ch) => ch.charCodeAt(0));
+  const SKY_LOW = [246, 204, 198];
 
   // 1-bit bitmap of the advertising board text, built from the pixel font.
   function boardBitmap(text) {
@@ -40,7 +43,7 @@
     }
     return { w: w, bits: bits };
   }
-  const SKY = [[0, [34, 24, 84]], [0.42, [108, 44, 144]], [0.76, [255, 94, 140]], [1, [255, 186, 110]]];
+  const SKY = [[0, [255, 255, 255]], [0.5, [252, 246, 240]], [0.85, [250, 224, 218]], [1, [246, 204, 198]]];
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
   function hash(x, z) {
@@ -146,9 +149,9 @@
             const period = Math.max(3, Math.round(sunR / 4));
             const gap = rel > 0.1 ? Math.min(period - 1, Math.floor(1 + rel * period * 0.55)) : 0;
             const inGap = gap > 0 && ((dy % period) + period) % period < gap;
-            if (!inGap) col = lerpCol([255, 244, 128], [255, 108, 96], (dy + sunR) / (2 * sunR));
+            if (!inGap) col = lerpCol([232, 58, 58], [190, 22, 28], (dy + sunR) / (2 * sunR));
           } else if (dist <= sunR * 1.45 && BAYER[(y & 3) * 4 + (x & 3)] < 7) {
-            col = lerpCol(col, [255, 190, 150], 0.35);
+            col = lerpCol(col, [250, 196, 196], 0.35);
           }
           const p = (y * W + x) * 4;
           d[p] = col[0]; d[p + 1] = col[1]; d[p + 2] = col[2]; d[p + 3] = 255;
@@ -159,7 +162,29 @@
 
     // ---------------- world: skyline, stands, surroundings, court, walls
     // Rendered twice: the second copy has the crowd on its feet for celebrations.
-    const board = boardBitmap('CUPTC  *  ');
+    const MILL = {
+      m: ['.....', '.....', '##.#.', '#.#.#', '#.#.#', '#.#.#', '#.#.#'],
+      i: ['.#.', '...', '##.', '.#.', '.#.', '.#.', '###'],
+      l: ['##.', '.#.', '.#.', '.#.', '.#.', '.#.', '###'],
+      w: ['.###.', '##.##', '#.#.#', '##.##', '#.#.#', '#.#.#', '.###.']
+    };
+    const board = (function () {
+      const segs = [
+        { glyphs: 'CUPTC'.split('').map((ch) => PP.Font.glyph(ch)), bg: C.board, fg: C.boardText }
+      ];
+      const cols = [];
+      segs.forEach((sg) => {
+        const push = (colBits) => cols.push({ bits: colBits, bg: sg.bg, fg: sg.fg });
+        for (let p = 0; p < 4; p++) push(null);
+        sg.glyphs.forEach((gl) => {
+          if (!gl) { push(null); push(null); return; }
+          for (let x = 0; x < gl[0].length; x++) push(gl.map((r) => r[x] === '#'));
+          push(null);
+        });
+        for (let p = 0; p < 3; p++) push(null);
+      });
+      return cols;
+    })();
 
     function crowdCol(ax, z, cheer) {
       const ru = (ax - 7.6) / 0.8, r = Math.floor(ru), fu = ru - r;
@@ -177,16 +202,25 @@
       return C.stand;
     }
 
+    // Boards alternate a red CUPTC panel with a white panel carrying the mill logo,
+    // sampled straight from the logo artwork so it stays sharp at any size.
+    const LC = board.length * 0.12, LM = 2.8, PERIOD = LC + LM;
+    const LOGO_H = 0.62, LOGO_W = LOGO_H * MILL_TEX.w / MILL_TEX.h;
     function boardCol(z, y, side) {
       if (y > 0.82) return C.boardTop;
-      const col = Math.floor((side > 0 ? -z : z) / 0.12);
-      const row = Math.floor((0.8 - y) / 0.115);
-      if (row >= 0 && row < 7) {
-        const w = board.w;
-        const cc = ((col % w) + w) % w;
-        if (board.bits[row * w + cc]) return C.boardText;
+      const t = ((((side > 0 ? -z : z)) % PERIOD) + PERIOD) % PERIOD;
+      if (t < LC) {
+        const col = board[Math.floor(t / 0.12)];
+        const row = Math.floor((0.8 - y) / 0.115);
+        if (row >= 0 && row < 7 && col.bits && col.bits[row]) return col.fg;
+        return col.bg;
       }
-      return C.board;
+      const lx = (t - LC - (LM - LOGO_W) / 2) / LOGO_W, ly = (0.72 - y) / LOGO_H;
+      if (lx >= 0 && lx < 1 && ly >= 0 && ly < 1) {
+        const i = Math.floor(ly * MILL_TEX.h) * MILL_TEX.w + Math.floor(lx * MILL_TEX.w);
+        if ((MILL_BITS[i >> 3] >> (i & 7)) & 1) return C.millText;
+      }
+      return C.millBoard;
     }
 
     function renderWorld(cheer) {
@@ -324,60 +358,53 @@
           for (let x = -hw; x <= hw; x++) put(Math.round(xc) + x + M, base - 1 - bottomPx - y, col);
         }
       };
-      // trees along the Backs
-      for (let x = -M; x < W + M; x++) {
-        const th = Math.round((3 + 2.2 * Math.sin(x * 0.13) + 1.6 * Math.sin(x * 0.37 + 1.3) + 1.2 * Math.sin(x * 0.07 + 4)) * u) + 2 * u;
-        for (let y = 0; y < th; y++) put(x + M, base - 1 - y, y === th - 1 && (hash(x, 7) & 3) === 0 ? C.treesHi : C.trees);
-      }
-      // gabled college buildings
-      const house = (x, w, h, roof) => {
-        fill(x, 0, w * u, h * u, C.sil);
-        tri(x + (w * u) / 2, h * u, (w * u) / 2, roof * u, C.sil);
-        for (let wx = 2; wx < w - 1; wx += 3) {
-          for (let wy = 2; wy < h - 2; wy += 4) {
-            fill(x + wx * u, wy * u, u, 2 * u, (hash(Math.round(x) + wx, wy) & 3) === 0 ? C.lit : C.silHi);
+      // Cambridge skyline traced from the club's reference silhouette, in one colour.
+      const src = SKYLINE;
+      const bits = SKYLINE_BITS;
+      const on = (x, y) => { const i = y * src.w + x; return (bits[i >> 3] >> (i & 7)) & 1; };
+      const tw = Math.min(W, Math.floor((hb * 0.64 * src.w) / src.h));
+      const th = Math.max(8, Math.round((tw * src.h) / src.w));
+      const x0 = Math.floor((W - tw) / 2);
+      const sx = src.w / tw, sy = src.h / th;
+      const mask = new Uint8Array(tw * th);
+      for (let ty = 0; ty < th; ty++) {
+        for (let tx = 0; tx < tw; tx++) {
+          let n = 0, hits = 0;
+          for (let yy = Math.floor(ty * sy); yy < Math.floor((ty + 1) * sy); yy++) {
+            for (let xx = Math.floor(tx * sx); xx < Math.floor((tx + 1) * sx); xx++) { n++; hits += on(xx, yy); }
           }
+          mask[ty * tw + tx] = n && hits / n > 0.34 ? 1 : 0;
         }
+      }
+      // close pinholes so thin tracery reads as solid pixel shapes
+      const at = (x, y) => (x >= 0 && y >= 0 && x < tw && y < th ? mask[y * tw + x] : 0);
+      const solid = mask.slice();
+      for (let ty = 0; ty < th; ty++) {
+        for (let tx = 0; tx < tw; tx++) {
+          if (at(tx, ty)) continue;
+          if ((at(tx - 1, ty) && at(tx + 1, ty) && at(tx, ty + 1)) || (at(tx, ty - 1) && at(tx, ty + 1) && (at(tx - 1, ty) || at(tx + 1, ty)))) solid[ty * tw + tx] = 1;
+        }
+      }
+      for (let ty = 0; ty < th; ty++) {
+        for (let tx = 0; tx < tw; tx++) if (solid[ty * tw + tx]) put(x0 + tx + M, base - th + ty, C.sil);
+      }
+      // rolling hills: a pale back range, then a low front range in the skyline green,
+      // rising towards the sides so the silhouette's edges melt into the landscape
+      const A = Math.max(3, th * 0.2);
+      const hill = (x, k) => {
+        const outside = Math.max(0, x0 - x, x - (x0 + tw)) / Math.max(1, W * 0.25);
+        return A * (k + 0.35 * Math.sin(x * 0.045 + k * 7) + 0.25 * Math.sin(x * 0.013 + 2) + 0.15 * Math.sin(x * 0.11)) + A * 0.9 * Math.min(1, outside);
       };
-      house(W * 0.03, 16, 9, 5);
-      house(W * 0.5, 20, 8, 5);
-      house(W * 0.8, 15, 11, 6);
-      // King's College Chapel
-      {
-        const cx0 = Math.round(W * 0.28);
-        fill(cx0 - 26 * u, 0, 52 * u, 15 * u, C.sil);
-        for (let x = -26; x < 26; x += 2) fill(cx0 + x * u, 15 * u, u, u, C.sil);
-        [-19, -12, -5, 2, 9, 16].forEach((p, idx) => {
-          fill(cx0 + p * u, 3 * u, 2 * u, 9 * u, idx === 2 ? C.lit : C.silHi);
-        });
-        [-22, -15, -8, -1, 6, 13, 20].forEach((p) => {
-          fill(cx0 + p * u, 15 * u, u, 4 * u, C.sil);
-          fill(cx0 + p * u - Math.floor(u / 2), 15 * u, u + 1, u, C.sil);
-        });
-        [cx0 - 31 * u, cx0 + 25 * u].forEach((tx) => {
-          fill(tx, 0, 6 * u, 24 * u, C.sil);
-          fill(tx, 24 * u, u, 5 * u, C.sil);
-          fill(tx + 5 * u, 24 * u, u, 5 * u, C.sil);
-          fill(tx + 2 * u, 24 * u, 2 * u, 3 * u, C.sil);
-          fill(tx + 2 * u, 27 * u, u, 3 * u, C.sil);
-          fill(tx + 2 * u, 6 * u, 2 * u, 4 * u, C.silHi);
-        });
+      for (let x = -M; x < W + M; x++) {
+        const hb2 = Math.round(hill(x, 0.9)), hf = Math.round(hill(x + 37, 0.45));
+        const tx = x - x0;
+        const inSil = (y) => tx >= 0 && tx < tw && y < th && solid[(th - 1 - y) * tw + tx];
+        for (let y = hf; y < hb2; y++) if (!inSil(y)) put(x + M, base - 1 - y, C.far);
+        for (let y = 0; y < hf; y++) put(x + M, base - 1 - y, C.sil);
       }
-      // Great St Mary's style tower
-      {
-        const tx = Math.round(W * 0.64);
-        fill(tx, 0, 10 * u, 22 * u, C.sil);
-        [0, 3, 6, 9].forEach((p) => fill(tx + p * u, 22 * u, u, p === 0 || p === 9 ? 4 * u : 2 * u, C.sil));
-        fill(tx + 4 * u, 13 * u, 2 * u, 4 * u, C.lit);
-        fill(tx + 4 * u, 5 * u, 2 * u, 4 * u, C.silHi);
-      }
-      // a spire
-      {
-        const sx0 = Math.round(W * 0.92);
-        fill(sx0 - 2 * u, 0, 5 * u, 13 * u, C.sil);
-        tri(sx0, 13 * u, 2.5 * u, 16 * u, C.sil);
-        fill(sx0, 6 * u, u, 3 * u, C.lit);
-      }
+      // carry the ground line across the full width
+      const gh = Math.max(1, Math.round(th * 0.03));
+      for (let x = -M; x < W + M; x++) for (let y = 0; y < gh; y++) put(x + M, base - 1 - y, C.sil);
     }
 
     const world = renderWorld(false);

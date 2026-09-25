@@ -39,8 +39,9 @@
       hair: 8, hairS: 9, face: 4, faceS: 5, sock: 2, shoe: 2, sole: 5, band: 0
     },
     opp: {
-      shirt: 10, shirtS: 11, collar: 2, shorts: 12, shortsS: 13, skin: 16, skinS: 17,
-      hair: 18, hairS: 18, face: 10, faceS: 11, sock: 2, shoe: 2, sole: 15, band: 2
+      shirt: 2, shirtS: 3, collar: 4, shorts: 2, shortsS: 3, skin: 16, skinS: 17,
+      hair: 18, hairS: 18, face: 10, faceS: 11, sock: 2, shoe: 2, sole: 15, band: 0,
+      panel: 4, crest: 10, sponsor: 1
     }
   };
 
@@ -210,6 +211,7 @@
     px.poly([[X(-0.2), Y(0.9 + U)], [X(0.2), Y(0.9 + U)], [X(0.215), Y(0.575 + U)], [X(-0.215), Y(0.575 + U)]], kit.shorts);
     px.poly([[X(0.1), Y(0.9 + U)], [X(0.2), Y(0.9 + U)], [X(0.215), Y(0.575 + U)], [X(0.11), Y(0.575 + U)]], kit.shortsS);
     if (k >= 14) px.capsule(X(0), Y(0.575 + U), X(0), Y(0.66 + U), 0.5, kit.shortsS);
+    if (kit.crest && !back) px.circle(X(0.12), Y(0.66 + U), R(0.03, 0.55), kit.crest);
 
     // ---- arms
     function drawArm(shoulderBX, handB) {
@@ -232,6 +234,10 @@
       px.capsule(X(E[0]), Y(E[1]), X(Hd[0]), Y(Hd[1]), R(0.048), kit.skin);
       const sl = [S[0] + (E[0] - S[0]) * 0.45, S[1] + (E[1] - S[1]) * 0.45];
       px.capsule(X(S[0]), Y(S[1]), X(sl[0]), Y(sl[1]), R(0.078), kit.shirt);
+      if (kit.panel) {
+        const c0 = [S[0] + (E[0] - S[0]) * 0.36, S[1] + (E[1] - S[1]) * 0.36];
+        px.capsule(X(c0[0]), Y(c0[1]), X(sl[0]), Y(sl[1]), R(0.08), kit.panel);
+      }
       px.circle(X(Hd[0]), Y(Hd[1]), R(0.054), kit.skin);
       return Hd;
     }
@@ -273,6 +279,16 @@
     px.circle(X(-0.19), Y(1.34 + U), R(0.078), kit.shirt);
     px.circle(X(0.19), Y(1.34 + U), R(0.078), kit.shirt);
     px.poly([[X(0.12), Y(1.4 + U)], [X(0.225), Y(1.4 + U)], [X(0.19), Y(0.86 + U)], [X(0.1), Y(0.86 + U)]], kit.shirtS);
+    if (kit.panel) {
+      // green side panels, chest crest and the sponsor across the front
+      [-1, 1].forEach((sd) => px.poly([[X(0.225 * sd), Y(1.28 + U)], [X(0.16 * sd), Y(1.28 + U)], [X(0.14 * sd), Y(0.86 + U)], [X(0.19 * sd), Y(0.86 + U)]], kit.panel));
+      if (!back) {
+        px.circle(X(0.105), Y(1.285 + U), R(0.03, 0.55), kit.panel);
+        px.circle(X(0.09), Y(1.27 + U), R(0.032, 0.6), kit.crest);
+        px.capsule(X(-0.1), Y(1.1 + U), X(0.05), Y(1.1 + U), R(0.022, 0.5), kit.sponsor);
+        px.circle(X(0.095), Y(1.1 + U), R(0.03, 0.5), kit.sponsor);
+      }
+    }
 
     // ---- neck + collar
     px.capsule(X(0), Y(1.38 + U), X(0), Y(1.5 + U), R(0.062), kit.skin);
@@ -282,9 +298,13 @@
       px.capsule(X(-0.1), Y(1.415 + U), X(-0.075), Y(1.47 + U), cr * 0.8, kit.collar);
       px.capsule(X(0.1), Y(1.415 + U), X(0.075), Y(1.47 + U), cr * 0.8, kit.collar);
     } else {
-      const cr = Math.max(0.55, 0.03 * k);
+      const cr = Math.max(kit.panel ? 0.75 : 0.55, (kit.panel ? 0.042 : 0.03) * k);
       px.capsule(X(-0.1), Y(1.42 + U), X(0), Y(1.33 + U), cr, kit.collar);
       px.capsule(X(0.1), Y(1.42 + U), X(0), Y(1.33 + U), cr, kit.collar);
+      if (kit.panel) {
+        px.capsule(X(-0.1), Y(1.42 + U), X(-0.16), Y(1.37 + U), cr, kit.collar);
+        px.capsule(X(0.1), Y(1.42 + U), X(0.16), Y(1.37 + U), cr, kit.collar);
+      }
     }
 
     // ---- head

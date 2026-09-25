@@ -12,8 +12,8 @@
 :root {
   --px: 1px;              /* size of one game pixel in CSS px (set from JS) */
   --ink: #1a1c2c;
-  --night: #221852;
-  --night-2: #16103a;
+  --night: #1f4034;
+  --night-2: #132a22;
   --green: #85b4a0;       /* logo green */
   --green-dark: #4f8069;
   --green-light: #b8dccb;
@@ -107,7 +107,7 @@ body {
   padding: 0;
   border: 0;
   color: #fff;
-  background: rgba(22, 16, 58, .55);
+  background: rgba(19, 42, 34, .55);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85), 0 0 0 2px var(--ink);
   cursor: pointer;
   text-decoration: none;
@@ -135,24 +135,24 @@ body {
   padding:
     max(64px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
     max(18px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
-  background: linear-gradient(180deg, rgba(22, 16, 58, .25), rgba(22, 16, 58, .55));
+  background: linear-gradient(180deg, rgba(19, 42, 34, .25), rgba(19, 42, 34, .55));
   animation: overlay-in .25s steps(4) both;
 }
 
 .overlay[hidden] { display: none; }
 
-#scr-title { cursor: pointer; background: linear-gradient(180deg, rgba(22, 16, 58, .05), rgba(22, 16, 58, .5)); }
+#scr-title { cursor: pointer; background: linear-gradient(180deg, rgba(19, 42, 34, .05), rgba(19, 42, 34, .5)); }
 
 .panel {
   width: min(100%, 400px);
   padding: 22px 18px 20px;
   text-align: center;
-  background: rgba(34, 24, 82, .92);
+  background: rgba(31, 64, 52, .94);
   box-shadow:
     inset 0 0 0 3px #fff,
     inset 0 0 0 6px var(--ink),
     0 0 0 3px var(--ink),
-    8px 8px 0 3px rgba(10, 6, 30, .45);
+    8px 8px 0 3px rgba(8, 22, 17, .45);
   animation: panel-in .35s steps(5) both;
 }
 
@@ -217,7 +217,7 @@ body {
   font-size: 8px;
   line-height: 2.1;
   color: #d9e6ff;
-  background: rgba(10, 6, 30, .35);
+  background: rgba(8, 22, 17, .35);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .12);
 }
 
@@ -315,19 +315,19 @@ body {
 
 .px-btn--ghost {
   color: #fff;
-  background: #3a2f7a;
+  background: #2f5a4a;
   box-shadow:
-    inset -4px -4px 0 #261d5c,
-    inset 4px 4px 0 #5a4ea6,
+    inset -4px -4px 0 #1f4034,
+    inset 4px 4px 0 #4d7d69,
     0 0 0 3px var(--ink),
     0 6px 0 3px var(--ink);
 }
 
-.px-btn--ghost:hover { background: #4a3e92; }
+.px-btn--ghost:hover { background: #3a6b57; }
 
 .px-btn--ghost:active {
   box-shadow:
-    inset 4px 4px 0 #261d5c,
+    inset 4px 4px 0 #1f4034,
     0 0 0 3px var(--ink),
     0 2px 0 3px var(--ink);
 }

@@ -149,7 +149,7 @@
           if (dx * dx + dy * dy <= b[2] * b[2]) inside = true;
         }
         if (!inside) continue;
-        g.fillStyle = y >= h - 2 ? '#f39ab8' : y < h * 0.35 ? '#fff1f5' : '#ffd4e2';
+        g.fillStyle = y >= h - 2 ? '#e3d6d3' : y < h * 0.35 ? '#ffffff' : '#f6efed';
         g.fillRect(x, y, 1, 1);
       }
     }
@@ -1058,7 +1058,7 @@
     }
 
     if (state.paused) {
-      ctx.fillStyle = 'rgba(12, 8, 32, 0.45)';
+      ctx.fillStyle = 'rgba(8, 22, 17, 0.45)';
       ctx.fillRect(0, 0, W, H);
     }
   }

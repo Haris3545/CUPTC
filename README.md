@@ -3,7 +3,7 @@
 Placeholder website for the Cambridge University Padel Club, with a small retro game to tide visitors over until the full site launches.
 
 - **`/`**: landing page with the logo, "Full Website Coming Soon", and a **To Tide You Over** button.
-- **`/play/`**: **Padel Pong**, a 16-bit padel rally game with a behind-the-player camera, glass walls and a sunset Cambridge skyline.
+- **`/play/`**: **Padel Pong**, a 16-bit padel rally game with a behind-the-player camera, glass walls, a crowd in club colours and a Cambridge skyline.
 
 It's a plain static site with no build step and no dependencies.
 
@@ -40,7 +40,7 @@ Every return adds one to the counter at the top of the screen. The game speeds u
 
 | File | What it does |
 |---|---|
-| `play/js/court.js` | Camera and scene. The court, glass walls, stands and skyline are ray-cast pixel by pixel into a low-resolution canvas (SNES "Mode 7" style) once per resize. |
+| `play/js/court.js` | Camera and scene. The court, glass walls, stands, sponsor boards and skyline are ray-cast pixel by pixel into a low-resolution canvas (SNES "Mode 7" style) once per resize. |
 | `play/js/sprites.js` | Procedural pixel-art players built from a simple skeleton, with automatic 1px outlines, run cycles and swing poses. |
 | `play/js/game.js` | Game loop, ball physics (bounces, glass rebounds), opponent AI, input, effects and HUD. |
 | `play/js/font.js` | 5×7 bitmap font for in-game text. |
