@@ -1197,8 +1197,13 @@
   const anchor = () => (/^#(support|donate)$/.test(location.hash) ? $('#support') : null);
   window.addEventListener('hashchange', () => route(false));
 
+  let reverseEntry = null;   // set by the phone entry animation below
   function goStart() {
-    if (location.hash) { history.pushState(null, '', location.pathname + location.search); route(false); }
+    if (!location.hash) return;
+    // On a phone at the top of Home, play the entry animation backwards instead of the green unfold.
+    if (reverseEntry && reverseEntry()) return;
+    history.pushState(null, '', location.pathname + location.search);
+    route(false);
   }
   // "Back to the start" links clear the hash; links to the page you're on scroll to the top.
   document.addEventListener('click', (e) => {
@@ -2109,7 +2114,8 @@
     const pimg = $('.sphoto img'), heroEl = $('.hero'), heroCopy = $('.hero-copy');
     const curtain = $('.curtain'), photo = $('.sphoto'), logo = $('.start-logo'), em = $('.start-logo .em'), wm = $('.start-logo .wm');
     const nav = $('.start-nav'), tags = $('#tags'), pages = $('#pages'), hdr = $('.hdr'), hdrImg = $('.hdr-logo img'), sbar = $('#member-bar');
-    const touched = [curtain, photo, pimg, heroCopy, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
+    const startEl = $('#start');
+    const touched = [startEl, curtain, photo, pimg, heroCopy, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
     let geo = null, p = 0, y0 = null, armed = false, samples = [], anim = 0, busy = false, wheel = 0, wheelTimer = 0;
     const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !busy;
     const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -2140,6 +2146,9 @@
       photo.style.clipPath = `inset(${G}px 0 ${vh - B}px 0)`;
       pimg.style.top = G + 'px';
       pimg.style.height = (B - G) + 'px';
+      pimg.style.transform = 'none';
+      startEl.style.opacity = 1;
+      startEl.style.visibility = 'visible';
       tags.style.opacity = 1 - span(t, 0, 0.12);
       nav.style.translate = `0 ${G - vh / 2}px`;
       nav.style.opacity = 1 - span(t, 0, 0.2);
@@ -2183,6 +2192,30 @@
       void root.offsetWidth;
       requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
     }
+    // The same animation backwards, back to the start screen (pulling down at the top of Home, or the logo).
+    reverseEntry = () => {
+      if (busy || !phoneMq.matches || reduce || current !== 'home' || window.scrollY > 4 || root.classList.contains('menu-open')) return false;
+      busy = true;
+      hero.run(false);                                          // slideshow back to the committee photo while the text fades
+      $$('#slides img').forEach((im) => { im.style.transition = 'opacity .9s ease'; });
+      measure();
+      const t0 = performance.now(), DUR = 2100;
+      const step = (now) => {
+        const t = clamp01((now - t0) / DUR);
+        draw(1 - t);
+        if (t < 1) { anim = requestAnimationFrame(step); return; }
+        busy = false;
+        root.classList.add('no-anim');
+        history.pushState(null, '', location.pathname + location.search);
+        route(false);
+        clear();
+        $$('#slides img').forEach((im) => im.style.removeProperty('transition'));
+        void root.offsetWidth;
+        requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
+      };
+      anim = requestAnimationFrame(step);
+      return true;
+    };
     // One smooth, self-playing animation: a swipe up (or tapping "home") starts it and it plays through.
     function play() {
       if (busy) return;
