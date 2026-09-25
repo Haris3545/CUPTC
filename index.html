@@ -274,8 +274,14 @@
 
   /* ================================================================ Membership */
   .page-head { padding: clamp(80px, 14vh, 150px) 0 clamp(56px, 8vh, 90px); }
-  .countdown { display: flex; gap: 10px; justify-content: center; margin-top: 30px; font-variant-numeric: tabular-nums; }
-  .countdown div { min-width: 82px; padding: 12px 8px 8px; border-top: 1.5px solid var(--green); display: grid; }
+  .sale-panel { margin: 36px auto 0; width: min(520px, 100%); padding: 26px 24px 22px; border: 1.5px solid rgba(223, 35, 38, .35); border-radius: 18px; background: #fff; }
+  .sale-tag { display: inline-block; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: var(--red); border-radius: 99px; padding: 5px 14px 4px; }
+  .sale-offer { font-size: clamp(22px, 2.4vw, 28px); margin-top: 14px; }
+  .sale-offer b { font-weight: 400; color: var(--red); }
+  .sale-offer s { color: var(--ink-3); font-size: .7em; margin-left: 4px; }
+  .sale-ends { margin-top: 14px; font-size: 15px; font-style: italic; color: var(--ink-3); }
+  .countdown { display: flex; gap: 10px; justify-content: center; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .countdown div { min-width: 82px; padding: 12px 8px 8px; border-top: 1.5px solid var(--red); display: grid; }
   .countdown strong { font-weight: 400; font-size: 40px; line-height: 1; }
   .countdown span { font-size: 14px; color: var(--ink-3); font-style: italic; margin-top: 6px; }
 
@@ -664,14 +670,17 @@
         <h2 class="display rv">Membership.</h2>
         <hr class="rule rv" style="--d:.06s">
         <p class="lede rv" style="--d:.1s">One membership for the whole 2026&ndash;27 year. Both include weekly padel, every social and the members' shop.</p>
-        <div data-sale class="rv" style="--d:.18s">
+        <div data-sale class="sale-panel rv" style="--d:.18s">
+          <p class="sale-tag">Freshers sale</p>
+          <p class="sale-offer">Social membership <b>£40</b> <s>£50</s></p>
+          <p class="sale-ends">Offer ends in</p>
           <div class="countdown" aria-label="Time left in the freshers sale">
             <div><strong data-cd="d">0</strong><span>days</span></div>
             <div><strong data-cd="h">00</strong><span>hours</span></div>
             <div><strong data-cd="m">00</strong><span>minutes</span></div>
             <div><strong data-cd="s">00</strong><span>seconds</span></div>
           </div>
-          <p class="small" style="margin-top:14px">Freshers sale: Social is £40 until midnight on 11 October, then £50.</p>
+          <p class="small" style="margin-top:14px">The price goes up to £50 at midnight on 11 October.</p>
         </div>
       </div>
     </section>
