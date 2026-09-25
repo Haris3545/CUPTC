@@ -516,6 +516,7 @@
     .hdr-menu { display: block; }
     .hdr-logo img { height: 36px; }
     .hero { height: calc(88svh - var(--bar)); min-height: 460px; }
+    .hero .slides img:first-child { object-position: 50% 40%; }   /* same crop as the start-screen photo */
     .hero-dots { display: none; }
     .sec { padding: 72px 0; }
     .tiers { grid-template-columns: 1fr; }
@@ -1033,7 +1034,7 @@
   // Passwords and codes are checked on the server (api/). Prices here are for display; the server sets what's charged.
   const SALE_END = new Date('2026-10-11T23:59:59+01:00');
   const PRICES = { socialSale: 40, social: 50, committee: 20, full: 80 };
-  const HERO = ['p16', 'p15', 'p12', 'p19'];
+  const HERO = ['p2', 'p16', 'p15', 'p12', 'p19'];   // p2 is the start-screen photo, so it carries straight on
   const PHOTOS = ['p15','p12','p19','p16','p9','p13','p21','p10','p4','p18','p14','p20','p3','p6','p7','p5','p11'];
   const IMAGES = [
     ['kit-shirt', 'Kit: shirt (front and back)'], ['kit-skort', 'Kit: skort'], ['kit-shorts', 'Kit: shorts'],
@@ -1085,14 +1086,14 @@
     const imgs = HERO.map((k, i) => {
       const im = document.createElement('img');
       im.src = imgSrc(k);
-      im.alt = i ? '' : 'CUPTC members courtside on a sunny day';
+      im.alt = i ? '' : 'CUPTC committee members at the club stall by the courts';
       if (i) im.loading = 'lazy';
       box.appendChild(im);
       dots.appendChild(document.createElement('i'));
       return im;
     });
     let i = 0, timer = 0;
-    function show(n) {
+    function show(n, calm) {
       imgs[i].classList.remove('on');
       dots.children[i].classList.remove('on');
       i = n;
@@ -1101,13 +1102,19 @@
       void dots.children[i].offsetWidth;
       dots.children[i].classList.add('on');
       im.getAnimations().forEach((a) => a.cancel());
-      if (!reduce) im.animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 9000, easing: 'cubic-bezier(.2,.6,.2,1)', fill: 'forwards' });
+      if (!reduce && !calm) im.animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 9000, easing: 'cubic-bezier(.2,.6,.2,1)', fill: 'forwards' });
     }
     return {
-      run(on) {
+      // calm: arriving by swiping from the start screen, where this photo is already on screen, so no zoom-in
+      run(on, calm) {
         clearInterval(timer);
-        if (!on) return;
-        show(i);
+        if (!on) {
+          // back to the first slide, ready for the next time Home opens
+          imgs.forEach((im, k) => { im.getAnimations().forEach((a) => a.cancel()); im.classList.toggle('on', !k); dots.children[k].classList.remove('on'); });
+          i = 0;
+          return;
+        }
+        show(i, calm);
         if (!reduce) timer = setInterval(() => show((i + 1) % imgs.length), 6000);
       }
     };
@@ -1160,7 +1167,7 @@
       const act = $('.page.active');
       if (!act || act.dataset.page !== page) showPage(page);
       else {
-        hero.run(page === 'home');
+        hero.run(page === 'home', true);
         $$('[data-go]').forEach((a) => { if (a.dataset.go === page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
       }
       document.title = TITLES[page];
@@ -2121,14 +2128,15 @@
       p = clamp01(v);
       const { vh, bar, T, s, dx, dy, ox, oy } = geo;
       const e = 1 - Math.pow(1 - clamp01(p / 0.6), 2);        // logo gets into place first, then hands over to the header's
-      const G = vh / 2 + (bar - vh / 2) * p;                  // bottom edge of the green
-      const B = vh + (geo.heroB - vh) * p;                    // bottom edge of the photo: ends where Home's photo ends
+      const g = 1 - Math.pow(1 - clamp01(p / 0.72), 2);      // the shapes settle first...
+      const G = vh / 2 + (bar - vh / 2) * g;                  // bottom edge of the green
+      const B = vh + (geo.heroB - vh) * g;                    // bottom edge of the photo: ends where Home's photo ends
       curtain.style.clipPath = `inset(0 0 ${vh - G}px 0)`;
       // the photo grows into the space the green gives up, becoming Home's big photo
       photo.style.clipPath = `inset(${G}px 0 ${vh - B}px 0)`;
       pimg.style.top = G + 'px';
       pimg.style.height = (B - G) + 'px';
-      const f = clamp01((p - 0.55) / 0.4);                    // then crossfades into Home's slideshow
+      const f = clamp01((p - 0.72) / 0.26);                   // ...then Home fades in over the identical photo
       photo.style.opacity = 1 - f;
       tags.style.opacity = clamp01(1 - p * 3);
       nav.style.translate = `0 ${G - vh / 2}px`;
