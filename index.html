@@ -74,7 +74,7 @@
   /* Phones: swiping up on the start screen carries you into the home page */
   /* Phones: while swiping from the start screen, JS drives these directly (green shrinks into the header,
      big logo becomes the header logo, photo scrolls away, Home arrives underneath). */
-  html.morph .curtain, html.morph .sphoto, html.morph .sphoto *, html.morph .hero-copy, html.morph .start, html.morph .start *, html.morph .pages,
+  html.morph .curtain, html.morph .sphoto, html.morph .sphoto *, html.morph .hero-copy, html.morph .hero-copy *, html.morph .start, html.morph .start *, html.morph .pages,
   html.morph .hdr, html.morph .hdr *, html.morph .signed-bar { transition: none !important; animation: none !important; }
   .swipe-hint { display: none; }
   /* Phones: pulling Home down from the top takes you back to the start screen */
@@ -226,7 +226,7 @@
   .hero { position: relative; height: calc(100svh - var(--bar) - var(--sbar, 0px)); min-height: 520px; overflow: hidden; background: #1c2a24; }
   .hero .slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s ease; }
   .hero .slides img.on { opacity: 1; }
-  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.12) 30%, rgba(0,0,0,.66) 100%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; inset: 0; opacity: var(--shade, 1); background: linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.12) 30%, rgba(0,0,0,.66) 100%); pointer-events: none; }
   .hero-copy { text-shadow: 0 1px 24px rgba(0,0,0,.25); }
   .hero-copy { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; padding: 0 var(--gutter) clamp(40px, 8vh, 84px); color: #fff; display: grid; gap: 24px; }
   .hero-copy .display { max-width: 11em; }
@@ -2124,38 +2124,52 @@
         dx: h.left + 6 * kh - (e.left + 7 * ku * s), dy: h.top + 58 * kh - (e.top + 45 * ku * s) };
       root.classList.add('morph');
     }
+    // t runs 0 to 1 in even time. First the shapes move (green, logo, photo), then Home's pieces fade in
+    // one after another over the settled photo: the shading, the title, the paragraph, then the button.
+    const sine = (x) => (1 - Math.cos(Math.PI * clamp01(x))) / 2;
+    const span = (t, a, b) => sine((t - a) / (b - a));
     function draw(v) {
-      p = clamp01(v);
-      const { vh, bar, T, s, dx, dy, ox, oy } = geo;
-      const e = 1 - Math.pow(1 - clamp01(p / 0.6), 2);        // logo gets into place first, then hands over to the header's
-      const g = 1 - Math.pow(1 - clamp01(p / 0.72), 2);      // the shapes settle first...
+      const t = clamp01(v);
+      p = t;
+      const { vh, bar, s, dx, dy, ox, oy } = geo;
+      const g = span(t, 0, 0.5);                              // green, photo: first half
+      const e = span(t, 0, 0.42);                             // logo gets into place a touch sooner
       const G = vh / 2 + (bar - vh / 2) * g;                  // bottom edge of the green
       const B = vh + (geo.heroB - vh) * g;                    // bottom edge of the photo: ends where Home's photo ends
       curtain.style.clipPath = `inset(0 0 ${vh - G}px 0)`;
-      // the photo grows into the space the green gives up, becoming Home's big photo
       photo.style.clipPath = `inset(${G}px 0 ${vh - B}px 0)`;
       pimg.style.top = G + 'px';
       pimg.style.height = (B - G) + 'px';
-      const f = clamp01((p - 0.72) / 0.26);                   // ...then Home fades in over the identical photo
-      photo.style.opacity = 1 - f;
-      tags.style.opacity = clamp01(1 - p * 3);
+      tags.style.opacity = 1 - span(t, 0, 0.12);
       nav.style.translate = `0 ${G - vh / 2}px`;
-      nav.style.opacity = clamp01(1 - p * 2.6);
+      nav.style.opacity = 1 - span(t, 0, 0.2);
       logo.style.transformOrigin = `${ox}px ${oy}px`;
       logo.style.transform = `translate(${dx * e}px, ${dy * e}px) scale(${1 + (s - 1) * e})`;
-      wm.style.opacity = clamp01(1 - p * 2.2);
-      const q = clamp01((p - 0.62) / 0.3);                    // hand over to the real header logo at the end
+      wm.style.opacity = 1 - span(t, 0, 0.25);
+      const q = span(t, 0.32, 0.5);                           // hand over to the real header logo
       em.style.opacity = 1 - q;
       hdr.style.visibility = 'visible';
       hdr.style.opacity = 1;
       hdrImg.style.opacity = q;
       $('.hdr-menu', hdr).style.opacity = q;
       if (sbar) sbar.style.opacity = q;
-      pages.style.opacity = f;
-      heroCopy.style.translate = `0 ${(1 - f) * 28}px`;
+      // Once settled, swap to Home's own (identical) photo in one frame, so there's no crossfade flash.
+      const settled = t >= 0.5;
+      photo.style.opacity = settled ? 0 : 1;
+      pages.style.opacity = settled ? 1 : 0;
+      heroEl.style.setProperty('--shade', span(t, 0.5, 0.7).toFixed(3));
+      heroCopy.style.translate = '0 0';
+      const [h, para, act] = heroCopy.children;
+      [[h, 0.6, 0.8], [para, 0.7, 0.9], [act, 0.8, 1]].forEach(([el, a0, a1]) => {
+        const k = span(t, a0, a1);
+        el.style.opacity = k;
+        el.style.translate = `0 ${(1 - k) * 16}px`;
+      });
     }
     function clear() {
       touched.forEach((el) => el && el.removeAttribute('style'));
+      Array.from(heroCopy.children).forEach((el) => el.removeAttribute('style'));
+      heroEl.style.removeProperty('--shade');
       $('.hdr-menu', hdr).removeAttribute('style');
       root.classList.remove('morph');
       geo = null;
@@ -2170,15 +2184,14 @@
       requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
     }
     // One smooth, self-playing animation: a swipe up (or tapping "home") starts it and it plays through.
-    const ease = (t) => (1 - Math.cos(Math.PI * t)) / 2;     // gentle in and out, even through the middle
     function play() {
       if (busy) return;
       busy = true;
       measure();
-      const t0 = performance.now(), DUR = 1500;
+      const t0 = performance.now(), DUR = 2300;
       const step = (now) => {
         const t = clamp01((now - t0) / DUR);
-        draw(ease(t));
+        draw(t);
         if (t < 1) { anim = requestAnimationFrame(step); return; }
         busy = false;
         arrive();
