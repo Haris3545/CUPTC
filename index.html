@@ -32,7 +32,7 @@
     --out: cubic-bezier(.16, 1, .3, 1);
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: var(--paper); color: var(--ink); font: 400 19px/1.6 var(--serif); -webkit-font-smoothing: antialiased; }
   html.at-start body, html.menu-open body { overflow: hidden; }
   img { max-width: 100%; height: auto; display: block; }
@@ -86,7 +86,7 @@
   .start-nav .s-area { bottom: clamp(26px, 7vh, 64px); }
   .ul { position: relative; }
   .ul::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.12em; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .55s var(--out); }
-  .ul:hover::after, .ul[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
+  .ul[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
 
   /* Who's who: hover the people in the start photo (computers with a mouse only) */
   .tags { position: absolute; inset: 0 47.5% 0 0; display: none; }
@@ -95,18 +95,20 @@
   /* A short hand-drawn arrow draws itself to the person, then the name is "written" in.
      Positions are worked out in JS so labels always stay on screen. */
   .arrow { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
-  .arrow path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .2s ease; }
+  .arrow path { stroke-dasharray: 1 2; stroke-dashoffset: 1.01; transition: stroke-dashoffset .2s ease; }
+  .arrow, .label { opacity: 0; visibility: hidden; }
+  .tag:hover .arrow { opacity: 1; visibility: visible; transition: opacity .1s ease, visibility 0s; }
   .tag:hover .shaft { stroke-dashoffset: 0; transition: stroke-dashoffset .42s cubic-bezier(.5, 0, .3, 1); }
   .tag:hover .head { stroke-dashoffset: 0; transition: stroke-dashoffset .18s ease-out .38s; }
   .label {
     position: absolute; left: 0; top: 0; transform: rotate(var(--rot, -3deg)); white-space: nowrap; text-align: center; pointer-events: none;
     color: #fff; font-family: "Caveat", "Bradley Hand", cursive; line-height: 1; text-shadow: 0 0 14px rgba(0, 0, 0, .65), 0 1px 3px rgba(0, 0, 0, .55);
-    clip-path: inset(-30% 100% -30% -5%); transition: clip-path .2s ease;
+    clip-path: inset(-30% 100% -30% -5%); transition: clip-path .2s ease, opacity .22s ease, visibility 0s linear .22s;
   }
   .label b { display: block; font-weight: 600; font-size: clamp(24px, 2.2vw, 32px); }
   .label i { display: block; font-style: normal; font-weight: 500; font-size: clamp(17px, 1.5vw, 22px); margin-top: 2px; }
   .label small { display: block; font-weight: 500; font-size: clamp(15px, 1.25vw, 18px); margin-top: 3px; opacity: .92; }
-  .tag:hover .label { clip-path: inset(-30% -5% -30% -5%); transition: clip-path .7s cubic-bezier(.45, 0, .25, 1) .4s; }
+  .tag:hover .label { opacity: 1; visibility: visible; clip-path: inset(-30% -5% -30% -5%); transition: clip-path .7s cubic-bezier(.45, 0, .25, 1) .4s, opacity .1s ease .4s, visibility 0s .4s; }
   .hint { position: absolute; left: clamp(18px, 2.4vw, 36px); bottom: clamp(18px, 3.4vh, 34px); margin: 0; color: #fff; font: 500 24px/1 "Caveat", cursive; text-shadow: 0 0 14px rgba(0, 0, 0, .7), 0 1px 3px rgba(0, 0, 0, .6); display: flex; align-items: center; gap: 10px; transition: opacity .6s ease; }
   .hint::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255, 255, 255, .3); animation: pulse 2.4s ease-in-out infinite; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); } }
@@ -131,7 +133,6 @@
   }
   html.at-start .hdr { opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility 0s .2s; }
   .hdr-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; transition: opacity .3s ease; }
-  .hdr-logo:hover { opacity: .85; }
   .hdr-logo img { height: 46px; width: auto; }
   .hdr-nav { display: flex; gap: clamp(22px, 3.2vw, 48px); }
   .hdr-nav a { color: #fff; text-decoration: none; font-size: 20px; }
@@ -155,7 +156,8 @@
   html.menu-open .menu nav a, html.menu-open .menu .back-m, html.menu-open .menu .contact { opacity: 1; transform: none; transition: opacity .6s ease, transform .8s var(--out); transition-delay: calc(.25s + var(--k) * 70ms); }
 
   /* ================================================================ Pages */
-  .pages { padding-top: var(--bar); opacity: 1; transition: opacity .7s ease 1s; }
+  .pages { padding-top: var(--bar); opacity: 1; transition: opacity .45s ease; }
+  html.entering .pages { transition: opacity .7s ease 1s; }
   html.at-start .pages { opacity: 0; transition: opacity .25s ease; }
   .pages.swap { opacity: 0 !important; transition: opacity .3s ease !important; }
   .page { display: none; }
@@ -173,11 +175,9 @@
   .ri { border-radius: 14px; transform: translateZ(0); transition: clip-path 1.4s var(--out) calc(var(--base, 0s) + var(--d, 0s)), box-shadow .5s var(--out), transform .5s var(--out); }
   .ri img { transition-delay: calc(var(--base, 0s) + var(--d, 0s)); }
   .ri.shown { clip-path: none; overflow: hidden; }
-  .ri.shown:hover { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
   .empty-ph { display: grid; place-items: center; background: var(--green-soft); }
   .person .empty-ph span { font-size: clamp(56px, 6vw, 88px); font-style: normal; color: var(--green-dark); line-height: 1; }
   .pimg { border-radius: 14px; transition: box-shadow .5s var(--out), transform .5s var(--out); }
-  .product:hover .pimg { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
 
   .wrap { width: min(1240px, 100%); margin: 0 auto; padding: 0 var(--gutter); }
   .narrow { width: min(820px, 100%); margin: 0 auto; padding: 0 var(--gutter); }
@@ -199,17 +199,12 @@
     font-size: 19px; line-height: 1; padding: 18px 34px; border-radius: 999px; background: var(--green); color: #fff;
     transition: background-color .35s ease, transform .5s var(--out), box-shadow .5s var(--out);
   }
-  .btn:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 14px 30px -16px rgba(40, 80, 64, .7); }
   .btn:active { transform: none; transition-duration: .1s; }
   .btn.red { background: var(--red); }
-  .btn.red:hover { background: var(--red-dark); box-shadow: 0 14px 30px -16px rgba(150, 20, 22, .7); }
   .btn.line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--green); }
-  .btn.line:hover { background: var(--green-soft); }
   .btn.onphoto { background: #fff; color: var(--ink); }
-  .btn.onphoto:hover { background: #f1f4f2; }
   .btn.sm { font-size: 16px; padding: 13px 22px; }
   .link { color: var(--ink); text-decoration: none; background: linear-gradient(var(--green), var(--green)) 0 100% / 100% 1.5px no-repeat; padding-bottom: 3px; transition: background-size .5s var(--out); }
-  .link:hover { background-size: 0 1.5px; background-position: 100% 100%; }
   .actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
   .center .actions { justify-content: center; }
 
@@ -275,9 +270,7 @@
   .foot-bottom { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.4); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; font-size: 15px; }
   .back { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-style: italic; }
   .back i { font-style: normal; width: 40px; height: 40px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #fff; display: grid; place-items: center; transition: transform .5s var(--out), background-color .3s, color .3s; }
-  .back:hover i { transform: translateY(-3px); background: #fff; color: var(--green-dark); }
   .copy { border: 0; background: rgba(255,255,255,.2); color: #fff; border-radius: 99px; padding: 1px 10px; font-size: 13px; cursor: pointer; margin-left: 8px; vertical-align: 2px; }
-  .copy:hover { background: rgba(255,255,255,.32); }
 
   /* ================================================================ Membership */
   .page-head { padding: clamp(80px, 14vh, 150px) 0 clamp(56px, 8vh, 90px); }
@@ -313,7 +306,6 @@
     font: 600 18px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     display: inline-flex; align-items: center; justify-content: center; transition: background-color .2s, opacity .3s, transform .3s var(--out);
   }
-  .apple:hover { background: #222; }
   .apple:active { transform: scale(.985); }
   .apple:disabled { opacity: .28; cursor: not-allowed; }
   .note { font-size: 14px; color: var(--ink-3); font-style: italic; text-align: center; }
@@ -336,7 +328,6 @@
   .pimg { aspect-ratio: 4 / 5; background: #f4f6f5; display: grid; place-items: center; overflow: hidden; margin-bottom: 6px; }
   .pimg img { width: 100%; height: 100%; object-fit: contain; transition: transform 1s var(--out); }
   .pimg.cover img { object-fit: cover; }
-  .product:hover .pimg img { transform: scale(1.03); }
   .product h3 { font-size: 22px; line-height: 1.2; }
   .product .d { font-size: 16px; color: var(--ink-2); }
   .pmeta { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -361,6 +352,10 @@
   .sheet { width: min(460px, 100%); background: #f6f6f6; border-radius: 22px 22px 0 0; padding: 18px 20px calc(24px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; animation: up .55s var(--out) both; box-shadow: 0 -12px 40px rgba(0,0,0,.18); }
   @media (min-width: 600px) { .scrim { align-items: center; } .sheet { border-radius: 22px; } }
   @keyframes up { from { transform: translateY(40px); opacity: 0; } }
+  .scrim.closing { animation: fadeOut .28s ease both; pointer-events: none; }
+  .scrim.closing .sheet { animation: down .28s ease-in both; }
+  @keyframes fadeOut { to { opacity: 0; } }
+  @keyframes down { to { transform: translateY(24px); opacity: 0; } }
   .sh-head { display: flex; justify-content: space-between; align-items: center; font-size: 20px; }
   .sh-x { border: 0; background: #e4e4e4; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; }
   .sh-demo { background: #fff4d6; color: #6b4e00; font-size: 14px; border-radius: 10px; padding: 8px 12px; }
@@ -374,6 +369,26 @@
   @keyframes pop { from { transform: scale(.3); } }
   .pw { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 14px 16px; font: 600 17px ui-monospace, Menlo, monospace; letter-spacing: .04em; }
   .pw .copy { background: var(--green-soft); color: var(--ink); }
+
+  /* Hover effects: only where there is a mouse, so taps on phones don't leave them stuck on */
+  @media (hover: hover) and (pointer: fine) {
+    .ul:hover::after { transform: scaleX(1); transform-origin: left; }
+    .tag:not(:hover) .arrow { transition: opacity .22s ease, visibility 0s linear .22s; }
+    .hdr-logo:hover { opacity: .85; }
+    .ri.shown:hover { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
+    .product:hover .pimg { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
+    .btn:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 14px 30px -16px rgba(40, 80, 64, .7); }
+    .btn.red:hover { background: var(--red-dark); box-shadow: 0 14px 30px -16px rgba(150, 20, 22, .7); }
+    .btn.line:hover { background: var(--green-soft); }
+    .btn.onphoto:hover { background: #f1f4f2; }
+    .link:hover { background-size: 0 1.5px; background-position: 100% 100%; }
+    .back:hover i { transform: translateY(-3px); background: #fff; color: var(--green-dark); }
+    .copy:hover { background: rgba(255,255,255,.32); }
+    .apple:hover { background: #222; }
+    .product:hover .pimg img { transform: scale(1.03); }
+    .photo-tools button:hover { background: #dce9e2; }
+    .eye:hover { color: var(--green-dark); }
+  }
 
   html.no-anim *, html.no-anim *::before, html.no-anim *::after { transition: none !important; }
 
@@ -443,7 +458,6 @@
   html.is-committee .photo-tools { display: flex; }
   .person:not(.custom) [data-photo="reset"] { display: none; }
   .photo-tools button { border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer; font-size: 14px; background: var(--green-soft); color: var(--ink); transition: background-color .3s; }
-  .photo-tools button:hover { background: #dce9e2; }
   .sh-main { display: grid; }
   .crop { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: #e8ece9; touch-action: none; cursor: grab; }
   .crop:active { cursor: grabbing; }
@@ -453,7 +467,7 @@
   .pw-wrap { position: relative; flex: 1; min-width: 0; display: block; }
   .pw-wrap .input { padding-right: 44px; }
   .eye { position: absolute; right: 0; bottom: 5px; width: 40px; height: 40px; border: 0; background: none; cursor: pointer; color: var(--ink-3); display: grid; place-items: center; border-radius: 10px; transition: color .25s; }
-  .eye:hover, .eye[aria-pressed="true"] { color: var(--green-dark); }
+  .eye[aria-pressed="true"] { color: var(--green-dark); }
   .eye svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .eye .slash { transition: stroke-dashoffset .3s var(--out); stroke-dasharray: 24; stroke-dashoffset: 0; }
   .eye[aria-pressed="true"] .slash { stroke-dashoffset: 24; }
@@ -816,6 +830,7 @@
       im.classList.add('on');
       void dots.children[i].offsetWidth;
       dots.children[i].classList.add('on');
+      im.getAnimations().forEach((a) => a.cancel());
       if (!reduce) im.animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 9000, easing: 'cubic-bezier(.2,.6,.2,1)', fill: 'forwards' });
     }
     return {
@@ -996,13 +1011,21 @@
   // ---------------------------------------------------------------- checkout
   function sheet(title) {
     const host = $('#modal-root');
-    host.innerHTML = '';
+    $$('.scrim', host).forEach((old) => old.remove());
     const scrim = document.createElement('div');
     scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"><div class="sh-head"><span></span><button class="sh-x" type="button" aria-label="Close">&times;</button></div><div class="sh-main"></div></div>';
     $('.sh-head span', scrim).textContent = title;
     $('.sheet', scrim).setAttribute('aria-label', title);
-    const close = () => { host.innerHTML = ''; document.removeEventListener('keydown', onKey); };
+    let closed = false;
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      document.removeEventListener('keydown', onKey);
+      if (reduce) { scrim.remove(); return; }
+      scrim.classList.add('closing');
+      setTimeout(() => scrim.remove(), 300);
+    };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
     $('.sh-x', scrim).addEventListener('click', close);
@@ -1463,19 +1486,19 @@
     body.className = 'body';
     d.insertBefore(body, p);
     body.appendChild(p);
-    let anim = null;
+    let anim = null, want = d.open;
     d.querySelector('summary').addEventListener('click', (e) => {
       if (reduce) return;
       e.preventDefault();
+      want = !want;
+      const from = anim ? body.getBoundingClientRect().height : (d.open ? body.scrollHeight : 0);
+      const fromO = anim ? +getComputedStyle(body).opacity : (d.open ? 1 : 0);
       if (anim) anim.cancel();
-      const opening = !d.open;
-      if (opening) d.open = true;
-      const full = body.scrollHeight;
-      anim = body.animate(
-        opening ? [{ height: '0px', opacity: 0 }, { height: full + 'px', opacity: 1 }] : [{ height: full + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
-        { duration: opening ? 520 : 380, easing: OUT }
-      );
-      anim.onfinish = () => { if (!opening) d.open = false; anim = null; };
+      d.open = true;
+      const to = want ? body.scrollHeight : 0;
+      anim = body.animate([{ height: from + 'px', opacity: fromO }, { height: to + 'px', opacity: want ? 1 : 0 }],
+        { duration: want ? 520 : 380, easing: OUT });
+      anim.onfinish = () => { anim = null; if (!want) d.open = false; };
     });
   });
 
