@@ -1,11 +1,12 @@
 // GET: custom committee photos { photos: { slug: url } }.
 // POST { slug, image: "data:image/jpeg;base64,..." }: upload a new photo. DELETE ?slug=: go back to the original.
 // Uploads need the committee sign-in.
-import { isCommittee, readJSON, writeJSON, putImage, removeImage, storageReady, send, body } from './_lib/core.js';
+import { isCommittee, readJSON, writeJSON, putImage, removeImage, storageReady, send, body, fromRequest } from './_lib/core.js';
 
 const SLUG = /^[a-z0-9-]{1,40}$/;
 
 export default async function handler(req, res) {
+  fromRequest(req);
   try {
     const photos = await readJSON('committee', {});
     if (req.method === 'GET') return send(res, 200, { photos });

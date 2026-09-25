@@ -1,10 +1,11 @@
 // POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size? }
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
-import { PASSWORDS, matches, env, membershipPrice, isMember, readJSON, send, body, origin } from './_lib/core.js';
+import { PASSWORDS, matches, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
 import { DEFAULT_MERCH } from './_lib/merch.js';
 
 export default async function handler(req, res) {
+  fromRequest(req);
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
   try {
     const b = body(req);

@@ -1,12 +1,13 @@
 // GET: the shop (prices and delivery only for signed-in members).
 // POST { item }: add or update an item. DELETE ?id=: remove one. Both need the committee sign-in.
 import crypto from 'node:crypto';
-import { isMember, isCommittee, readJSON, writeJSON, storageReady, send, body, isUploaded, removeImage } from './_lib/core.js';
+import { isMember, isCommittee, readJSON, writeJSON, storageReady, send, body, isUploaded, removeImage, fromRequest } from './_lib/core.js';
 import { DEFAULT_MERCH } from './_lib/merch.js';
 
 const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 
 export default async function handler(req, res) {
+  fromRequest(req);
   try {
     const items = await readJSON('merch', DEFAULT_MERCH);
     if (req.method === 'GET') {

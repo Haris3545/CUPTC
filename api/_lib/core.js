@@ -56,18 +56,37 @@ export const isMember = (req) => ['member', 'committee'].includes(roleOf(req));
 export const isCommittee = (req) => roleOf(req) === 'committee';
 
 // ------------------------------------------------------------------ storage
-// On Vercel: Vercel Blob (needs a Blob store connected, which sets BLOB_READ_WRITE_TOKEN).
+// On Vercel: Vercel Blob. Connecting a Blob store sets either BLOB_READ_WRITE_TOKEN (older stores)
+// or BLOB_STORE_ID, in which case the function signs in with Vercel's own per-request OIDC token.
 // Locally (scripts/dev.js): files in .data/.
 const LOCAL = path.join(process.cwd(), '.data');
-const useBlob = () => !!env('BLOB_READ_WRITE_TOKEN');
+const useBlob = () => !!(env('BLOB_READ_WRITE_TOKEN') || env('BLOB_STORE_ID'));
+let requestOidc = '';
+// Call at the start of a handler that uses storage, so the OIDC token from the request is available.
+export function fromRequest(req) {
+  const t = req && req.headers && req.headers['x-vercel-oidc-token'];
+  if (t) requestOidc = String(t);
+}
+const auth = () => (env('BLOB_READ_WRITE_TOKEN') ? {} : { oidcToken: requestOidc || undefined, storeId: env('BLOB_STORE_ID') || undefined });
 export const storageReady = () => useBlob() || env('LOCAL_STORAGE') === '1';
+// A real round trip to storage, for the status page.
+export async function storageCheck() {
+  if (!useBlob()) return env('LOCAL_STORAGE') === '1' ? 'ok (local)' : 'not connected';
+  try {
+    const { list } = await import('@vercel/blob');
+    await list({ limit: 1, ...auth() });
+    return 'ok';
+  } catch (e) {
+    return 'error: ' + String(e && e.message || e).slice(0, 160);
+  }
+}
 
 // JSON documents are written under a new name each time and the older copies removed,
 // so a read never gets a stale cached copy.
 export async function readJSON(name, fallback) {
   if (useBlob()) {
     const { list } = await import('@vercel/blob');
-    const { blobs } = await list({ prefix: 'data/' + name + '-' });
+    const { blobs } = await list({ prefix: 'data/' + name + '-', ...auth() });
     if (!blobs.length) return fallback;
     blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
     const r = await fetch(blobs[0].url, { cache: 'no-store' });
@@ -79,9 +98,9 @@ export async function readJSON(name, fallback) {
 export async function writeJSON(name, data) {
   if (useBlob()) {
     const { put, list, del } = await import('@vercel/blob');
-    const { blobs: old } = await list({ prefix: 'data/' + name + '-' });
-    await put('data/' + name + '-' + Date.now() + '.json', JSON.stringify(data), { access: 'public', contentType: 'application/json', addRandomSuffix: true });
-    if (old.length) await del(old.map((b) => b.url));
+    const { blobs: old } = await list({ prefix: 'data/' + name + '-', ...auth() });
+    await put('data/' + name + '-' + Date.now() + '.json', JSON.stringify(data), { access: 'public', contentType: 'application/json', addRandomSuffix: true, ...auth() });
+    if (old.length) await del(old.map((b) => b.url), auth());
     return;
   }
   await fs.mkdir(LOCAL, { recursive: true });
@@ -90,7 +109,7 @@ export async function writeJSON(name, data) {
 export async function putImage(name, buf) {
   if (useBlob()) {
     const { put } = await import('@vercel/blob');
-    const b = await put('uploads/' + name + '.jpg', buf, { access: 'public', contentType: 'image/jpeg', addRandomSuffix: true });
+    const b = await put('uploads/' + name + '.jpg', buf, { access: 'public', contentType: 'image/jpeg', addRandomSuffix: true, ...auth() });
     return b.url;
   }
   const file = name + '-' + Date.now() + '.jpg';
@@ -103,7 +122,7 @@ export const isUploaded = (v) => /^(https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\
 export async function removeImage(url) {
   if (!url) return;
   try {
-    if (useBlob()) { const { del } = await import('@vercel/blob'); await del(url); }
+    if (useBlob()) { const { del } = await import('@vercel/blob'); await del(url, auth()); }
     else await fs.unlink(path.join(process.cwd(), url));
   } catch { /* already gone */ }
 }
