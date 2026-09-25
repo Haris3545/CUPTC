@@ -29,6 +29,16 @@ The pages are plain HTML with no build step. A few small server functions in `ap
 
 Payments show up in the Stripe dashboard, including the size chosen for merch (in the payment's metadata) and the delivery address.
 
+## Switch Stripe from test to live
+
+1. In the Stripe dashboard, finish **Activate payments**: the club's details, a contact, and the bank account payouts go to.
+2. **Settings → Business → Public details**: the name and statement descriptor people see (e.g. `CUPTC`), plus support email.
+3. **Settings → Branding**: logo, icon and the green `#85B4A0`, so the checkout page matches the site.
+4. **Settings → Customer emails**: turn on receipts for successful payments.
+5. Turn off **Test mode**, then **Developers → API keys** and copy the live **Secret key** (`sk_live_…`).
+6. In Vercel, replace `STRIPE_SECRET_KEY` with it and redeploy. `/api/status` should show `"stripe": "live"`.
+7. Buy something cheap with a real card to check, then refund it from the Stripe dashboard.
+
 ## Run it locally
 
 ```sh
