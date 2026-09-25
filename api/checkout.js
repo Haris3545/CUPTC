@@ -1,7 +1,7 @@
 // POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size? }
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
-import { PASSWORDS, same, env, membershipPrice, isMember, readJSON, send, body, origin } from './_lib/core.js';
+import { PASSWORDS, matches, env, membershipPrice, isMember, readJSON, send, body, origin } from './_lib/core.js';
 import { DEFAULT_MERCH } from './_lib/merch.js';
 
 export default async function handler(req, res) {
@@ -14,8 +14,7 @@ export default async function handler(req, res) {
       title = 'CUPTC Social membership';
       name = 'Social membership 2026–27';
     } else if (b.kind === 'full') {
-      const want = PASSWORDS().full;
-      if (!want || !same(String(b.fullCode || '').trim().toUpperCase(), want.toUpperCase())) return send(res, 403, { error: 'full_code' });
+      if (!matches(b.fullCode, PASSWORDS().full)) return send(res, 403, { error: 'full_code' });
       amount = membershipPrice('full');
       title = 'CUPTC Full membership';
       name = 'Full membership 2026–27';

@@ -15,6 +15,7 @@ The pages are plain HTML with no build step. A few small server functions in `ap
 | `api/merch.js` | The members' shop. Prices are only sent to signed-in members; the committee can add, edit and remove items. |
 | `api/committee.js` | Committee photo uploads. Signed in as committee, each person on the home page gets **Change photo**. |
 | `api/merch-image.js` | Shop photo uploads, from the **Upload photo** button in the committee merch form. |
+| `api/status.js` | Open `/api/status` to see which settings the live site can see (yes/no only, never the values). |
 
 ## Put it live on Vercel
 
@@ -56,11 +57,9 @@ After a few hits, pickups appear on your half (run over them to grab one) and th
 |---|---|
 | **Big Racket** | Bigger racket and reach for 4 shots. |
 | **Glass Guardian** | Saves the next ball that would double-bounce. |
-| **Golden Ball** | Each hit scores 3 for 6 shots, but the ball is 25% faster. |
 | **Combo Streak** | 5 volleys, smashes or off-the-glass shots in a row doubles your points; 10 triples them. |
 | **Smash Zone** | Smash from inside the gold circle near the net for +5. |
 | **Cambridge Weather** | Rain for 15 seconds: low, skiddy bounces. |
-| **Night Session** | Floodlights only for 15 seconds. |
 | **Doubles Rally** | A teammate and a second opponent join for 20 seconds. |
 | **Crowd Wave** | The crowd does a wave and every hit is worth double for 10 seconds. |
 

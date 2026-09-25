@@ -132,8 +132,7 @@
   html.at-start .hdr { opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility 0s .2s; }
   .hdr-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; transition: opacity .3s ease; }
   .hdr-logo:hover { opacity: .85; }
-  .hdr-logo .em { height: 44px; width: auto; }
-  .hdr-logo .cu { height: 30px; width: auto; }
+  .hdr-logo img { height: 46px; width: auto; }
   .hdr-nav { display: flex; gap: clamp(22px, 3.2vw, 48px); }
   .hdr-nav a { color: #fff; text-decoration: none; font-size: 20px; }
   .hdr-menu { display: none; border: 0; background: none; color: #fff; font-size: 19px; padding: 10px 0 10px 16px; cursor: pointer; }
@@ -270,8 +269,7 @@
   .foot a { color: #fff; text-decoration: none; }
   .foot-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 40px; align-items: start; }
   .foot-logo { display: flex; align-items: center; gap: 16px; }
-  .foot-logo .em { height: 70px; width: auto; }
-  .foot-logo .cu { height: 48px; width: auto; }
+  .foot-logo img { height: 72px; width: auto; }
   .foot h4 { margin: 0 0 12px; font-weight: 400; font-style: italic; font-size: 16px; opacity: .8; }
   .foot p { font-size: 18px; line-height: 1.8; }
   .foot-bottom { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.4); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; font-size: 15px; }
@@ -318,7 +316,6 @@
   .apple:hover { background: #222; }
   .apple:active { transform: scale(.985); }
   .apple:disabled { opacity: .28; cursor: not-allowed; }
-  .apple .ap { width: .82em; height: .96em; fill: currentColor; margin: 0 1px 0 6px; }
   .note { font-size: 14px; color: var(--ink-3); font-style: italic; text-align: center; }
 
   .faq { border-top: 1px solid var(--line); }
@@ -408,8 +405,7 @@
     .start-nav .s-home { top: auto; bottom: calc(50% + 26px + 2em + 24px); }
     .hdr-nav { display: none; }
     .hdr-menu { display: block; }
-    .hdr-logo .em { height: 34px; }
-    .hdr-logo .cu { height: 23px; }
+    .hdr-logo img { height: 36px; }
     .hero { height: calc(88svh - var(--bar)); min-height: 460px; }
     .hero-dots { display: none; }
     .sec { padding: 72px 0; }
@@ -430,8 +426,7 @@
     .pdeliv { text-align: left; }
     .admin form { grid-template-columns: 1fr; }
     .foot-top { grid-template-columns: 1fr; gap: 32px; }
-    .foot-logo .em { height: 54px; }
-    .foot-logo .cu { height: 37px; }
+    .foot-logo img { height: 56px; }
     .foot-bottom { flex-direction: column-reverse; align-items: start; }
   }
   @media (max-width: 380px) { .shop { grid-template-columns: 1fr; } }
@@ -454,6 +449,14 @@
   .crop:active { cursor: grabbing; }
   .crop img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; }
   .zoom { width: 100%; accent-color: var(--green-dark); }
+  /* Show / hide password */
+  .pw-wrap { position: relative; flex: 1; min-width: 0; display: block; }
+  .pw-wrap .input { padding-right: 44px; }
+  .eye { position: absolute; right: 0; bottom: 5px; width: 40px; height: 40px; border: 0; background: none; cursor: pointer; color: var(--ink-3); display: grid; place-items: center; border-radius: 10px; transition: color .25s; }
+  .eye:hover, .eye[aria-pressed="true"] { color: var(--green-dark); }
+  .eye svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .eye .slash { transition: stroke-dashoffset .3s var(--out); stroke-dasharray: 24; stroke-dashoffset: 0; }
+  .eye[aria-pressed="true"] .slash { stroke-dashoffset: 24; }
   .m-preview { width: 120px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 10px; margin-top: 8px; }
 </style>
 </head>
@@ -478,7 +481,7 @@
 </section>
 
 <header class="hdr">
-  <a class="hdr-logo" href="#" aria-label="Back to the start"><img class="em" src="img/emblem.png" alt="" width="460" height="294"><img class="cu white" src="img/cuptc.png" alt="" width="488" height="192"></a>
+  <a class="hdr-logo" href="#" aria-label="CUPTC, back to the start"><img src="img/logo-cuptc.png" alt="CUPTC" width="1312" height="353"></a>
   <nav class="hdr-nav" aria-label="Main">
     <a class="ul" href="#home" data-go="home">Home</a>
     <a class="ul" href="#membership" data-go="membership">Membership</a>
@@ -612,8 +615,8 @@
             <div class="inline"><input class="input" id="code-social" autocomplete="off" placeholder="Enter code"><button class="btn line sm" type="button" id="apply-code">Apply</button></div>
             <p class="msg" id="code-msg" role="status"></p>
           </div>
-          <button class="apple" type="button" id="buy-social">Buy with <svg class="ap" viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Pay</button>
-          <p class="note">Secure payment by Stripe.</p>
+          <button class="apple" type="button" id="buy-social">Buy now</button>
+          <p class="note">Secure checkout by Stripe. Card, Apple Pay and Google Pay.</p>
         </article>
 
         <article class="plan full rv" style="--d:.1s">
@@ -632,8 +635,8 @@
             <div class="inline"><input class="input" id="code-full" autocomplete="off" placeholder="Full-member code"><button class="btn line sm" type="button" id="unlock-full">Unlock</button></div>
             <p class="msg" id="full-msg" role="status">You'll get this code if you're selected at trials.</p>
           </div>
-          <button class="apple" type="button" id="buy-full" disabled>Buy with <svg class="ap" viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Pay</button>
-          <p class="note">Secure payment by Stripe.</p>
+          <button class="apple" type="button" id="buy-full" disabled>Buy now</button>
+          <p class="note">Secure checkout by Stripe. Card, Apple Pay and Google Pay.</p>
         </article>
       </div>
     </section>
@@ -676,15 +679,19 @@
     </section>
 
     <section class="sec">
-      <div class="narrow">
-        <h2 class="h3 rv" style="margin-bottom:20px">Committee</h2>
-        <form class="gate rv" id="admin-gate" autocomplete="off" style="margin:0;--d:.08s">
+      <div class="narrow center">
+        <h2 class="h2 rv">Committee.</h2>
+        <hr class="rule rv" style="--d:.06s">
+        <p class="lede rv" style="--d:.1s">Sign in to manage the shop and change committee photos.</p>
+      </div>
+      <div class="narrow rv" style="--d:.18s;margin-top:40px">
+        <form class="gate" id="admin-gate" autocomplete="off">
           <label class="lbl" for="admin-pw">Committee password</label>
           <div class="inline"><input class="input" id="admin-pw" type="password" placeholder="Password"><button class="btn line sm" type="submit">Manage merch</button></div>
           <p class="msg" id="admin-msg" role="status"></p>
         </form>
         <div class="admin" id="admin" hidden>
-          <p class="muted">Add items, set prices and delivery times. Changes show for everyone straight away.</p>
+          <p class="muted center">Add items, set prices and delivery times. Changes show for everyone straight away.</p>
           <form id="merch-form">
             <input type="hidden" id="m-id">
             <div class="field"><label for="m-name">Item name</label><input class="input" id="m-name" required maxlength="80"></div>
@@ -710,7 +717,7 @@
   <footer class="foot">
     <div class="wrap">
       <div class="foot-top">
-        <a class="foot-logo" href="#" aria-label="Back to the start"><img class="em" src="img/emblem.png" alt="" width="460" height="294"><img class="cu white" src="img/cuptc.png" alt="" width="488" height="192"></a>
+        <a class="foot-logo" href="#" aria-label="CUPTC, back to the start"><img src="img/logo-cuptc.png" alt="CUPTC" width="1312" height="353"></a>
         <div>
           <h4>Pages</h4>
           <p><a class="ul" href="#home">Home</a><br><a class="ul" href="#membership">Membership</a><br><a class="ul" href="#members">Members Area</a><br><a class="ul" href="play/index.html">Padel Pong</a></p>
@@ -987,7 +994,6 @@
   const errText = (res, fallback) => ERR[res.data.error] || (res.status === 404 && !res.data.error ? ERR.offline : fallback);
 
   // ---------------------------------------------------------------- checkout
-  const APPLE = $('#buy-social .ap').outerHTML;
   function sheet(title) {
     const host = $('#modal-root');
     host.innerHTML = '';
@@ -1023,7 +1029,7 @@
   function demoSheet({ title, lines, meta }) {
     const s = sheet(title);
     const total = lines.reduce((a, l) => a + l[1], 0);
-    s.main.innerHTML = '<p class="sh-demo">Demo mode: no card is charged. Add a Stripe key in Vercel to take real payments.</p><div class="sh-lines" style="margin-top:14px"></div><div class="sh-body" style="margin-top:14px"><button class="apple" type="button">Pay £' + total.toFixed(2).replace(/\.00$/, '') + ' with ' + APPLE + 'Pay</button></div>';
+    s.main.innerHTML = '<p class="sh-demo">Demo mode: no card is charged. Add a Stripe key in Vercel to take real payments.</p><div class="sh-lines" style="margin-top:14px"></div><div class="sh-body" style="margin-top:14px"><button class="apple" type="button">Pay £' + total.toFixed(2).replace(/\.00$/, '') + '</button></div>';
     lines.concat([['Total', total]]).forEach((l) => {
       const row = document.createElement('div');
       row.className = 'sh-line';
@@ -1099,6 +1105,28 @@
   });
   $('#buy-full').addEventListener('click', (e) => { if (state.fullCode) startCheckout({ kind: 'full', fullCode: state.fullCode }, e.currentTarget); });
 
+  // ---------------------------------------------------------------- show / hide password
+  $$('input[type="password"]').forEach((input) => {
+    const wrap = document.createElement('span');
+    wrap.className = 'pw-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const eye = document.createElement('button');
+    eye.type = 'button';
+    eye.className = 'eye';
+    eye.setAttribute('aria-label', 'Show password');
+    eye.setAttribute('aria-pressed', 'false');
+    eye.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>';
+    eye.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      eye.setAttribute('aria-pressed', String(show));
+      eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      input.focus();
+    });
+    wrap.appendChild(eye);
+  });
+
   // ---------------------------------------------------------------- sign in
   function signIn(role, token) {
     state.token = token;
@@ -1118,9 +1146,9 @@
   async function login(input, msg, e) {
     e.preventDefault();
     const res = await api('login', { body: { password: input.value.trim() } });
-    if (res.ok) { msg.textContent = ''; input.value = ''; signIn(res.data.role, res.data.token); return; }
+    if (res.ok) { msg.textContent = ''; input.value = ''; input.type = 'password'; const eye = input.parentNode.querySelector('.eye'); if (eye) eye.setAttribute('aria-pressed', 'false'); signIn(res.data.role, res.data.token); return; }
     msg.className = 'msg err';
-    msg.textContent = res.status === 401 ? "That password isn't right." : errText(res, 'Couldn’t sign in. Try again.');
+    msg.textContent = res.status === 401 ? "That password isn't right." : errText(res, 'Couldn’t sign in (error ' + res.status + '). Try again.');
   }
   $('#gate').addEventListener('submit', (e) => login($('#member-pw'), $('#gate-msg'), e));
   $('#admin-gate').addEventListener('submit', (e) => login($('#admin-pw'), $('#admin-msg'), e));
@@ -1198,7 +1226,7 @@
         const buy = document.createElement('button');
         buy.className = 'apple';
         buy.type = 'button';
-        buy.innerHTML = 'Buy with ' + APPLE + 'Pay';
+        buy.textContent = 'Buy now';
         buy.addEventListener('click', () => startCheckout({ kind: 'merch', itemId: m.id, size: sel ? sel.value : '' }, buy));
         card.appendChild(buy);
       } else {
