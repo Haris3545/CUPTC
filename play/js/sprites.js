@@ -47,7 +47,6 @@
       panel: 4, crest: 10, sponsor: 1
     }
   };
-  KITS.oppRage = Object.assign({}, KITS.opp, { shirt: 10, shirtS: 11, panel: 11, collar: 2, crest: 2 });
 
   // Hand positions (h), racket angle in degrees (a) and free hand (f), in body space:
   // metres, +x towards the racket side, +y up.

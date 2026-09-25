@@ -93,23 +93,20 @@
   // Pickups appear on your half and are collected by running over them; events are
   // triggered by the game. Both are scheduled by rally hits once the rally gets going.
   const PICKUPS = {
-    espresso: { name: 'ESPRESSO SHOT', color: '#ffe14d', shots: 5 },
     big: { name: 'BIG RACKET', color: '#b8dccb', shots: 4 },
     guardian: { name: 'GLASS GUARDIAN', color: '#ffc93a' },
     golden: { name: 'GOLDEN BALL', color: '#ffc93a', shots: 6 }
   };
   const EVENTS = {
-    mirror: { name: 'MIRROR MATCH', color: '#ff7eb6' },
     weather: { name: 'RAIN!', color: '#7fd6ff', dur: 15 },
     night: { name: 'NIGHT SESSION', color: '#b8dccb', dur: 15 },
-    rage: { name: 'RIVAL RAGE', color: '#ff4d6d' },
     doubles: { name: 'DOUBLES!', color: '#e9ff3b', dur: 20 },
     wave: { name: 'CROWD WAVE X2', color: '#ffb86b', dur: 10 },
     zone: { name: 'SMASH ZONE', color: '#ffc93a', dur: 16 }
   };
   const freshPU = () => ({
-    espresso: 0, big: 0, guardian: false, golden: 0, mirror: 0, rage: 0, rageFinal: false,
-    pickup: null, event: null, eventT: 0, zone: null, streak: 0, bandeja: 0,
+    big: 0, guardian: false, golden: 0,
+    pickup: null, event: null, eventT: 0, zone: null, streak: 0,
     nextPickup: 6, nextEvent: 10, lastEvent: null
   });
   const pu = freshPU();
@@ -280,7 +277,7 @@
 
   // ------------------------------------------------------------------ shots
   function playerMaxV() {
-    return 7.6 * (0.84 + 0.16 * state.speed) * (pu.espresso > 0 ? 1.55 : 1);
+    return 7.6 * (0.84 + 0.16 * state.speed);
   }
   const reach = () => REACH * (pu.big > 0 ? 1.5 : 1);
   const reachH = () => REACH_H + (pu.big > 0 ? 0.4 : 0);
@@ -320,13 +317,11 @@
     const dx = ball.x - who.x;
     const off = clamp(dx / reach(), -1, 1);
     const high = ball.y > 1.75;
-    const overhead = ball.y > 1.5;
     const volley = ball.bounces === 0;
     const glass = ball.wallHits > 0;
-    const powerSmash = high && pu.bandeja >= 1 && state.mode === 'play';
     const tx = clamp(ball.x * 0.3 + off * 3.4 + who.vx * 0.14 + rand(-0.4, 0.4), -4.3, 4.3);
     const tz = high ? rand(7, 9) : rand(5.8, 8.8);
-    launch(ball, tx, tz, powerSmash ? 0.62 : high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
+    launch(ball, tx, tz, high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
     ball.lastHit = 'player';
     ball.bV = 0.72;
     ball.bH = 0.86;
@@ -363,25 +358,8 @@
       state.cheerT = Math.max(state.cheerT, 1.2);
       if (pu.zone.left <= 0) endEvent();
     }
-    if (powerSmash) {
-      bonus += 5;
-      pu.bandeja = 0;
-      worldLabel('BANDEJA +5', who, '#ffc93a');
-      state.cheerT = Math.max(state.cheerT, 1.2);
-    } else if (overhead && pu.bandeja < 1) {
-      pu.bandeja = Math.min(1, pu.bandeja + 0.34);
-      if (pu.bandeja >= 1) { worldLabel('BANDEJA READY!', who, '#ffc93a'); sfx.powerup(); }
-    }
-    if (pu.rageFinal) {
-      bonus += 3;
-      pu.rageFinal = false;
-      worldLabel('SURVIVED! +3', who, '#ff7eb6');
-      endEvent();
-    }
     if (pu.golden > 0 && --pu.golden === 0) worldLabel('GOLDEN BALL OVER', who, '#ffc93a');
-    if (pu.espresso > 0) pu.espresso--;
     if (pu.big > 0) pu.big--;
-    if (pu.mirror > 0 && --pu.mirror === 0 && pu.event === 'mirror') endEvent();
     const gained = pts + bonus;
     state.score += gained;
     state.scorePop = 0.16;
@@ -389,11 +367,11 @@
 
     if (high) {
       sfx.smash();
-      shake(powerSmash ? 6 : 4, 0.28);
-      fx.flash = powerSmash ? 0.2 : 0.12;
-      state.hitstop = powerSmash ? 0.14 : 0.09;
+      shake(4, 0.28);
+      fx.flash = 0.12;
+      state.hitstop = 0.09;
       vibrate(28);
-      if (!powerSmash) worldLabel('SMASH!', who, '#ffe14d');
+      worldLabel('SMASH!', who, '#ffe14d');
       state.cheerT = Math.max(state.cheerT, 0.6);
     } else {
       sfx.hit(state.hits);
@@ -472,9 +450,7 @@
     pu.eventT = info.dur || 30;
     banner(info.name, { color: info.color, life: 1.4 });
     sfx.event();
-    if (e === 'mirror') pu.mirror = 3;
-    else if (e === 'weather') { phys.bV = 0.62; phys.bH = 1.1; }
-    else if (e === 'rage') { pu.rage = 3; worldLabel('VAMOS!', opp, '#ff4d6d'); }
+    if (e === 'weather') { phys.bV = 0.62; phys.bH = 1.1; }
     else if (e === 'wave') state.cheerT = info.dur;
     else if (e === 'zone') pu.zone = { x: rand(-3, 3), z: rand(-3.4, -2.2), r: 1.15, left: 3 };
     else if (e === 'doubles') {
@@ -494,9 +470,6 @@
     phys.bV = 1;
     phys.bH = 1;
     pu.zone = null;
-    pu.mirror = 0;
-    pu.rage = 0;
-    pu.rageFinal = false;
     if (e === 'doubles') {
       if (mate) { mate.leaving = 1.2; mate.tx = mate.side * 6.5; }
       if (opp2) { opp2.leaving = 1.2; opp2.tx = opp2.side * 6.5; }
@@ -533,18 +506,13 @@
     else tx = player.x + rand(-1.5, 1.5);
     tx = clamp(clamp(tx, player.x - maxShift, player.x + maxShift), -4.2, 4.2);
 
-    if (!feed && state.mode === 'play' && pu.rage > 0) {
-      kind = 'rage';
-      tx = clamp(away * rand(2.4, 4.3), player.x - maxShift - 1.5, player.x + maxShift + 1.5);
-      if (--pu.rage === 0) pu.rageFinal = true;
-    } else if (!feed && state.mode === 'play' && pu.zone && Math.random() < 0.65) {
+    if (!feed && state.mode === 'play' && pu.zone && Math.random() < 0.65) {
       kind = 'floater';
       tx = pu.zone.x + rand(-0.4, 0.4);
     }
 
     let tz = -6.8, T = 1.55, bV = 0.72, bH = 0.86, label = null;
-    if (kind === 'rage') { tz = rand(-7.6, -5.4); T = 1.0; label = pu.rage === 2 ? null : 'VAMOS!'; }
-    else if (kind === 'floater') { tz = pu.zone.z + rand(-0.3, 0.3); T = 1.75; }
+    if (kind === 'floater') { tz = pu.zone.z + rand(-0.3, 0.3); T = 1.75; }
     else if (kind === 'drive') { tz = rand(-7.8, -5.2); T = lerp(1.4, 1.22, d); }
     else if (kind === 'lob') { tz = rand(-9.3, -8.5); T = 2.15; bV = 0.66; label = 'GLOBO!'; }
     else if (kind === 'drop') { tz = rand(-4.2, -3.0); T = 1.3; bV = 0.55; bH = 0.62; label = 'DEJADA!'; }
@@ -568,7 +536,7 @@
 
     if (state.mode !== 'attract') {
       if (kind === 'smash') { sfx.smash(); shake(2, 0.15); } else sfx.oppHit();
-      if (label && (kind !== 'lob' || Math.random() < 0.6)) worldLabel(label, opp, kind === 'smash' || kind === 'rage' ? '#ff7eb6' : '#ffb86b');
+      if (label && (kind !== 'lob' || Math.random() < 0.6)) worldLabel(label, opp, kind === 'smash' ? '#ff7eb6' : '#ffb86b');
     }
     const p = scene.project(ball.x, ball.y, ball.z);
     sparks(p.x, p.y, 6, ['#ffffff', '#ff7eb6'], 30, 70);
@@ -721,7 +689,7 @@
 
   function setTargetFromScreen(sx, sy) {
     const w = scene.unproject(sx, sy);
-    player.tx = clamp(w ? w.x * (pu.mirror > 0 ? -1 : 1) : player.tx, PB.x0, PB.x1);
+    player.tx = clamp(w ? w.x : player.tx, PB.x0, PB.x1);
     player.tz = clamp(w ? w.z : PB.z1, PB.z0, PB.z1);
   }
 
@@ -777,7 +745,7 @@
     const d = input.drag;
     if (!d || d.id !== e.pointerId) return;
     e.preventDefault();
-    const w = scene.unproject(d.ax + (g.x - d.fx) * DRAG_GAIN * (pu.mirror > 0 ? -1 : 1), d.ay + (g.y - d.fy) * DRAG_GAIN);
+    const w = scene.unproject(d.ax + (g.x - d.fx) * DRAG_GAIN, d.ay + (g.y - d.fy) * DRAG_GAIN);
     const tx = w ? w.x : player.tx;
     const tz = w ? w.z : PB.z1;
     const cx = clamp(tx, PB.x0, PB.x1), cz = clamp(tz, PB.z0, PB.z1);
@@ -939,7 +907,7 @@
     if (state.mode === 'attract' || (DEBUG_AUTO && state.mode === 'play')) {
       dv = towards(player, state.mode === 'attract' ? 7.2 : maxV);
     } else if (controllable()) {
-      const kx = ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)) * (pu.mirror > 0 ? -1 : 1);
+      const kx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       const kz = (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
       if (kx || kz) {
         input.src = 'keys';
@@ -1137,16 +1105,6 @@
       if (f === mate && !f.swing && ball.live && ball.lastHit === 'opp' && ball.z < 2) f.prep = ball.x >= f.x ? 'fh' : 'bh';
       else if (!f.swing) f.prep = null;
     }
-    // espresso steam
-    if (pu.espresso > 0 && Math.random() < dt * 14) {
-      const p = scene.project(player.x + rand(-0.2, 0.2), 2.3 * EXAG / 1.45, player.z);
-      fx.parts.push({ x: p.x, y: p.y, vx: rand(-6, 6), vy: rand(-26, -14), g: -8, life: 0.6, max: 0.6, c: '#ffffff', s: 1 });
-    }
-    // rival rage fumes
-    if ((pu.rage > 0 || pu.rageFinal) && Math.random() < dt * 10) {
-      const p = scene.project(opp.x + rand(-0.2, 0.2), 2.4, opp.z);
-      fx.parts.push({ x: p.x, y: p.y, vx: rand(-8, 8), vy: rand(-20, -10), g: -5, life: 0.5, max: 0.5, c: pick(['#ff4d6d', '#ffb86b']), s: 1 });
-    }
     // rain
     if (pu.event === 'weather') {
       const want = Math.floor((W * H) / 700);
@@ -1198,7 +1156,6 @@
   // 9x9 pixel icons for pickups and the HUD
   const ICON_PAL = { k: '#1a1c2c', w: '#ffffff', s: '#d9e2ec', b: '#6b3e26', g: '#85b4a0', G: '#4f8069', y: '#ffc93a', Y: '#c98a12', l: '#fff4c2' };
   const ICON_ART = {
-    espresso: ['..s.s....', '.s.s.....', '.........', 'kkkkkkk..', 'kbbbbbkkk', 'kwwwwwk.k', 'kwwwwwkkk', '.kwwwk...', 'kGGGGGGk.'],
     big: ['..kkkk...', '.kgGgGk..', 'kgGgGgGk.', 'kGgGgGgk.', 'kgGgGgGk.', '.kgGgGk..', '..kkkk...', '...kk....', '...kk....'],
     guardian: ['.kkkkkkk.', 'kyyyyyyYk', 'kylyyyyYk', 'kyylyyyYk', 'kyyylyyYk', 'kyyyyyyYk', '.kyyyyYk.', '..kyyYk..', '...kkk...'],
     golden: ['...kkk...', '.kkyyykk.', '.kyllyyk.', 'kyylyyyYk', 'kyyyyyyYk', 'kyyyyyYYk', '.kyyyYYk.', '.kkYYYkk.', '...kkk...']
@@ -1328,9 +1285,7 @@
   function drawFig(f, ox, oy) {
     const p = scene.project(f.x, 0, f.z);
     const ps = figPose(f);
-    let who = f.who;
-    if (f === opp && (pu.rage > 0 || pu.rageFinal) && Math.floor(state.time * 6) % 2) who = 'oppRage';
-    const spr = Sprites.get(who, p.s * EXAG, ps.pose, ps.legs, ps.frame, f === player && pu.big > 0);
+    const spr = Sprites.get(f.who, p.s * EXAG, ps.pose, ps.legs, ps.frame, f === player && pu.big > 0);
     ctx.drawImage(spr.c, Math.round(p.x - spr.ax) + ox, Math.round(p.y - spr.ay) + oy - ps.hop * 2);
   }
 
@@ -1448,7 +1403,7 @@
     }
   }
 
-  // Active power-ups, event timer, combo multiplier and the Bandeja gauge.
+  // Active power-ups, event timer and the combo multiplier.
   function drawPowerHud(y, big) {
     const mult = pu.streak >= 10 ? 3 : pu.streak >= 5 ? 2 : 1;
     if (mult > 1) {
@@ -1456,7 +1411,6 @@
       drawText('X' + mult, W / 2 + sw / 2 + 6, hudTop + 2, { scale: 2, color: '#e9ff3b' }, 'left');
     }
     const items = [];
-    if (pu.espresso > 0) items.push({ icon: 'espresso', n: pu.espresso });
     if (pu.big > 0) items.push({ icon: 'big', n: pu.big });
     if (pu.golden > 0) items.push({ icon: 'golden', n: pu.golden });
     if (pu.guardian) items.push({ icon: 'guardian', n: '' });
@@ -1464,8 +1418,6 @@
       const info = EVENTS[pu.event];
       let label = info.name.replace('!', '').split(' ')[0];
       let n = info.dur ? Math.ceil(pu.eventT) : '';
-      if (pu.event === 'mirror') n = pu.mirror;
-      if (pu.event === 'rage') n = pu.rage + (pu.rageFinal ? 1 : 0);
       if (pu.event === 'zone') { label = 'ZONE'; n = pu.zone ? pu.zone.left : ''; }
       items.push({ text: label, n: n, color: info.color });
     }
@@ -1482,19 +1434,6 @@
       else { ctx.drawImage(p.lbl, x, y); x += p.lbl.width; }
       if (p.t) { ctx.drawImage(p.t, x + 2, y + 1); x += p.t.width + 2; }
       x += 6;
-    }
-    if (pu.bandeja > 0) {
-      const gy = y + (parts.length ? 12 : 0);
-      const ready = pu.bandeja >= 1;
-      const lbl = Font.render('BANDEJA', { scale: 1, color: ready && Math.floor(state.time * 8) % 2 ? '#ffffff' : '#ffc93a' });
-      const bw = 30, tw = lbl.width + 4 + bw;
-      const bx = Math.round(W / 2 - tw / 2);
-      ctx.drawImage(lbl, bx, gy);
-      const gx = bx + lbl.width + 4;
-      ctx.fillStyle = '#1a1c2c';
-      ctx.fillRect(gx, gy + 2, bw, 5);
-      ctx.fillStyle = ready ? '#ffc93a' : '#c98a12';
-      ctx.fillRect(gx + 1, gy + 3, Math.round((bw - 2) * pu.bandeja), 3);
     }
   }
 

@@ -42,17 +42,13 @@ After a few hits, pickups appear on your half (run over them to grab one) and th
 
 | | What it does |
 |---|---|
-| **Espresso Shot** | You run about 55% faster for 5 shots. |
 | **Big Racket** | Bigger racket and reach for 4 shots. |
 | **Glass Guardian** | Saves the next ball that would double-bounce. |
 | **Golden Ball** | Each hit scores 3 for 6 shots, but the ball is 25% faster. |
 | **Combo Streak** | 5 volleys, smashes or off-the-glass shots in a row doubles your points; 10 triples them. |
-| **Bandeja Boost** | High balls fill a gauge; when it's full, your next smash is a power smash worth +5. |
 | **Smash Zone** | Smash from inside the gold circle near the net for +5. |
-| **Mirror Match** | Left and right swap for 3 shots. |
 | **Cambridge Weather** | Rain for 15 seconds: low, skiddy bounces. |
 | **Night Session** | Floodlights only for 15 seconds. |
-| **Rival Rage** | 3 fast, wide attacking shots; survive them for +3. |
 | **Doubles Rally** | A teammate and a second opponent join for 20 seconds. |
 | **Crowd Wave** | The crowd does a wave and every hit is worth double for 10 seconds. |
 
