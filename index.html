@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CUPTC · Cambridge University Padel Tennis Club</title>
+<meta name="description" content="Cambridge University Padel Tennis Club: weekly social and competitive padel, socials, BUCS, NUPL and Varsity against Oxford.">
+<meta name="theme-color" content="#85b4a0">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/img/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --green: #85b4a0;
+    --green-dark: #5e8f7a;
+    --green-soft: #eef4f1;
+    --red: #df2326;
+    --red-dark: #c41d20;
+    --ink: #121412;
+    --ink-2: #4a514d;
+    --ink-3: #8a918d;
+    --line: #e2e7e4;
+    --paper: #ffffff;
+    --bar: 84px;
+    --gutter: clamp(20px, 5vw, 72px);
+    --serif: "Old Standard TT", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --ease: cubic-bezier(.77, 0, .18, 1);
+    --out: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 19px/1.6 var(--serif); -webkit-font-smoothing: antialiased; }
+  html.at-start body, html.menu-open body { overflow: hidden; }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--green-dark); outline-offset: 3px; }
+  h1, h2, h3, p { margin: 0; }
+  h1, h2, h3 { font-weight: 400; text-wrap: balance; letter-spacing: -.01em; }
+  [hidden] { display: none !important; }
+  .white { filter: brightness(0) invert(1); }
+
+  /* ================================================================ The green curtain
+     One green layer. At the start it fills the screen; in the site it folds up into the header bar.
+     Every animation is a CSS transition between two states, so interrupting one simply reverses it. */
+  .curtain {
+    position: fixed; inset: 0; z-index: 40; background: var(--green); pointer-events: none;
+    clip-path: inset(0 0 calc(100% - var(--bar)) 0);
+    transition: clip-path 1s var(--ease) .18s;
+  }
+  html.at-start .curtain { clip-path: inset(0 0 0 52.5%); transition-delay: .12s; }
+
+  /* The photo half of the start screen. It wipes away to the left as the green sweeps across. */
+  .sphoto {
+    position: fixed; inset: 0; z-index: 41; overflow: hidden; pointer-events: none;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1s var(--ease) .18s;
+  }
+  html.at-start .sphoto { clip-path: inset(0 47.5% 0 0); transition-delay: .12s; }
+  .sphoto img { position: absolute; top: 0; left: 0; width: 52.5%; height: 100%; object-fit: cover; object-position: 42% 50%; transform: translateX(-16%) scale(1.04); transition: transform 1.1s var(--ease) .18s; }
+  html.at-start .sphoto img { transform: none; transition-delay: .12s; }
+
+  /* Start screen content: logo over the photo, words on the green */
+  .start {
+    position: fixed; inset: 0; z-index: 45; color: #fff; pointer-events: none;
+    opacity: 0; visibility: hidden;
+    transition: opacity .38s ease, visibility 0s .6s;
+  }
+  html.at-start .start { opacity: 1; visibility: visible; transition: opacity .8s ease .75s, visibility 0s; }
+  .start a { pointer-events: auto; }
+  .start-logo {
+    position: absolute; top: clamp(18px, 4vh, 40px); left: clamp(18px, 2.4vw, 36px); margin: 0;
+    width: calc(52.5vw - 2 * clamp(18px, 2.4vw, 36px)); display: flex; align-items: center; gap: 2.5%;
+  }
+  .start-logo .em { width: 26%; flex: none; }
+  .start-logo .wm { flex: 1 1 0; min-width: 0; filter: brightness(0) invert(1); }
+  /* A soft shade from the top of the photo, fading out two-thirds of the way down */
+  .sphoto::after { content: ""; position: absolute; left: 0; top: 0; width: 52.5%; height: 66.7%; pointer-events: none; background: linear-gradient(180deg, rgba(0, 0, 0, .42) 0%, rgba(0, 0, 0, .2) 38%, rgba(0, 0, 0, .06) 72%, rgba(0, 0, 0, 0) 100%); }
+  .start-nav a { position: absolute; right: clamp(20px, 3.4vw, 52px); color: #fff; text-decoration: none; line-height: 1; font-size: clamp(34px, 5.4vw, 84px); white-space: nowrap; }
+  .start-nav .s-home { top: clamp(26px, 7vh, 64px); }
+  .start-nav .s-mem { bottom: calc(clamp(26px, 7vh, 64px) + 1em + clamp(12px, 2.4vh, 22px)); }
+  .start-nav .s-area { bottom: clamp(26px, 7vh, 64px); }
+  .ul { position: relative; }
+  .ul::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.12em; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .55s var(--out); }
+  .ul:hover::after, .ul[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
+
+  /* Who's who: hover the people in the start photo (computers with a mouse only) */
+  .tags { position: absolute; inset: 0 47.5% 0 0; display: none; }
+  @media (hover: hover) and (min-width: 721px) { .tags { display: block; } }
+  .tag { position: absolute; pointer-events: auto; }
+  /* A short hand-drawn arrow draws itself to the person, then the name is "written" in.
+     Positions are worked out in JS so labels always stay on screen. */
+  .arrow { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
+  .arrow path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .2s ease; }
+  .tag:hover .shaft { stroke-dashoffset: 0; transition: stroke-dashoffset .42s cubic-bezier(.5, 0, .3, 1); }
+  .tag:hover .head { stroke-dashoffset: 0; transition: stroke-dashoffset .18s ease-out .38s; }
+  .label {
+    position: absolute; left: 0; top: 0; transform: rotate(var(--rot, -3deg)); white-space: nowrap; text-align: center; pointer-events: none;
+    color: #fff; font-family: "Caveat", "Bradley Hand", cursive; line-height: 1; text-shadow: 0 0 14px rgba(0, 0, 0, .65), 0 1px 3px rgba(0, 0, 0, .55);
+    clip-path: inset(-30% 100% -30% -5%); transition: clip-path .2s ease;
+  }
+  .label b { display: block; font-weight: 600; font-size: clamp(24px, 2.2vw, 32px); }
+  .label i { display: block; font-style: normal; font-weight: 500; font-size: clamp(17px, 1.5vw, 22px); margin-top: 2px; }
+  .label small { display: block; font-weight: 500; font-size: clamp(15px, 1.25vw, 18px); margin-top: 3px; opacity: .92; }
+  .tag:hover .label { clip-path: inset(-30% -5% -30% -5%); transition: clip-path .7s cubic-bezier(.45, 0, .25, 1) .4s; }
+  .hint { position: absolute; left: clamp(18px, 2.4vw, 36px); bottom: clamp(18px, 3.4vh, 34px); margin: 0; color: #fff; font: 500 24px/1 "Caveat", cursive; text-shadow: 0 0 14px rgba(0, 0, 0, .7), 0 1px 3px rgba(0, 0, 0, .6); display: flex; align-items: center; gap: 10px; transition: opacity .6s ease; }
+  .hint::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255, 255, 255, .3); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); } }
+  .tags.seen .hint { opacity: 0; }
+
+  html.intro .curtain { animation: inGreen 1.3s var(--ease) both; }
+  html.intro .sphoto img { animation: inPhoto 1.8s var(--out) both; }
+  html.intro .start-logo { animation: rise 1.3s var(--out) .5s both; }
+  html.intro .start-nav a { animation: rise 1.2s var(--out) both; }
+  html.intro .start-nav .s-home { animation-delay: .7s; }
+  html.intro .start-nav .s-mem { animation-delay: .8s; }
+  html.intro .start-nav .s-area { animation-delay: .9s; }
+  @keyframes inGreen { from { clip-path: inset(0 0 0 100%); } }
+  @keyframes inPhoto { from { transform: scale(1.12); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(22px); } }
+
+  /* ================================================================ Header (lives on the folded curtain) */
+  .hdr {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--bar); z-index: 46;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter);
+    color: #fff; transition: opacity .5s ease .95s, visibility 0s;
+  }
+  html.at-start .hdr { opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility 0s .2s; }
+  .hdr-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; transition: opacity .3s ease; }
+  .hdr-logo:hover { opacity: .85; }
+  .hdr-logo .em { height: 44px; width: auto; }
+  .hdr-logo .cu { height: 30px; width: auto; }
+  .hdr-nav { display: flex; gap: clamp(22px, 3.2vw, 48px); }
+  .hdr-nav a { color: #fff; text-decoration: none; font-size: 20px; }
+  .hdr-menu { display: none; border: 0; background: none; color: #fff; font-size: 19px; padding: 10px 0 10px 16px; cursor: pointer; }
+
+  /* Phone menu */
+  .menu {
+    position: fixed; inset: 0; z-index: 44; background: var(--green); color: #fff;
+    display: flex; flex-direction: column; padding: calc(var(--bar) + 36px) 28px max(30px, env(safe-area-inset-bottom));
+    clip-path: inset(0 0 calc(100% - var(--bar)) 0); visibility: hidden;
+    transition: clip-path .75s var(--ease), visibility 0s .75s;
+  }
+  html.menu-open .menu { clip-path: inset(0); visibility: visible; transition: clip-path .75s var(--ease), visibility 0s; }
+  .menu a { color: #fff; text-decoration: none; }
+  .menu nav { display: grid; gap: 4px; margin-top: auto; }
+  .menu nav a { font-size: clamp(40px, 12vw, 58px); line-height: 1.18; display: flex; align-items: center; gap: 16px; }
+  .menu nav a[aria-current="page"]::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+  .menu .back-m { margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, .45); font-style: italic; font-size: 20px; }
+  .menu .contact { margin-top: 14px; display: grid; gap: 2px; font-size: 16px; opacity: .9; }
+  .menu nav a, .menu .back-m, .menu .contact { opacity: 0; transform: translateY(18px); transition: opacity .3s ease, transform .3s ease; }
+  html.menu-open .menu nav a, html.menu-open .menu .back-m, html.menu-open .menu .contact { opacity: 1; transform: none; transition: opacity .6s ease, transform .8s var(--out); transition-delay: calc(.25s + var(--k) * 70ms); }
+
+  /* ================================================================ Pages */
+  .pages { padding-top: var(--bar); opacity: 1; transition: opacity .7s ease 1s; }
+  html.at-start .pages { opacity: 0; transition: opacity .25s ease; }
+  .pages.swap { opacity: 0 !important; transition: opacity .3s ease !important; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Reveal on scroll: fades up once. html.entering holds reveals until the curtain has folded. */
+  .rv { opacity: 0; transform: translateY(26px); transition: opacity 1s var(--out), transform 1.2s var(--out); transition-delay: calc(var(--base, 0s) + var(--d, 0s)); }
+  .rv.in { opacity: 1; transform: none; }
+  html.entering { --base: .95s; }
+  .ri { overflow: hidden; clip-path: inset(10% 0 0 0); transition: clip-path 1.4s var(--out); transition-delay: calc(var(--base, 0s) + var(--d, 0s)); background: var(--green-soft); }
+  .ri img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); transition: transform 2s var(--out); transition-delay: inherit; }
+  .ri.in { clip-path: inset(0); }
+  .ri.in img { transform: none; }
+  /* Rounded corners and a soft lift on hover for every photo */
+  .ri { border-radius: 14px; transform: translateZ(0); transition: clip-path 1.4s var(--out) calc(var(--base, 0s) + var(--d, 0s)), box-shadow .5s var(--out), transform .5s var(--out); }
+  .ri img { transition-delay: calc(var(--base, 0s) + var(--d, 0s)); }
+  .ri.shown { clip-path: none; overflow: hidden; }
+  .ri.shown:hover { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
+  .empty-ph { display: grid; place-items: center; background: var(--green-soft); }
+  .person .empty-ph span { font-size: clamp(56px, 6vw, 88px); font-style: normal; color: var(--green-dark); line-height: 1; }
+  .pimg { border-radius: 14px; transition: box-shadow .5s var(--out), transform .5s var(--out); }
+  .product:hover .pimg { box-shadow: 0 22px 44px -26px rgba(22, 44, 36, .5); transform: translateY(-3px); }
+
+  .wrap { width: min(1240px, 100%); margin: 0 auto; padding: 0 var(--gutter); }
+  .narrow { width: min(820px, 100%); margin: 0 auto; padding: 0 var(--gutter); }
+  .sec { padding: clamp(80px, 13vh, 150px) 0; }
+  .sec + .sec { padding-top: 0; }
+  .center { text-align: center; }
+  .display { font-size: clamp(46px, 7vw, 104px); line-height: 1; letter-spacing: -.02em; }
+  .h2 { font-size: clamp(38px, 4.6vw, 68px); line-height: 1.05; }
+  .h3 { font-size: clamp(26px, 2.4vw, 34px); line-height: 1.15; }
+  .lede { font-size: clamp(20px, 1.8vw, 25px); line-height: 1.5; color: var(--ink-2); }
+  .muted { color: var(--ink-2); }
+  .small { font-size: 16px; color: var(--ink-2); }
+  .rule { width: 64px; height: 1.5px; background: var(--green); border: 0; margin: 28px 0; }
+  .center .rule { margin-inline: auto; }
+  .stack { display: grid; gap: 22px; align-content: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; cursor: pointer; text-decoration: none; white-space: nowrap;
+    font-size: 19px; line-height: 1; padding: 18px 34px; border-radius: 999px; background: var(--green); color: #fff;
+    transition: background-color .35s ease, transform .5s var(--out), box-shadow .5s var(--out);
+  }
+  .btn:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 14px 30px -16px rgba(40, 80, 64, .7); }
+  .btn:active { transform: none; transition-duration: .1s; }
+  .btn.red { background: var(--red); }
+  .btn.red:hover { background: var(--red-dark); box-shadow: 0 14px 30px -16px rgba(150, 20, 22, .7); }
+  .btn.line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--green); }
+  .btn.line:hover { background: var(--green-soft); }
+  .btn.onphoto { background: #fff; color: var(--ink); }
+  .btn.onphoto:hover { background: #f1f4f2; }
+  .btn.sm { font-size: 16px; padding: 13px 22px; }
+  .link { color: var(--ink); text-decoration: none; background: linear-gradient(var(--green), var(--green)) 0 100% / 100% 1.5px no-repeat; padding-bottom: 3px; transition: background-size .5s var(--out); }
+  .link:hover { background-size: 0 1.5px; background-position: 100% 100%; }
+  .actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .center .actions { justify-content: center; }
+
+  /* Home: hero */
+  .hero { position: relative; height: calc(100svh - var(--bar)); min-height: 520px; overflow: hidden; background: #1c2a24; }
+  .hero .slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s ease; }
+  .hero .slides img.on { opacity: 1; }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.12) 30%, rgba(0,0,0,.66) 100%); pointer-events: none; }
+  .hero-copy { text-shadow: 0 1px 24px rgba(0,0,0,.25); }
+  .hero-copy { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; padding: 0 var(--gutter) clamp(40px, 8vh, 84px); color: #fff; display: grid; gap: 24px; }
+  .hero-copy .display { max-width: 11em; }
+  .hero-copy p { font-size: clamp(19px, 1.6vw, 23px); max-width: 34em; opacity: .92; }
+  .hero-dots { position: absolute; z-index: 2; right: var(--gutter); bottom: clamp(44px, 8vh, 90px); display: flex; gap: 8px; }
+  .hero-dots i { width: 26px; height: 1.5px; background: rgba(255,255,255,.4); overflow: hidden; position: relative; }
+  .hero-dots i::after { content: ""; position: absolute; inset: 0; background: #fff; transform: scaleX(0); transform-origin: left; }
+  .hero-dots i.on::after { animation: dot 6s linear both; }
+  @keyframes dot { to { transform: scaleX(1); } }
+
+  /* Split rows */
+  .split { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(40px, 7vw, 120px); align-items: center; }
+  .split.flip > :first-child { order: 2; }
+  .split .ri { aspect-ratio: 4 / 5; }
+
+  .tiers { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .tiers > div { padding: 26px 0; display: grid; gap: 8px; align-content: start; }
+  .tiers > div + div { border-left: 1px solid var(--line); padding-left: 28px; }
+  .tiers > div:first-child { padding-right: 28px; }
+  .price { font-size: 34px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .price s { font-size: .55em; color: var(--ink-3); margin-left: 8px; }
+  .tiers p { font-size: 17px; color: var(--ink-2); }
+  .sale-note { color: var(--red); font-style: italic; font-size: 16px; }
+
+  .dates { border-top: 1px solid var(--line); }
+  .dates div { display: grid; grid-template-columns: 8em 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 18px; }
+  .dates time { font-style: italic; color: var(--green-dark); }
+
+  .team { display: grid; grid-template-columns: repeat(4, 1fr); gap: 48px 28px; margin-top: 64px; width: min(1040px, 100%); margin-inline: auto; }
+  .person { margin: 0; display: grid; gap: 16px; align-content: start; }
+  .person .ri { aspect-ratio: 1; }
+  .person figcaption { display: grid; gap: 2px; }
+  .person b { font-weight: 400; font-size: 22px; line-height: 1.25; }
+  .person span { font-size: 16px; font-style: italic; color: var(--green-dark); }
+
+  .arcade .ri { aspect-ratio: 3 / 2; background: #e9efe9; }
+  .arcade .ri img { image-rendering: pixelated; }
+  .arcade .h2 { color: var(--red); }
+
+  .sponsors { display: grid; grid-template-columns: 1fr 1fr; margin-top: 56px; border-top: 1px solid var(--line); }
+  .sponsors > div { padding: 44px 24px 8px; display: grid; justify-items: center; gap: 16px; text-align: center; }
+  .sponsors > div + div { border-left: 1px solid var(--line); }
+  .sponsors .logo { height: 100px; display: grid; place-items: center; }
+  .sponsors .logo img { max-height: 100px; width: auto; }
+  .sponsors p { color: var(--ink-2); font-size: 17px; }
+
+  /* Footer */
+  .foot { background: var(--green); color: #fff; padding: clamp(64px, 10vh, 110px) 0 36px; }
+  .foot a { color: #fff; text-decoration: none; }
+  .foot-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 40px; align-items: start; }
+  .foot-logo { display: flex; align-items: center; gap: 16px; }
+  .foot-logo .em { height: 70px; width: auto; }
+  .foot-logo .cu { height: 48px; width: auto; }
+  .foot h4 { margin: 0 0 12px; font-weight: 400; font-style: italic; font-size: 16px; opacity: .8; }
+  .foot p { font-size: 18px; line-height: 1.8; }
+  .foot-bottom { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.4); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; font-size: 15px; }
+  .back { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-style: italic; }
+  .back i { font-style: normal; width: 40px; height: 40px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #fff; display: grid; place-items: center; transition: transform .5s var(--out), background-color .3s, color .3s; }
+  .back:hover i { transform: translateY(-3px); background: #fff; color: var(--green-dark); }
+  .copy { border: 0; background: rgba(255,255,255,.2); color: #fff; border-radius: 99px; padding: 1px 10px; font-size: 13px; cursor: pointer; margin-left: 8px; vertical-align: 2px; }
+  .copy:hover { background: rgba(255,255,255,.32); }
+
+  /* ================================================================ Membership */
+  .page-head { padding: clamp(80px, 14vh, 150px) 0 clamp(56px, 8vh, 90px); }
+  .countdown { display: flex; gap: 10px; justify-content: center; margin-top: 30px; font-variant-numeric: tabular-nums; }
+  .countdown div { min-width: 82px; padding: 12px 8px 8px; border-top: 1.5px solid var(--green); display: grid; }
+  .countdown strong { font-weight: 400; font-size: 40px; line-height: 1; }
+  .countdown span { font-size: 14px; color: var(--ink-3); font-style: italic; margin-top: 6px; }
+
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .plan { border: 1px solid var(--line); padding: clamp(30px, 4vw, 52px); display: flex; flex-direction: column; gap: 22px; background: #fff; }
+  .plan.full { background: var(--green-soft); border-color: transparent; }
+  .plan-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .plan-tag { font-size: 15px; font-style: italic; color: var(--ink-3); }
+  .plan-tag.red { color: var(--red); }
+  .plan-price { font-size: clamp(56px, 6vw, 84px); line-height: 1; font-variant-numeric: tabular-nums; }
+  .plan-price small { font-size: 20px; color: var(--ink-3); }
+  .was { color: var(--ink-3); font-size: 17px; margin-top: -8px; }
+  .ticks { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); flex: 1; }
+  .plan.full .ticks, .plan.full .ticks li { border-color: #d6e3dc; }
+  .ticks li { padding: 13px 0 13px 28px; border-bottom: 1px solid var(--line); position: relative; font-size: 18px; }
+  .ticks li::before { content: ""; position: absolute; left: 2px; top: 1.3em; width: 12px; height: 1.5px; background: var(--green-dark); }
+  .field { display: grid; gap: 6px; }
+  .field label, .lbl { font-size: 15px; color: var(--ink-2); font-style: italic; }
+  .input { width: 100%; height: 50px; border: 0; border-bottom: 1.5px solid #c8d2cd; background: transparent; padding: 0 2px; font-size: 19px; border-radius: 0; transition: border-color .3s; }
+  .input:focus { outline: none; border-bottom-color: var(--green-dark); }
+  .inline { display: flex; gap: 14px; align-items: end; }
+  .inline .input { flex: 1; min-width: 0; }
+  .msg { font-size: 15px; min-height: 22px; }
+  .msg.ok { color: #2f7a5c; }
+  .msg.err { color: #b3261e; }
+  .apple {
+    width: 100%; height: 54px; border: 0; border-radius: 12px; background: #000; color: #fff; cursor: pointer;
+    font: 600 18px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    display: inline-flex; align-items: center; justify-content: center; transition: background-color .2s, opacity .3s, transform .3s var(--out);
+  }
+  .apple:hover { background: #222; }
+  .apple:active { transform: scale(.985); }
+  .apple:disabled { opacity: .28; cursor: not-allowed; }
+  .apple .ap { width: .82em; height: .96em; fill: currentColor; margin: 0 1px 0 6px; }
+  .note { font-size: 14px; color: var(--ink-3); font-style: italic; text-align: center; }
+
+  .faq { border-top: 1px solid var(--line); }
+  .faq details { border-bottom: 1px solid var(--line); }
+  .faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 20px; padding: 22px 0; font-size: 22px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; color: var(--green-dark); transition: transform .5s var(--out); }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq .body { overflow: hidden; }
+  .faq .body p { padding-bottom: 24px; color: var(--ink-2); font-size: 18px; max-width: 40em; }
+
+  /* ================================================================ Members area */
+  .gate { width: min(520px, 100%); margin: 0 auto; display: grid; gap: 10px; text-align: left; }
+  .signed { width: min(720px, 100%); margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 16px 22px; background: var(--green-soft); font-size: 17px; }
+  .signed button { border: 0; background: none; cursor: pointer; text-decoration: underline; padding: 0; }
+  .shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px 28px; }
+  .product { display: flex; flex-direction: column; gap: 10px; }
+  .pimg { aspect-ratio: 4 / 5; background: #f4f6f5; display: grid; place-items: center; overflow: hidden; margin-bottom: 6px; }
+  .pimg img { width: 100%; height: 100%; object-fit: contain; transition: transform 1s var(--out); }
+  .pimg.cover img { object-fit: cover; }
+  .product:hover .pimg img { transform: scale(1.03); }
+  .product h3 { font-size: 22px; line-height: 1.2; }
+  .product .d { font-size: 16px; color: var(--ink-2); }
+  .pmeta { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .pprice { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .pdeliv { font-size: 14px; color: var(--ink-3); font-style: italic; text-align: right; }
+  .lock { font-size: 16px; color: var(--ink-3); font-style: italic; }
+  .product select.input { height: 44px; font-size: 17px; }
+  .product .apple { height: 46px; font-size: 16px; }
+  .empty { grid-column: 1 / -1; text-align: center; color: var(--ink-2); padding: 40px 0; }
+
+  .admin { display: grid; gap: 20px; }
+  .admin form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; }
+  .admin .full { grid-column: 1 / -1; }
+  .admin textarea.input { height: 90px; padding: 10px 2px; resize: vertical; }
+  .admin-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
+  .admin-row button { border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer; font-size: 14px; background: var(--green-soft); }
+  .admin-row .del { color: #b3261e; }
+
+  /* ================================================================ Checkout sheet */
+  .scrim { position: fixed; inset: 0; z-index: 80; background: rgba(12, 18, 15, .45); display: grid; align-items: end; justify-items: center; animation: fade .3s ease both; }
+  @keyframes fade { from { opacity: 0; } }
+  .sheet { width: min(460px, 100%); background: #f6f6f6; border-radius: 22px 22px 0 0; padding: 18px 20px calc(24px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; animation: up .55s var(--out) both; box-shadow: 0 -12px 40px rgba(0,0,0,.18); }
+  @media (min-width: 600px) { .scrim { align-items: center; } .sheet { border-radius: 22px; } }
+  @keyframes up { from { transform: translateY(40px); opacity: 0; } }
+  .sh-head { display: flex; justify-content: space-between; align-items: center; font-size: 20px; }
+  .sh-x { border: 0; background: #e4e4e4; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; }
+  .sh-demo { background: #fff4d6; color: #6b4e00; font-size: 14px; border-radius: 10px; padding: 8px 12px; }
+  .sh-lines { background: #fff; border-radius: 14px; padding: 4px 16px; }
+  .sh-line { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #eee; font-variant-numeric: tabular-nums; font-size: 17px; }
+  .sh-line:last-child { border-bottom: 0; font-weight: 700; }
+  .sh-state { display: grid; justify-items: center; gap: 10px; padding: 16px 0 4px; text-align: center; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #ddd; border-top-color: #111; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .done { width: 54px; height: 54px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 28px; animation: pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+  @keyframes pop { from { transform: scale(.3); } }
+  .pw { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 14px 16px; font: 600 17px ui-monospace, Menlo, monospace; letter-spacing: .04em; }
+  .pw .copy { background: var(--green-soft); color: var(--ink); }
+
+  html.no-anim *, html.no-anim *::before, html.no-anim *::after { transition: none !important; }
+
+  /* ================================================================ Tablets */
+  @media (max-width: 980px) {
+    .split, .split.flip { grid-template-columns: 1fr; }
+    .split.flip > :first-child { order: 0; }
+    .split .ri { aspect-ratio: 4 / 3; }
+    .shop { grid-template-columns: 1fr 1fr; }
+    .foot-top { grid-template-columns: 1fr 1fr; }
+    .foot-top > :first-child { grid-column: 1 / -1; }
+  }
+
+  /* ================================================================ Phones */
+  @media (max-width: 720px) {
+    :root { --bar: 62px; --gutter: 24px; }
+    body { font-size: 18px; }
+    /* Phones: green on the top half (logo, then the three words), photo on the bottom half */
+    html.at-start .curtain { clip-path: inset(0 0 50% 0); }
+    .sphoto { clip-path: inset(100% 0 0 0); }
+    html.at-start .sphoto { clip-path: inset(50% 0 0 0); }
+    .sphoto img { top: 50%; width: 100%; height: 50%; object-position: 50% 40%; transform: translateY(14%) scale(1.04); }
+    @keyframes inGreen { from { clip-path: inset(0 0 100% 0); } }
+    .start-logo { width: calc(100vw - 40px); left: 20px; top: max(24px, calc(env(safe-area-inset-top) + 14px)); }
+    .sphoto::after { display: none; }
+    .start-nav a { right: 24px; font-size: clamp(34px, 10vw, 48px); }
+    .start-nav .s-area { bottom: calc(50% + 26px); }
+    .start-nav .s-mem { bottom: calc(50% + 26px + 1em + 12px); }
+    .start-nav .s-home { top: auto; bottom: calc(50% + 26px + 2em + 24px); }
+    .hdr-nav { display: none; }
+    .hdr-menu { display: block; }
+    .hdr-logo .em { height: 34px; }
+    .hdr-logo .cu { height: 23px; }
+    .hero { height: calc(88svh - var(--bar)); min-height: 460px; }
+    .hero-dots { display: none; }
+    .sec { padding: 72px 0; }
+    .tiers { grid-template-columns: 1fr; }
+    .tiers > div + div { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; }
+    .tiers > div:first-child { padding-right: 0; }
+    .dates div { grid-template-columns: 1fr; gap: 2px; }
+    .team { grid-template-columns: 1fr 1fr; gap: 36px 16px; margin-top: 44px; }
+    .person b { font-size: 19px; }
+    .sponsors { grid-template-columns: 1fr; }
+    .sponsors > div + div { border-left: 0; border-top: 1px solid var(--line); margin-top: 28px; }
+    .plans { grid-template-columns: 1fr; }
+    .countdown div { min-width: 66px; }
+    .countdown strong { font-size: 32px; }
+    .shop { gap: 36px 16px; }
+    .product h3 { font-size: 19px; }
+    .pmeta { flex-direction: column; align-items: start; gap: 2px; }
+    .pdeliv { text-align: left; }
+    .admin form { grid-template-columns: 1fr; }
+    .foot-top { grid-template-columns: 1fr; gap: 32px; }
+    .foot-logo .em { height: 54px; }
+    .foot-logo .cu { height: 37px; }
+    .foot-bottom { flex-direction: column-reverse; align-items: start; }
+  }
+  @media (max-width: 380px) { .shop { grid-template-columns: 1fr; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01s !important; transition-delay: 0s !important; }
+    .rv { opacity: 1; transform: none; }
+    .ri { clip-path: none; }
+    .ri img { transform: none; }
+  }
+
+  /* Committee sign-in: change photos on the home page */
+  .photo-tools { display: none; gap: 8px; flex-wrap: wrap; }
+  html.is-committee .photo-tools { display: flex; }
+  .person:not(.custom) [data-photo="reset"] { display: none; }
+  .photo-tools button { border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer; font-size: 14px; background: var(--green-soft); color: var(--ink); transition: background-color .3s; }
+  .photo-tools button:hover { background: #dce9e2; }
+  .sh-main { display: grid; }
+  .crop { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: #e8ece9; touch-action: none; cursor: grab; }
+  .crop:active { cursor: grabbing; }
+  .crop img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; }
+  .zoom { width: 100%; accent-color: var(--green-dark); }
+  .m-preview { width: 120px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 10px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ Start screen -->
+<div class="curtain" aria-hidden="true"></div>
+<div class="sphoto" aria-hidden="true"><img src="img/p2.jpg" alt="" width="1080" height="1350"></div>
+<section class="start" id="start" aria-label="Cambridge University Padel Tennis Club">
+  <h1 class="start-logo"><img class="em" src="img/emblem.png" alt="" width="460" height="294"><img class="wm" src="img/wordmark.png" alt="Cambridge University Padel Tennis Club" width="1286" height="324"></h1>
+  <div class="tags" id="tags" aria-hidden="true">
+    <div class="tag" data-mode="left" data-box="250 585 170 415" data-pin="352 600"><svg class="arrow" aria-hidden="true"><path class="shaft" pathLength="1"/><path class="head" pathLength="1"/></svg><span class="label" style="--rot:-3deg"><b>George Papadopoullos</b><i>Social Secretary</i><small>(with Josie, not pictured)</small></span></div>
+    <div class="tag" data-mode="right" data-box="437 692 196 308" data-pin="556 704"><svg class="arrow" aria-hidden="true"><path class="shaft" pathLength="1"/><path class="head" pathLength="1"/></svg><span class="label" style="--rot:2deg"><b>Panayiotis Hadjicostis</b><i>Secretary</i></span></div>
+    <div class="tag" data-mode="edge" data-box="640 555 195 395" data-pin="772 640"><svg class="arrow" aria-hidden="true"><path class="shaft" pathLength="1"/><path class="head" pathLength="1"/></svg><span class="label" style="--rot:-2deg"><b>Haris Khan</b><i>President</i></span></div>
+    <p class="hint">Hover over the committee</p>
+  </div>
+  <nav class="start-nav" aria-label="Enter the site">
+    <a class="ul s-home" href="#home">home</a>
+    <a class="ul s-mem" href="#membership">membership</a>
+    <a class="ul s-area" href="#members">members area</a>
+  </nav>
+</section>
+
+<header class="hdr">
+  <a class="hdr-logo" href="#" aria-label="Back to the start"><img class="em" src="img/emblem.png" alt="" width="460" height="294"><img class="cu white" src="img/cuptc.png" alt="" width="488" height="192"></a>
+  <nav class="hdr-nav" aria-label="Main">
+    <a class="ul" href="#home" data-go="home">Home</a>
+    <a class="ul" href="#membership" data-go="membership">Membership</a>
+    <a class="ul" href="#members" data-go="members">Members Area</a>
+  </nav>
+  <button class="hdr-menu" id="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+</header>
+
+<div class="menu" id="menu" role="dialog" aria-label="Menu">
+  <nav aria-label="Pages">
+    <a href="#home" data-go="home" style="--k:0">Home</a>
+    <a href="#membership" data-go="membership" style="--k:1">Membership</a>
+    <a href="#members" data-go="members" style="--k:2">Members Area</a>
+  </nav>
+  <a class="back-m" href="#" style="--k:3">&uarr;&ensp;Back to the start</a>
+  <div class="contact" style="--k:4"><a href="https://www.instagram.com/camunipadelclub/" target="_blank" rel="noopener">Instagram @camunipadelclub</a><a href="mailto:secretary@cuptc.com">secretary@cuptc.com</a></div>
+</div>
+
+<!-- ================================================================ Pages -->
+<main class="pages" id="pages">
+
+  <!-- ---------------------------------------------------------- HOME -->
+  <div class="page" data-page="home">
+    <section class="hero" aria-label="Welcome">
+      <div class="slides" id="slides"></div>
+      <div class="hero-copy">
+        <h2 class="display rv">Padel at Cambridge.</h2>
+        <p class="rv" style="--d:.12s">Weekly social and intense padel sessions, with fun socials and constant matches against other universities.</p>
+        <div class="actions rv" style="--d:.24s"><a class="btn onphoto" href="#membership">Become a member</a></div>
+      </div>
+      <div class="hero-dots" id="dots" aria-hidden="true"></div>
+    </section>
+
+    <section class="sec">
+      <div class="wrap split">
+        <div class="ri"><img src="img/p5.jpg" alt="Students signing up at the CUPTC stall, with club shirts on the table" loading="lazy"></div>
+        <div class="stack">
+          <h2 class="h2 rv">Two ways to play.</h2>
+          <p class="lede rv" style="--d:.08s">One membership for the whole year. Both include weekly padel, every social and the members' shop.</p>
+          <div class="tiers rv" style="--d:.16s">
+            <div><h3 class="h3">Social</h3><div class="price" data-social-price>£40<s>£50</s></div><p>An hour of social padel every week and every club social. About £448 of court time.</p></div>
+            <div><h3 class="h3">Full</h3><div class="price">£80</div><p>Adds coached training, fitness sessions and a place in the team. About £896 of court time. Selected at trials.</p></div>
+          </div>
+          <p class="sale-note rv" data-sale style="--d:.22s">Freshers price ends in <span data-clock></span></p>
+          <div class="actions rv" style="--d:.26s"><a class="btn" href="#membership">View membership</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="wrap split flip">
+        <div class="ri"><img src="img/p11.jpg" alt="A CUPTC player at the net on a sunny day" loading="lazy"></div>
+        <div class="stack">
+          <h2 class="h2 rv">Competing.</h2>
+          <p class="lede rv" style="--d:.08s">Our full members make up four men's and four women's pairs. They play BUCS and the National University Padel League, and the season builds to Varsity against Oxford.</p>
+          <div class="dates rv" style="--d:.16s">
+            <div><time datetime="2026-10-05">5 October</time><span>Sports Freshers Fair, 12 to 5pm</span></div>
+            <div><time datetime="2026-10-06">6 October</time><span>Trials, 3 to 5pm. Sixteen full-member places</span></div>
+            <div><time datetime="2027-03-12">12 March</time><span>Varsity against Oxford, in London</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="narrow center">
+        <h2 class="h2 rv">The committee.</h2>
+        <hr class="rule rv" style="--d:.06s">
+        <p class="lede rv" style="--d:.1s">The students who run the club. Say hello at the Freshers Fair, or message us any time.</p>
+      </div>
+      <div class="wrap"><div class="team" id="team"></div></div>
+    </section>
+
+    <section class="sec arcade">
+      <div class="wrap split">
+        <div class="ri"><img src="img/game.png" alt="Padel Pong: a pixel-art padel rally on a green court, with crowds and a Cambridge skyline" loading="lazy"></div>
+        <div class="stack">
+          <h2 class="h2 rv">CUPTC Arcade.</h2>
+          <p class="lede rv" style="--d:.08s">How long can you keep the rally going?</p>
+          <div class="actions rv" style="--d:.16s"><a class="btn red" href="play/index.html">Play Padel Pong</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="narrow center">
+        <h2 class="h2 rv">Our sponsors.</h2>
+      </div>
+      <div class="wrap">
+        <div class="sponsors rv" style="--d:.1s">
+          <div><div class="logo"><img src="img/mill.png" alt="mill, Mediterranean coffee spot" width="250" height="96"></div><p>Mill Mediterranean funds our socials.</p></div>
+          <div><div class="logo"><img src="img/mantis.png" alt="Mantis Sport" width="164" height="96"></div><p>Mantis Sport is our sole equipment sponsor.</p></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------------------------------------------------------- MEMBERSHIP -->
+  <div class="page" data-page="membership">
+    <section class="page-head">
+      <div class="narrow center">
+        <h2 class="display rv">Membership.</h2>
+        <hr class="rule rv" style="--d:.06s">
+        <p class="lede rv" style="--d:.1s">One membership for the whole 2026&ndash;27 year. Both include weekly padel, every social and the members' shop.</p>
+        <div data-sale class="rv" style="--d:.18s">
+          <div class="countdown" aria-label="Time left in the freshers sale">
+            <div><strong data-cd="d">0</strong><span>days</span></div>
+            <div><strong data-cd="h">00</strong><span>hours</span></div>
+            <div><strong data-cd="m">00</strong><span>minutes</span></div>
+            <div><strong data-cd="s">00</strong><span>seconds</span></div>
+          </div>
+          <p class="small" style="margin-top:14px">Freshers sale: Social is £40 until midnight on 11 October, then £50.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="plans">
+        <article class="plan rv">
+          <div class="plan-top"><h3 class="h3">Social</h3><span class="plan-tag red" data-sale>Freshers price</span></div>
+          <div class="plan-price" data-social-amount>£40 <small>/ year</small></div>
+          <p class="was" data-sale>Usually <s>£50</s>, from 12 October.</p>
+          <ul class="ticks">
+            <li>An hour of social padel every week</li>
+            <li>Every club social</li>
+            <li>The members' shop</li>
+            <li>About £448 of court time over the year</li>
+          </ul>
+          <div class="field">
+            <label for="code-social">Discount code (optional)</label>
+            <div class="inline"><input class="input" id="code-social" autocomplete="off" placeholder="Enter code"><button class="btn line sm" type="button" id="apply-code">Apply</button></div>
+            <p class="msg" id="code-msg" role="status"></p>
+          </div>
+          <button class="apple" type="button" id="buy-social">Buy with <svg class="ap" viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Pay</button>
+          <p class="note">Secure payment by Stripe.</p>
+        </article>
+
+        <article class="plan full rv" style="--d:.1s">
+          <div class="plan-top"><h3 class="h3">Full</h3><span class="plan-tag">Sixteen places</span></div>
+          <div class="plan-price">£80 <small>/ year</small></div>
+          <p class="was">Selected at trials on 6 October.</p>
+          <ul class="ticks">
+            <li>Everything in Social</li>
+            <li>Weekly training with a professional coach</li>
+            <li>Fitness sessions with the captains</li>
+            <li>A place in the team for BUCS, NUPL and Varsity</li>
+            <li>About £896 of court time, plus coaching</li>
+          </ul>
+          <div class="field">
+            <label for="code-full">Selected at trials? Enter your full-member code</label>
+            <div class="inline"><input class="input" id="code-full" autocomplete="off" placeholder="Full-member code"><button class="btn line sm" type="button" id="unlock-full">Unlock</button></div>
+            <p class="msg" id="full-msg" role="status">You'll get this code if you're selected at trials.</p>
+          </div>
+          <button class="apple" type="button" id="buy-full" disabled>Buy with <svg class="ap" viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Pay</button>
+          <p class="note">Secure payment by Stripe.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="narrow">
+        <h2 class="h2 center rv">Questions.</h2>
+        <hr class="rule rv" style="--d:.06s;margin-inline:auto">
+        <div class="faq rv" style="--d:.1s">
+          <details><summary>Do I need to have played before?</summary><p>No. Social membership is for everyone, whatever your level. Full membership is for players who want to compete, and places are decided at trials on 6 October.</p></details>
+          <details><summary>Where do we play?</summary><p>At the Cambridge University Sports Centre. Members get session details after joining.</p></details>
+          <details><summary>What happens after I pay?</summary><p>You'll get the password to the members area straight away, where the shop and member information live.</p></details>
+          <details><summary>How do I get in touch?</summary><p>Message us on Instagram at @camunipadelclub or email secretary@cuptc.com.</p></details>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------------------------------------------------------- MEMBERS AREA -->
+  <div class="page" data-page="members">
+    <section class="page-head">
+      <div class="narrow center">
+        <h2 class="display rv">Members Area.</h2>
+        <hr class="rule rv" style="--d:.06s">
+        <p class="lede rv" id="members-lede" style="--d:.1s">Club kit and merch, for members only. Sign in with the password you got when you joined.</p>
+      </div>
+      <div class="narrow rv" style="--d:.18s;margin-top:40px">
+        <form class="gate" id="gate" autocomplete="off">
+          <label class="lbl" for="member-pw">Members password</label>
+          <div class="inline"><input class="input" id="member-pw" type="password" placeholder="Password"><button class="btn sm" type="submit">Sign in</button></div>
+          <p class="msg" id="gate-msg" role="status"></p>
+          <p class="small">Not a member yet? <a class="link" href="#membership">See membership</a></p>
+        </form>
+        <div class="signed" id="member-bar" hidden><span id="member-bar-text">You're signed in.</span><button type="button" id="sign-out">Sign out</button></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="shop rv" id="shop" aria-live="polite"></div>
+    </section>
+
+    <section class="sec">
+      <div class="narrow">
+        <h2 class="h3 rv" style="margin-bottom:20px">Committee</h2>
+        <form class="gate rv" id="admin-gate" autocomplete="off" style="margin:0;--d:.08s">
+          <label class="lbl" for="admin-pw">Committee password</label>
+          <div class="inline"><input class="input" id="admin-pw" type="password" placeholder="Password"><button class="btn line sm" type="submit">Manage merch</button></div>
+          <p class="msg" id="admin-msg" role="status"></p>
+        </form>
+        <div class="admin" id="admin" hidden>
+          <p class="muted">Add items, set prices and delivery times. Changes show for everyone straight away.</p>
+          <form id="merch-form">
+            <input type="hidden" id="m-id">
+            <div class="field"><label for="m-name">Item name</label><input class="input" id="m-name" required maxlength="80"></div>
+            <div class="field"><label for="m-price">Price (£)</label><input class="input" id="m-price" type="number" min="0" step="0.01" required></div>
+            <div class="field"><label for="m-delivery">Delivery time</label><input class="input" id="m-delivery" placeholder="e.g. 3 to 4 weeks" maxlength="60"></div>
+            <div class="field"><label for="m-sizes">Sizes (comma separated)</label><input class="input" id="m-sizes" placeholder="XS, S, M, L, XL" maxlength="80"></div>
+            <div class="field"><label for="m-image">Image</label><div class="inline"><select class="input" id="m-image"></select><button class="btn line sm" type="button" id="m-upload">Upload photo</button></div><img id="m-preview" class="m-preview" alt="" hidden></div>
+            <div class="field"><label for="m-order">Position in shop</label><input class="input" id="m-order" type="number" step="1" value="10"></div>
+            <div class="field full"><label for="m-desc">Description</label><textarea class="input" id="m-desc" maxlength="400"></textarea></div>
+            <div class="full actions">
+              <button class="btn sm" type="submit" id="m-save">Add item</button>
+              <button class="btn line sm" type="button" id="m-cancel" hidden>Cancel edit</button>
+            </div>
+            <p class="msg full" id="m-msg" role="status"></p>
+          </form>
+          <div id="admin-list"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------------------------------------------------------- Footer (every page) -->
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot-top">
+        <a class="foot-logo" href="#" aria-label="Back to the start"><img class="em" src="img/emblem.png" alt="" width="460" height="294"><img class="cu white" src="img/cuptc.png" alt="" width="488" height="192"></a>
+        <div>
+          <h4>Pages</h4>
+          <p><a class="ul" href="#home">Home</a><br><a class="ul" href="#membership">Membership</a><br><a class="ul" href="#members">Members Area</a><br><a class="ul" href="play/index.html">Padel Pong</a></p>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <p><a class="ul" href="https://www.instagram.com/camunipadelclub/" target="_blank" rel="noopener">Instagram @camunipadelclub</a><br><span>secretary@cuptc.com</span><button class="copy" type="button" data-copy="secretary@cuptc.com">Copy</button></p>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>&copy; 2026 Cambridge University Padel Tennis Club. Sponsored by Mill Mediterranean and Mantis Sport.</span>
+        <a class="back" href="#"><i aria-hidden="true">&uarr;</i>Back to the start</a>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<div id="modal-root"></div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const root = document.documentElement;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const OUT = 'cubic-bezier(.16,1,.3,1)';
+
+  // Passwords and codes are checked on the server (api/). Prices here are for display; the server sets what's charged.
+  const SALE_END = new Date('2026-10-11T23:59:59+01:00');
+  const PRICES = { socialSale: 40, social: 50, committee: 20, full: 80 };
+  const HERO = ['p16', 'p15', 'p12', 'p19'];
+  const PHOTOS = ['p15','p12','p19','p16','p9','p13','p21','p10','p4','p18','p14','p20','p3','p6','p7','p5','p11'];
+  const IMAGES = [
+    ['kit-shirt', 'Kit: shirt (front and back)'], ['kit-skort', 'Kit: skort'], ['kit-shorts', 'Kit: shorts'],
+    ['mill', 'Logo: mill'], ['mantis', 'Logo: Mantis Sport'], ['cuptc-logo', 'Logo: CUPTC']
+  ].concat(PHOTOS.map((p, i) => [p, 'Club photo ' + (i + 1)]));
+  const imgSrc = (key) => (/^(https:|\/)/.test(key) ? key : 'img/' + key + (/logo|mill|mantis|game/.test(key) ? '.png' : '.jpg'));
+  const TEAM = [
+    { name: 'Haris Khan', role: 'President', img: 'c-haris' },
+    { name: 'Keira Au', role: 'Vice-President', img: 'c-keira' },
+    { name: 'Lorenzo Martellini', role: 'Treasurer', img: 'c-lorenzo' },
+    { name: 'Panayiotis Hadjicostis', role: 'Secretary', img: 'c-panayiotis' },
+    { name: 'Josie Blake-James', role: 'Social Secretary', img: 'c-josie' },
+    { name: 'George Papadopoullos', role: 'Social Secretary', img: 'c-george' },
+    { name: 'Joe Conway', role: "Men's Captain", img: 'c-joe' },
+    { name: 'Unfilled', role: "Women's Captain", img: null },
+    { name: 'Anais Gill', role: 'Social Media Officer', img: 'c-anais' },
+    { name: 'Alice Mander', role: 'Kit Secretary', img: 'c-alice' },
+    { name: 'Archie Chalk', role: 'Sponsorship Officer', img: 'c-archie' },
+    { name: 'Mia Edgworth', role: 'Welfare Officer', img: 'c-mia' },
+    { name: 'Jaya Kumar Das', role: 'Welfare Officer', img: 'c-jaya' },
+    { name: 'Lucy Wadley', role: 'Welfare Officer', img: 'c-lucy' },
+    { name: 'Freya Mullin', role: 'Safety Officer', img: 'c-freya' },
+    { name: 'Alex Atkinson', role: 'Alumni Officer', img: 'c-alex' }
+  ];
+  const TITLES = { home: 'CUPTC', membership: 'CUPTC Membership', members: 'CUPTC Members Area' };
+
+  const store = {
+    get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* private mode */ } },
+    del(k) { try { sessionStorage.removeItem(k); } catch (e) { /* ignore */ } }
+  };
+  const state = { token: store.get('cuptc-token') || '', member: !!store.get('cuptc-token'), admin: store.get('cuptc-role') === 'committee', discount: '', fullCode: '', merch: null };
+
+  // ---------------------------------------------------------------- reveals
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); if (reduce && e.target.classList.contains('ri')) e.target.classList.add('shown'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+  function armReveals(page) {
+    $$('.rv, .ri', page).concat($$('.foot .rv')).forEach((el) => { el.classList.remove('in', 'shown'); io.observe(el); });
+  }
+  // Once an image has unfolded, drop its clip so the hover shadow can show.
+  document.addEventListener('transitionend', (e) => {
+    if (e.propertyName === 'clip-path' && e.target.classList.contains('ri') && e.target.classList.contains('in')) e.target.classList.add('shown');
+  });
+
+  // ---------------------------------------------------------------- hero slideshow
+  const hero = (() => {
+    const box = $('#slides'), dots = $('#dots');
+    const imgs = HERO.map((k, i) => {
+      const im = document.createElement('img');
+      im.src = imgSrc(k);
+      im.alt = i ? '' : 'CUPTC members courtside on a sunny day';
+      if (i) im.loading = 'lazy';
+      box.appendChild(im);
+      dots.appendChild(document.createElement('i'));
+      return im;
+    });
+    let i = 0, timer = 0;
+    function show(n) {
+      imgs[i].classList.remove('on');
+      dots.children[i].classList.remove('on');
+      i = n;
+      const im = imgs[i];
+      im.classList.add('on');
+      void dots.children[i].offsetWidth;
+      dots.children[i].classList.add('on');
+      if (!reduce) im.animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 9000, easing: 'cubic-bezier(.2,.6,.2,1)', fill: 'forwards' });
+    }
+    return {
+      run(on) {
+        clearInterval(timer);
+        if (!on) return;
+        show(i);
+        if (!reduce) timer = setInterval(() => show((i + 1) % imgs.length), 6000);
+      }
+    };
+  })();
+
+  // ---------------------------------------------------------------- routing
+  // States: the start screen (no hash) or one of three pages. The curtain, header and pages all
+  // animate from CSS classes on <html>, so rapid clicks never leave anything half-way.
+  const PAGES = ['home', 'membership', 'members'];
+  const ALIAS = { memberships: 'membership' };
+  const pageFromHash = () => { const h = location.hash.slice(1); const p = ALIAS[h] || h; return PAGES.indexOf(p) >= 0 ? p : null; };
+  let current = null, swapTimer = 0, enterTimer = 0;
+
+  function showPage(page) {
+    $$('.page').forEach((p) => p.classList.toggle('active', p.dataset.page === page));
+    $$('[data-go]').forEach((a) => { if (a.dataset.go === page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    document.title = TITLES[page];
+    window.scrollTo(0, 0);
+    armReveals($('.page.active'));
+    hero.run(page === 'home');
+  }
+
+  function route(first) {
+    const page = pageFromHash();
+    setMenu(false);
+    clearTimeout(swapTimer);
+    $('#pages').classList.remove('swap');
+
+    if (!page) {                                   // back to the start
+      root.classList.add('at-start');
+      current = null;
+      document.title = 'CUPTC';
+      hero.run(false);
+      return;
+    }
+    if (first || current === null) {               // entering from the start screen
+      if (!first) {
+        root.classList.add('entering');
+        clearTimeout(enterTimer);
+        enterTimer = setTimeout(() => root.classList.remove('entering'), 2400);
+      }
+      showPage(page);
+      root.classList.remove('at-start');
+    } else if (page !== current) {                 // page to page: a quick fade through white
+      if (reduce) showPage(page);
+      else {
+        $('#pages').classList.add('swap');
+        swapTimer = setTimeout(() => { showPage(page); requestAnimationFrame(() => $('#pages').classList.remove('swap')); }, 320);
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    }
+    current = page;
+  }
+  window.addEventListener('hashchange', () => route(false));
+
+  // "Back to the start" links clear the hash; links to the page you're on scroll to the top.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const target = a.getAttribute('href');
+    if (target === '#') {
+      e.preventDefault();
+      if (location.hash) { history.pushState(null, '', location.pathname + location.search); route(false); }
+    } else if (target === location.hash) {
+      e.preventDefault();
+      setMenu(false);
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    }
+  });
+
+  // ---------------------------------------------------------------- phone menu
+  function setMenu(open) {
+    root.classList.toggle('menu-open', open);
+    const b = $('#menu-btn');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    b.textContent = open ? 'Close' : 'Menu';
+  }
+  $('#menu-btn').addEventListener('click', () => setMenu(!root.classList.contains('menu-open')));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+  const phoneMq = matchMedia('(max-width: 720px)');
+  if (phoneMq.addEventListener) phoneMq.addEventListener('change', () => setMenu(false));
+
+  // ---------------------------------------------------------------- committee
+  TEAM.forEach((p) => { p.slug = p.name === 'Unfilled' ? 'womens-captain' : p.name.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, ''); });
+  TEAM.forEach((p, n) => {
+    const d = document.createElement('figure');
+    d.className = 'person';
+    d.dataset.slug = p.slug;
+    d.innerHTML = '<div class="ri"></div><figcaption class="rv"><b></b><span></span></figcaption><div class="photo-tools"><button type="button" data-photo="upload">Change photo</button><button type="button" data-photo="reset">Use original</button></div>';
+    $('.ri', d).style.setProperty('--d', (n % 4) * 0.08 + 's');
+    $('.rv', d).style.setProperty('--d', (n % 4) * 0.08 + 0.15 + 's');
+    $('b', d).textContent = p.name;
+    $('figcaption span', d).textContent = p.role;
+    if (p.img) {
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.width = img.height = 640;
+      img.src = 'img/' + p.img + '.jpg';
+      img.alt = p.name + ', ' + p.role;
+      $('.ri', d).appendChild(img);
+    } else {
+      $('.ri', d).classList.add('empty-ph');
+      $('.ri', d).innerHTML = '<span aria-hidden="true">?</span>';
+    }
+    $('#team').appendChild(d);
+  });
+
+  // ---------------------------------------------------------------- sale + countdown
+  const saleOn = () => Date.now() < SALE_END.getTime();
+  const socialPrice = () => (state.discount ? PRICES.committee : saleOn() ? PRICES.socialSale : PRICES.social);
+  function tick() {
+    const left = Math.max(0, SALE_END.getTime() - Date.now());
+    const d = Math.floor(left / 864e5), h = Math.floor(left / 36e5) % 24, m = Math.floor(left / 6e4) % 60, s = Math.floor(left / 1e3) % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    $$('[data-cd="d"]').forEach((e) => (e.textContent = d));
+    $$('[data-cd="h"]').forEach((e) => (e.textContent = pad(h)));
+    $$('[data-cd="m"]').forEach((e) => (e.textContent = pad(m)));
+    $$('[data-cd="s"]').forEach((e) => (e.textContent = pad(s)));
+    $$('[data-clock]').forEach((e) => (e.textContent = d + ' days, ' + pad(h) + ':' + pad(m) + ':' + pad(s)));
+    if (!saleOn()) $$('[data-sale]').forEach((e) => (e.hidden = true));
+    renderSocialPrice();
+  }
+  function renderSocialPrice() {
+    const amt = $('[data-social-amount]');
+    if (amt) amt.innerHTML = '£' + socialPrice() + ' <small>/ year</small>';
+    const tile = $('[data-social-price]');
+    if (tile) tile.innerHTML = saleOn() ? '£40<s>£50</s>' : '£50';
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ---------------------------------------------------------------- copy
+  $$('[data-copy]').forEach((b) => b.addEventListener('click', () => copyText(b.dataset.copy, b)));
+  function copyText(text, btn) {
+    const done = () => { const t = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = t), 1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => selectFallback(btn));
+    else selectFallback(btn);
+  }
+  function selectFallback(btn) {
+    const el = btn.previousElementSibling;
+    if (!el) return;
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    const s = getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+
+  // ---------------------------------------------------------------- server calls
+  async function api(path, opts = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.token) headers.Authorization = 'Bearer ' + state.token;
+    let r;
+    try {
+      r = await fetch('/api/' + path, { method: opts.method || (opts.body ? 'POST' : 'GET'), headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+    } catch (e) { return { ok: false, status: 0, data: { error: 'offline' } }; }
+    let data = {};
+    try { data = await r.json(); } catch (e) { data = { error: 'bad_response' }; }
+    if (r.status === 401 && state.token && (data.error === 'committee_only' || data.error === 'members_only')) signOut(false);
+    return { ok: r.ok, status: r.status, data };
+  }
+  const ERR = {
+    offline: 'Couldn’t reach the club’s server. Check your connection and try again.',
+    payments_not_configured: 'Online payments open soon. Message us on Instagram or email secretary@cuptc.com to join now.',
+    storage_not_configured: 'Saving isn’t switched on yet (the site needs its storage connecting in Vercel).',
+    not_configured: 'Sign-in isn’t switched on yet (the site needs its passwords setting in Vercel).'
+  };
+  const errText = (res, fallback) => ERR[res.data.error] || (res.status === 404 && !res.data.error ? ERR.offline : fallback);
+
+  // ---------------------------------------------------------------- checkout
+  const APPLE = $('#buy-social .ap').outerHTML;
+  function sheet(title) {
+    const host = $('#modal-root');
+    host.innerHTML = '';
+    const scrim = document.createElement('div');
+    scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"><div class="sh-head"><span></span><button class="sh-x" type="button" aria-label="Close">&times;</button></div><div class="sh-main"></div></div>';
+    $('.sh-head span', scrim).textContent = title;
+    $('.sheet', scrim).setAttribute('aria-label', title);
+    const close = () => { host.innerHTML = ''; document.removeEventListener('keydown', onKey); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    $('.sh-x', scrim).addEventListener('click', close);
+    scrim.addEventListener('click', (e) => { if (e.target === scrim) close(); });
+    host.appendChild(scrim);
+    return { main: $('.sh-main', scrim), close };
+  }
+  const spin = (el, text) => { el.innerHTML = '<div class="sh-state"><div class="spinner"></div><span></span></div>'; $('span', el).textContent = text; };
+
+  // Payment goes to Stripe Checkout (card, Apple Pay, Google Pay). In demo mode a simulated sheet stands in.
+  async function startCheckout(req, btn) {
+    const was = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'One moment…';
+    const res = await api('checkout', { body: req });
+    btn.disabled = false;
+    btn.innerHTML = was;
+    if (res.ok && res.data.url) { location.href = res.data.url; return; }
+    if (res.ok && res.data.demo) return demoSheet(res.data);
+    const s = sheet('Checkout');
+    s.main.innerHTML = '<p class="sh-state muted" style="padding:10px 0 4px"></p>';
+    $('p', s.main).textContent = errText(res, 'Something went wrong starting the payment. Try again in a moment.');
+  }
+  function demoSheet({ title, lines, meta }) {
+    const s = sheet(title);
+    const total = lines.reduce((a, l) => a + l[1], 0);
+    s.main.innerHTML = '<p class="sh-demo">Demo mode: no card is charged. Add a Stripe key in Vercel to take real payments.</p><div class="sh-lines" style="margin-top:14px"></div><div class="sh-body" style="margin-top:14px"><button class="apple" type="button">Pay £' + total.toFixed(2).replace(/\.00$/, '') + ' with ' + APPLE + 'Pay</button></div>';
+    lines.concat([['Total', total]]).forEach((l) => {
+      const row = document.createElement('div');
+      row.className = 'sh-line';
+      const a = document.createElement('span'), b = document.createElement('span');
+      a.textContent = l[0];
+      b.textContent = '£' + l[1].toFixed(2);
+      row.append(a, b);
+      $('.sh-lines', s.main).appendChild(row);
+    });
+    $('.apple', s.main).focus();
+    $('.apple', s.main).addEventListener('click', async () => {
+      spin(s.main, 'Processing');
+      const res = await api('confirm', { body: { demo: meta } });
+      showPaid(res, s);
+    });
+  }
+  function showPaid(res, s) {
+    if (!res.ok) { s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = 'We couldn’t confirm that payment. If you were charged, email secretary@cuptc.com and we’ll sort it.'; return; }
+    const d = res.data;
+    if (d.kind === 'merch') {
+      s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:21px;font-weight:400">Order placed</b><span class="muted"></span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
+      $('.muted', s.main).textContent = d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.';
+      $('button', s.main).addEventListener('click', s.close);
+      return;
+    }
+    signIn('member', d.token);
+    s.main.innerHTML =
+      '<div class="sh-state" style="gap:12px"><div class="done">&#10003;</div><b style="font-size:22px;font-weight:400">Welcome to CUPTC</b>' +
+      '<span class="muted"></span></div><div class="pw" style="margin-top:14px"><span></span><button class="copy" type="button">Copy</button></div>' +
+      '<a class="btn" href="#members" style="width:100%;margin-top:14px">Go to the Members Area</a>';
+    $('.muted', s.main).textContent = 'Your ' + d.kind + ' membership is confirmed. Here’s your password for the Members Area. Keep it safe:';
+    $('.pw span', s.main).textContent = d.password;
+    $('.copy', s.main).addEventListener('click', (e) => copyText(d.password, e.target));
+    $('a', s.main).addEventListener('click', s.close);
+  }
+  // Coming back from Stripe
+  (async () => {
+    const q = new URLSearchParams(location.search);
+    const id = q.get('paid');
+    if (!id) return;
+    history.replaceState(null, '', location.pathname + location.hash);
+    const s = sheet('Payment');
+    spin(s.main, 'Confirming your payment');
+    showPaid(await api('confirm', { body: { session: id } }), s);
+  })();
+
+  // ---------------------------------------------------------------- membership
+  $('#apply-code').addEventListener('click', async () => {
+    const v = $('#code-social').value.trim();
+    const msg = $('#code-msg');
+    if (!v) { state.discount = ''; msg.className = 'msg err'; msg.textContent = 'Enter a code first.'; return renderSocialPrice(); }
+    const res = await api('code', { body: { kind: 'discount', code: v } });
+    state.discount = res.ok && res.data.ok ? v : '';
+    msg.className = 'msg ' + (state.discount ? 'ok' : 'err');
+    msg.textContent = state.discount ? 'Committee price applied: £20.' : res.ok ? "That code isn't valid. Check it and try again." : errText(res, 'Couldn’t check that code. Try again.');
+    renderSocialPrice();
+  });
+  $('#buy-social').addEventListener('click', (e) => startCheckout({ kind: 'social', code: state.discount || undefined }, e.currentTarget));
+  $('#unlock-full').addEventListener('click', async () => {
+    const v = $('#code-full').value.trim();
+    const msg = $('#full-msg');
+    if (!v) { msg.className = 'msg err'; msg.textContent = 'Enter your full-member code first.'; return; }
+    const res = await api('code', { body: { kind: 'full', code: v } });
+    if (res.ok && res.data.ok) {
+      state.fullCode = v;
+      msg.className = 'msg ok';
+      msg.textContent = 'Code accepted. Congratulations on being selected.';
+      $('#buy-full').disabled = false;
+    } else {
+      msg.className = 'msg err';
+      msg.textContent = res.ok ? "That code isn't valid. Full-member codes are given out at trials." : errText(res, 'Couldn’t check that code. Try again.');
+    }
+  });
+  $('#buy-full').addEventListener('click', (e) => { if (state.fullCode) startCheckout({ kind: 'full', fullCode: state.fullCode }, e.currentTarget); });
+
+  // ---------------------------------------------------------------- sign in
+  function signIn(role, token) {
+    state.token = token;
+    state.member = true;
+    state.admin = role === 'committee';
+    store.set('cuptc-token', token);
+    store.set('cuptc-role', role);
+    renderMembers();
+    loadShop();
+  }
+  function signOut(reload = true) {
+    state.token = ''; state.member = false; state.admin = false;
+    store.del('cuptc-token'); store.del('cuptc-role');
+    renderMembers();
+    if (reload) loadShop();
+  }
+  async function login(input, msg, e) {
+    e.preventDefault();
+    const res = await api('login', { body: { password: input.value.trim() } });
+    if (res.ok) { msg.textContent = ''; input.value = ''; signIn(res.data.role, res.data.token); return; }
+    msg.className = 'msg err';
+    msg.textContent = res.status === 401 ? "That password isn't right." : errText(res, 'Couldn’t sign in. Try again.');
+  }
+  $('#gate').addEventListener('submit', (e) => login($('#member-pw'), $('#gate-msg'), e));
+  $('#admin-gate').addEventListener('submit', (e) => login($('#admin-pw'), $('#admin-msg'), e));
+  $('#sign-out').addEventListener('click', () => signOut());
+
+  function renderMembers() {
+    $('#gate').hidden = state.member;
+    $('#member-bar').hidden = !state.member;
+    $('#admin').hidden = !state.admin;
+    $('#admin-gate').hidden = state.admin;
+    $('#member-bar-text').textContent = state.admin ? 'Signed in as committee. You can manage merch below and change committee photos on the home page.' : "You're signed in. Prices and ordering are unlocked.";
+    $('#members-lede').textContent = state.member ? 'Club kit and merch, just for members.' : 'Club kit and merch, for members only. Sign in with the password you got when you joined.';
+    root.classList.toggle('is-committee', state.admin);
+    renderShop();
+    renderAdminList();
+  }
+
+  // ---------------------------------------------------------------- shop
+  async function loadShop() {
+    const res = await api('merch');
+    state.shopError = res.ok ? '' : errText(res, 'The shop can’t load right now.');
+    state.merch = res.ok ? res.data.items : [];
+    state.pricesShown = res.ok && res.data.member;
+    renderShop();
+    renderAdminList();
+  }
+  function renderShop() {
+    const shop = $('#shop');
+    shop.innerHTML = '';
+    const empty = (t) => { const p = document.createElement('p'); p.className = 'empty'; p.textContent = t; shop.appendChild(p); };
+    if (state.merch == null) return empty('Loading the shop…');
+    if (state.shopError) return empty(state.shopError);
+    if (!state.merch.length) return empty('No merch yet. Check back soon.');
+    state.merch.forEach((m) => {
+      const card = document.createElement('article');
+      card.className = 'product';
+      const pimg = document.createElement('div');
+      pimg.className = 'pimg' + (/^(p\d|https:|\/)/.test(m.image || '') ? ' cover' : '');
+      if (m.image) {
+        const img = document.createElement('img');
+        img.src = imgSrc(m.image);
+        img.alt = m.name || 'Merch item';
+        img.loading = 'lazy';
+        pimg.appendChild(img);
+      }
+      const h = document.createElement('h3');
+      h.textContent = m.name || 'Untitled item';
+      card.append(pimg, h);
+      if (m.description) {
+        const d = document.createElement('p');
+        d.className = 'd';
+        d.textContent = m.description;
+        card.appendChild(d);
+      }
+      if (state.member && state.pricesShown) {
+        const meta = document.createElement('div');
+        meta.className = 'pmeta';
+        const pr = document.createElement('span');
+        pr.className = 'pprice';
+        pr.textContent = '£' + Number(m.price || 0).toFixed(2).replace(/\.00$/, '');
+        const dl = document.createElement('span');
+        dl.className = 'pdeliv';
+        dl.textContent = m.delivery ? 'Delivery: ' + m.delivery : '';
+        meta.append(pr, dl);
+        card.appendChild(meta);
+        const sizes = String(m.sizes || '').split(',').map((s) => s.trim()).filter(Boolean);
+        let sel = null;
+        if (sizes.length) {
+          sel = document.createElement('select');
+          sel.className = 'input';
+          sel.setAttribute('aria-label', 'Size for ' + (m.name || 'item'));
+          sizes.forEach((s) => { const o = document.createElement('option'); o.textContent = s; sel.appendChild(o); });
+          card.appendChild(sel);
+        }
+        const buy = document.createElement('button');
+        buy.className = 'apple';
+        buy.type = 'button';
+        buy.innerHTML = 'Buy with ' + APPLE + 'Pay';
+        buy.addEventListener('click', () => startCheckout({ kind: 'merch', itemId: m.id, size: sel ? sel.value : '' }, buy));
+        card.appendChild(buy);
+      } else {
+        const lock = document.createElement('p');
+        lock.className = 'lock';
+        lock.textContent = 'Members only. Sign in to see prices and order.';
+        card.appendChild(lock);
+      }
+      shop.appendChild(card);
+    });
+  }
+
+  // ---- committee: manage merch
+  const imgSel = $('#m-image');
+  [['', 'No image']].concat(IMAGES).forEach(([k, label]) => { const o = document.createElement('option'); o.value = k; o.textContent = label; imgSel.appendChild(o); });
+
+  // Upload a shop photo (cropped to the shop's 4:5 shape) and select it for this item.
+  function useImage(value) {
+    if (value && !$$('option', imgSel).some((o) => o.value === value)) {
+      const o = document.createElement('option');
+      o.value = value;
+      o.textContent = 'Uploaded photo';
+      imgSel.insertBefore(o, imgSel.children[1]);
+    }
+    imgSel.value = value || '';
+    const pv = $('#m-preview');
+    pv.hidden = !value;
+    if (value) pv.src = imgSrc(value);
+  }
+  imgSel.addEventListener('change', () => useImage(imgSel.value));
+  $('#m-upload').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', () => {
+      if (!input.files[0]) return;
+      cropImage(input.files[0], {
+        title: 'Shop photo', hint: 'Drag and zoom to frame the item.', ratio: 1.25, outW: 1000,
+        save: async (data) => {
+          const res = await api('merch-image', { body: { image: data } });
+          if (res.ok) { useImage(res.data.url); $('#m-msg').className = 'msg full ok'; $('#m-msg').textContent = 'Photo uploaded. Save the item to use it in the shop.'; }
+          return res;
+        }
+      });
+    });
+    input.click();
+  });
+
+  function resetForm() {
+    useImage('');
+    $('#merch-form').reset();
+    $('#m-id').value = '';
+    $('#m-order').value = String(((state.merch || []).length + 1) * 10);
+    $('#m-save').textContent = 'Add item';
+    $('#m-cancel').hidden = true;
+  }
+  $('#m-cancel').addEventListener('click', resetForm);
+
+  $('#merch-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('#m-msg');
+    const item = {
+      id: $('#m-id').value || undefined,
+      name: $('#m-name').value.trim(),
+      price: Math.max(0, Number($('#m-price').value) || 0),
+      delivery: $('#m-delivery').value.trim(),
+      sizes: $('#m-sizes').value.trim(),
+      image: imgSel.value,
+      description: $('#m-desc').value.trim(),
+      order: Number($('#m-order').value) || 0
+    };
+    if (!item.name) { msg.textContent = 'Give the item a name.'; return; }
+    $('#m-save').disabled = true;
+    const res = await api('merch', { body: { item } });
+    $('#m-save').disabled = false;
+    msg.className = 'msg full ' + (res.ok ? 'ok' : 'err');
+    msg.textContent = res.ok ? (item.id ? 'Saved. The shop is updated.' : 'Added to the shop.') : errText(res, 'Couldn’t save. Try again in a moment.');
+    if (res.ok) { resetForm(); loadShop(); }
+  });
+
+  function renderAdminList() {
+    const list = $('#admin-list');
+    list.innerHTML = '';
+    if (!state.admin || !state.merch) return;
+    state.merch.forEach((m) => {
+      const row = document.createElement('div');
+      row.className = 'admin-row';
+      const name = document.createElement('span');
+      name.textContent = m.name || 'Untitled';
+      const price = document.createElement('span');
+      price.textContent = '£' + Number(m.price || 0).toFixed(2);
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', () => {
+        $('#m-id').value = m.id;
+        $('#m-name').value = m.name || '';
+        $('#m-price').value = m.price || 0;
+        $('#m-delivery').value = m.delivery || '';
+        $('#m-sizes').value = m.sizes || '';
+        useImage(m.image || '');
+        $('#m-desc').value = m.description || '';
+        $('#m-order').value = m.order || 0;
+        $('#m-save').textContent = 'Save changes';
+        $('#m-cancel').hidden = false;
+        $('#m-name').focus();
+      });
+      const del = document.createElement('button');
+      del.className = 'del';
+      del.type = 'button';
+      del.textContent = 'Remove';
+      let armed = false;
+      del.addEventListener('click', async () => {
+        if (!armed) { armed = true; del.textContent = 'Confirm'; setTimeout(() => { armed = false; del.textContent = 'Remove'; }, 3000); return; }
+        const res = await api('merch?id=' + encodeURIComponent(m.id), { method: 'DELETE' });
+        if (res.ok) loadShop(); else $('#m-msg').textContent = errText(res, 'Couldn’t remove it. Try again.');
+      });
+      row.append(name, price, edit, del);
+      list.appendChild(row);
+    });
+  }
+  loadShop();
+
+  // ---------------------------------------------------------------- committee photos: custom uploads
+  async function loadCommitteePhotos() {
+    const res = await api('committee');
+    if (!res.ok) return;
+    const photos = res.data.photos || {};
+    $$('#team .person').forEach((fig) => setPhoto(fig, photos[fig.dataset.slug] || null));
+  }
+  function setPhoto(fig, url) {
+    const p = TEAM.find((t) => t.slug === fig.dataset.slug);
+    const box = $('.ri', fig);
+    const src = url || (p.img ? 'img/' + p.img + '.jpg' : null);
+    fig.classList.toggle('custom', !!url);
+    box.classList.toggle('empty-ph', !src);
+    let img = $('img', box);
+    if (!src) { box.innerHTML = '<span aria-hidden="true">?</span>'; return; }
+    if (!img) { box.innerHTML = ''; img = document.createElement('img'); img.width = img.height = 640; img.alt = p.name + ', ' + p.role; box.appendChild(img); }
+    img.src = src;
+  }
+  $('#team').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-photo]');
+    if (!btn) return;
+    const fig = btn.closest('.person');
+    if (btn.dataset.photo === 'reset') {
+      btn.disabled = true;
+      const res = await api('committee?slug=' + fig.dataset.slug, { method: 'DELETE' });
+      btn.disabled = false;
+      if (res.ok) setPhoto(fig, null); else alertSheet(errText(res, 'Couldn’t reset that photo.'));
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', () => { if (input.files[0]) cropper(input.files[0], fig); });
+    input.click();
+  });
+  function alertSheet(text) { const s = sheet('Committee photo'); s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = text; }
+
+  // Square crop: drag to position, slider to zoom. Saves a 640 x 640 JPEG.
+  function cropper(file, fig) {
+    const p = TEAM.find((t) => t.slug === fig.dataset.slug);
+    cropImage(file, {
+      title: 'Photo for ' + p.name, hint: 'Drag to frame the face and shoulders.', ratio: 1, outW: 640,
+      save: async (data) => {
+        const res = await api('committee', { body: { slug: fig.dataset.slug, image: data } });
+        if (res.ok) setPhoto(fig, res.data.url);
+        return res;
+      }
+    });
+  }
+  // Crop to a fixed shape (ratio = height / width): drag to position, slider to zoom, then save(jpegDataURL).
+  function cropImage(file, { title, hint, ratio, outW, save }) {
+    const s = sheet(title);
+    s.main.innerHTML = '<div class="crop"><img alt="" draggable="false"></div><label class="lbl" style="display:block;margin-top:14px">Zoom<input class="zoom" type="range" min="1" max="3" step="0.01" value="1"></label><p class="note" style="text-align:left;margin:6px 0 14px"></p><button class="btn" type="button" style="width:100%">Save photo</button><p class="msg" role="status"></p>';
+    $('.note', s.main).textContent = hint;
+    const view = $('.crop', s.main), img = $('img', view), zoom = $('.zoom', s.main);
+    view.style.aspectRatio = '1 / ' + ratio;
+    const url = URL.createObjectURL(file);
+    let W = 0, H = 0, base = 1, z = 1, x = 0, y = 0;
+    const V = () => view.clientWidth, VH = () => view.clientWidth * ratio;
+    const clamp = () => {
+      const sc = base * z;
+      x = Math.min(0, Math.max(V() - W * sc, x));
+      y = Math.min(0, Math.max(VH() - H * sc, y));
+      img.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + sc + ')';
+    };
+    img.onload = () => { W = img.naturalWidth; H = img.naturalHeight; base = Math.max(V() / W, VH() / H); x = (V() - W * base) / 2; y = (VH() - H * base) / (ratio === 1 ? 4 : 2); clamp(); };
+    img.onerror = () => { $('.msg', s.main).className = 'msg err'; $('.msg', s.main).textContent = 'That file isn’t an image this browser can open.'; };
+    img.src = url;
+    zoom.addEventListener('input', () => {
+      const cx = V() / 2, cy = VH() / 2, old = base * z;
+      z = +zoom.value;
+      const sc = base * z;
+      x = cx - (cx - x) * sc / old;
+      y = cy - (cy - y) * sc / old;
+      clamp();
+    });
+    let drag = null;
+    view.addEventListener('pointerdown', (e) => { drag = { px: e.clientX, py: e.clientY, x, y }; view.setPointerCapture(e.pointerId); });
+    view.addEventListener('pointermove', (e) => { if (!drag) return; x = drag.x + e.clientX - drag.px; y = drag.y + e.clientY - drag.py; clamp(); });
+    view.addEventListener('pointerup', () => { drag = null; });
+    $('.btn', s.main).addEventListener('click', async () => {
+      if (!W) return;
+      const c = document.createElement('canvas');
+      c.width = outW;
+      c.height = Math.round(outW * ratio);
+      const sc = base * z, k = outW / V();
+      const g = c.getContext('2d');
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(img, x * k, y * k, W * sc * k, H * sc * k);
+      const data = c.toDataURL('image/jpeg', 0.86);
+      spin(s.main, 'Saving');
+      const res = await save(data);
+      URL.revokeObjectURL(url);
+      if (res.ok) s.close(); else { s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = errText(res, 'Couldn’t save that photo. Try again.'); }
+    });
+  }
+  loadCommitteePhotos();
+
+  // FAQ: animate height rather than snapping open
+  $$('.faq details').forEach((d) => {
+    const p = d.querySelector('p');
+    const body = document.createElement('div');
+    body.className = 'body';
+    d.insertBefore(body, p);
+    body.appendChild(p);
+    let anim = null;
+    d.querySelector('summary').addEventListener('click', (e) => {
+      if (reduce) return;
+      e.preventDefault();
+      if (anim) anim.cancel();
+      const opening = !d.open;
+      if (opening) d.open = true;
+      const full = body.scrollHeight;
+      anim = body.animate(
+        opening ? [{ height: '0px', opacity: 0 }, { height: full + 'px', opacity: 1 }] : [{ height: full + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+        { duration: opening ? 520 : 380, easing: OUT }
+      );
+      anim.onfinish = () => { if (!opening) d.open = false; anim = null; };
+    });
+  });
+
+  // ---------------------------------------------------------------- who's who on the start photo
+  // Hotspots are stored in the photo's own pixels (1080 x 1350) and mapped onto however the photo is cropped.
+  (() => {
+    const box = $('#tags'), W = 1080, H = 1350, POS_X = 0.42, POS_Y = 0.5;
+    const place = () => {
+      const bw = box.clientWidth, bh = box.clientHeight;
+      if (!bw) return;
+      const s = Math.max(bw / W, bh / H), ox = (bw - W * s) * POS_X, oy = (bh - H * s) * POS_Y;
+      $$('.tag', box).forEach((t) => {
+        const [x, y, w, h] = t.dataset.box.split(' ').map(Number);
+        const [px0, py0] = t.dataset.pin.split(' ').map(Number);
+        const tx = ox + x * s, ty = oy + y * s;
+        Object.assign(t.style, { left: tx + 'px', top: ty + 'px', width: w * s + 'px', height: h * s + 'px' });
+        const L = $('.label', t), lw = L.offsetWidth, lh = L.offsetHeight;
+        const px = ox + px0 * s, py = oy + py0 * s;           // the point the arrow lands on
+        let lx, ly, sx, sy;
+        if (t.dataset.mode === 'edge') {                      // label straddles the photo/green border, arrow comes in from the side
+          lx = bw - lw * 0.62; ly = py - lh * 0.95;
+          sx = lx - 8; sy = ly + lh * 0.6;
+        } else {                                              // label above, nudged left or right, never off the photo
+          const dir = t.dataset.mode === 'left' ? -1 : 1;
+          lx = Math.max(14, Math.min(bw - 14 - lw, px + dir * 46 - lw / 2));
+          ly = py - 54 - lh;
+          sx = Math.max(lx + 12, Math.min(lx + lw - 12, px + dir * 22)); sy = ly + lh + 6;
+        }
+        let ex = px + (t.dataset.mode === 'edge' ? 4 : 0), ey = py - (t.dataset.mode === 'edge' ? 0 : 4);
+        const far = Math.hypot(ex - sx, ey - sy), MAX = 100;   // keep arrows short: past this they just point towards the person
+        if (far > MAX) { ex = sx + (ex - sx) * MAX / far; ey = sy + (ey - sy) * MAX / far; }
+        // a gentle hand-drawn curve: slight bow, then a two-stroke arrowhead along the final direction
+        const dx = ex - sx, dy = ey - sy, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len, bow = Math.min(14, len * 0.16) * (t.dataset.mode === 'left' ? 1 : -1);
+        const c1x = sx + dx * 0.35 + nx * bow, c1y = sy + dy * 0.35 + ny * bow, c2x = sx + dx * 0.75 + nx * bow * 0.5, c2y = sy + dy * 0.75 + ny * bow * 0.5;
+        const ang = Math.atan2(ey - c2y, ex - c2x), hl = 10;
+        const hx1 = ex - hl * Math.cos(ang - 0.5), hy1 = ey - hl * Math.sin(ang - 0.5), hx2 = ex - hl * Math.cos(ang + 0.5), hy2 = ey - hl * Math.sin(ang + 0.5);
+        const r = (v, o) => (v - o).toFixed(1);
+        $('.shaft', t).setAttribute('d', `M${r(sx, tx)} ${r(sy, ty)} C${r(c1x, tx)} ${r(c1y, ty)} ${r(c2x, tx)} ${r(c2y, ty)} ${r(ex, tx)} ${r(ey, ty)}`);
+        $('.head', t).setAttribute('d', `M${r(hx1, tx)} ${r(hy1, ty)} L${r(ex, tx)} ${r(ey, ty)} L${r(hx2, tx)} ${r(hy2, ty)}`);
+        Object.assign(L.style, { left: lx - tx + 'px', top: ly - ty + 'px' });
+      });
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+    place();
+    addEventListener('resize', place);
+    $$('.tag', box).forEach((t) => t.addEventListener('mouseenter', () => box.classList.add('seen'), { once: true }));
+  })();
+
+  // ---------------------------------------------------------------- first paint
+  root.classList.add('no-anim');
+  if (!pageFromHash()) { root.classList.add('at-start'); if (!reduce) root.classList.add('intro'); }
+  route(true);
+  renderMembers();
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
+  setTimeout(() => root.classList.remove('intro'), 2400);
+})();
+</script>
+</body>
+</html>
