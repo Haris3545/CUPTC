@@ -2126,7 +2126,9 @@
       // Line the lions up exactly. The lion is the same size in both image files, but sits at (7, 45) in
       // emblem.png (460 x 294) and at (6, 58) in logo-cuptc.png (1312 x 353).
       const ku = e.height / 294, kh = h.height / 353, s = kh / ku;
-      geo = { vh, bar, T: vh - bar, heroB: bar + (heroEl.offsetHeight || vh * 0.8), s, ox: e.left - l.left, oy: e.top - l.top,
+      // where Home's photo sits: below the header, and below the signed-in bar when there is one
+      const heroT = parseFloat(getComputedStyle(pages).paddingTop) || bar;
+      geo = { vh, bar, T: vh - bar, heroT, heroB: heroT + (heroEl.offsetHeight || vh * 0.8), s, ox: e.left - l.left, oy: e.top - l.top,
         dx: h.left + 6 * kh - (e.left + 7 * ku * s), dy: h.top + 58 * kh - (e.top + 45 * ku * s) };
       root.classList.add('morph');
     }
@@ -2143,9 +2145,10 @@
       const G = vh / 2 + (bar - vh / 2) * g;                  // bottom edge of the green
       const B = vh + (geo.heroB - vh) * g;                    // bottom edge of the photo: ends where Home's photo ends
       curtain.style.clipPath = `inset(0 0 ${vh - G}px 0)`;
-      photo.style.clipPath = `inset(${G}px 0 ${vh - B}px 0)`;
-      pimg.style.top = G + 'px';
-      pimg.style.height = (B - G) + 'px';
+      const P = vh / 2 + (geo.heroT - vh / 2) * g;            // top edge of the photo: ends where Home's photo starts
+      photo.style.clipPath = `inset(${P}px 0 ${vh - B}px 0)`;
+      pimg.style.top = P + 'px';
+      pimg.style.height = (B - P) + 'px';
       pimg.style.transform = 'none';
       startEl.style.opacity = 1;
       startEl.style.visibility = 'visible';
@@ -2161,7 +2164,11 @@
       hdr.style.opacity = 1;
       hdrImg.style.opacity = q;
       $('.hdr-menu', hdr).style.opacity = q;
-      if (sbar) sbar.style.opacity = q;
+      if (sbar) {                                             // signed-in bar: its strip fills the gap above the photo,
+        sbar.style.opacity = 1;                               // and its words fade in last of all
+        sbar.style.transform = 'none';
+        Array.from(sbar.children).forEach((c) => { c.style.opacity = span(t, 0.88, 1); });
+      }
       // Once settled, swap to Home's own (identical) photo in one frame, so there's no crossfade flash.
       const settled = t >= 0.5;
       photo.style.opacity = settled ? 0 : 1;
@@ -2180,6 +2187,7 @@
       Array.from(heroCopy.children).forEach((el) => el.removeAttribute('style'));
       heroEl.style.removeProperty('--shade');
       $('.hdr-menu', hdr).removeAttribute('style');
+      if (sbar) Array.from(sbar.children).forEach((c) => c.removeAttribute('style'));
       root.classList.remove('morph');
       geo = null;
     }
