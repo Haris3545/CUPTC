@@ -349,6 +349,21 @@
   .faq .body { overflow: hidden; }
   .faq .body p { padding-bottom: 24px; color: var(--ink-2); font-size: 18px; max-width: 40em; }
 
+  /* ================================================================ Donations */
+  #support { scroll-margin-top: calc(var(--bar) + var(--sbar, 0px) + 36px); }
+  .donate { width: min(560px, 100%); margin: 40px auto 0; display: grid; gap: 18px; }
+  .seg { justify-self: center; display: inline-flex; padding: 4px; border-radius: 99px; background: var(--green-soft); }
+  .seg button { border: 0; background: none; padding: 10px 22px; border-radius: 99px; cursor: pointer; font-size: 17px; color: var(--ink-2); transition: background-color .35s var(--out), color .25s, box-shadow .35s; }
+  .seg button[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 2px 10px -4px rgba(22, 44, 36, .35); }
+  .amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .amounts button { height: 58px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; font-size: 22px; font-variant-numeric: tabular-nums; color: var(--ink); transition: border-color .25s, background-color .25s, transform .3s var(--out); }
+  .amounts button[data-amount="other"] { font-size: 18px; }
+  .amounts button[aria-checked="true"] { border-color: var(--green-dark); background: var(--green-soft); }
+  .amounts button:active { transform: scale(.97); }
+  .donate .msg { min-height: 0; }
+  .donate-btn { width: 100%; font-size: 20px; }
+  @media (max-width: 420px) { .amounts { grid-template-columns: repeat(2, 1fr); } }
+
   /* ================================================================ Data protection statement */
   .legal { font-size: 18px; line-height: 1.7; color: var(--ink-2); }
   .legal h3 { font-size: clamp(24px, 2.2vw, 30px); color: var(--ink); margin: 48px 0 14px; padding-top: 22px; border-top: 1px solid var(--line); }
@@ -623,7 +638,7 @@
     <a href="#members" data-go="members" style="--k:2">Members Area</a>
   </nav>
   <a class="back-m" href="#" style="--k:3">&uarr;&ensp;Back to the start</a>
-  <div class="contact" style="--k:4"><a href="https://www.instagram.com/camunipadelclub/" target="_blank" rel="noopener">Instagram @camunipadelclub</a><a href="mailto:secretary@cuptc.com">secretary@cuptc.com</a><a href="#privacy">Data protection</a></div>
+  <div class="contact" style="--k:4"><a href="https://www.instagram.com/camunipadelclub/" target="_blank" rel="noopener">Instagram @camunipadelclub</a><a href="mailto:secretary@cuptc.com">secretary@cuptc.com</a><a href="#support">Support the club</a><a href="#privacy">Data protection</a></div>
 </div>
 
 <!-- ================================================================ Pages -->
@@ -689,6 +704,34 @@
           <p class="lede rv" style="--d:.08s">How long can you keep the rally going?</p>
           <div class="actions rv" style="--d:.16s"><a class="btn red" href="play/index.html">Play Padel Pong</a></div>
         </div>
+      </div>
+    </section>
+
+    <section class="sec" id="support" aria-labelledby="h-support">
+      <div class="narrow center">
+        <h2 class="h2 rv" id="h-support">Support the next generation of Cambridge padel.</h2>
+        <hr class="rule rv" style="--d:.06s">
+        <p class="lede rv" style="--d:.1s">Donations from alumni and friends of the club pay for extra court time and travel to competitions.</p>
+      </div>
+      <div class="narrow">
+        <form class="donate rv" id="donate" style="--d:.16s" novalidate>
+          <div class="seg" role="radiogroup" aria-label="How often">
+            <button type="button" role="radio" aria-checked="true" data-often="once">One-off</button>
+            <button type="button" role="radio" aria-checked="false" data-often="monthly">Monthly</button>
+          </div>
+          <div class="amounts" role="radiogroup" aria-label="Amount">
+            <button type="button" role="radio" aria-checked="false" data-amount="10">£10</button>
+            <button type="button" role="radio" aria-checked="true" data-amount="25">£25</button>
+            <button type="button" role="radio" aria-checked="false" data-amount="50">£50</button>
+            <button type="button" role="radio" aria-checked="false" data-amount="other">Other</button>
+          </div>
+          <div class="field" id="d-other-f" hidden><label for="d-other">Amount (£)</label><input class="input" id="d-other" type="number" inputmode="decimal" min="1" max="5000" step="1" placeholder="e.g. 100"></div>
+          <div class="field"><label for="d-name">Your name (optional)</label><input class="input" id="d-name" maxlength="60" autocomplete="name"></div>
+          <div class="field"><label for="d-msg">A message for the club (optional)</label><textarea class="input" id="d-msg" maxlength="300" rows="2"></textarea></div>
+          <p class="msg err" id="d-err" role="status"></p>
+          <button class="btn donate-btn" type="submit" id="d-go">Donate £25</button>
+          <p class="note">Secure checkout by Stripe. Card, Apple Pay and Google Pay. <a class="link" href="#privacy">How we use your data</a></p>
+        </form>
       </div>
     </section>
 
@@ -969,7 +1012,7 @@
         <a class="foot-logo" href="#" aria-label="CUPTC, back to the start"><img src="img/logo-cuptc.png" alt="CUPTC" width="1312" height="353"></a>
         <div>
           <h4>Pages</h4>
-          <p><a class="ul" href="#home">Home</a><br><a class="ul" href="#membership">Membership</a><br><a class="ul" href="#members">Members Area</a><br><a class="ul" href="play/index.html">Padel Pong</a><br><a class="ul" href="#privacy">Data protection</a></p>
+          <p><a class="ul" href="#home">Home</a><br><a class="ul" href="#membership">Membership</a><br><a class="ul" href="#members">Members Area</a><br><a class="ul" href="play/index.html">Padel Pong</a><br><a class="ul" href="#support">Donate</a><br><a class="ul" href="#privacy">Data protection</a></p>
         </div>
         <div>
           <h4>Contact</h4>
@@ -1082,7 +1125,7 @@
   // States: the start screen (no hash) or one of three pages. The curtain, header and pages all
   // animate from CSS classes on <html>, so rapid clicks never leave anything half-way.
   const PAGES = ['home', 'membership', 'members', 'privacy'];
-  const ALIAS = { memberships: 'membership', 'data-protection': 'privacy' };
+  const ALIAS = { memberships: 'membership', 'data-protection': 'privacy', support: 'home', donate: 'home' };
   const pageFromHash = () => { const h = location.hash.slice(1); const p = ALIAS[h] || h; return PAGES.indexOf(p) >= 0 ? p : null; };
   let current = null, swapTimer = 0, enterTimer = 0;
 
@@ -1122,11 +1165,15 @@
         $('#pages').classList.add('swap');
         swapTimer = setTimeout(() => { showPage(page); requestAnimationFrame(() => $('#pages').classList.remove('swap')); }, 320);
       }
-    } else {
+    } else if (!anchor()) {
       window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
     }
     current = page;
+    const el = anchor();
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: reduce || first ? 'auto' : 'smooth', block: 'start' }), first ? 60 : root.classList.contains('entering') ? 1050 : 380);
   }
+  // Links like #support open a page and scroll to a section on it.
+  const anchor = () => (/^#(support|donate)$/.test(location.hash) ? $('#support') : null);
   window.addEventListener('hashchange', () => route(false));
 
   function goStart() {
@@ -1140,7 +1187,7 @@
     if (target === '#') {
       e.preventDefault();
       goStart();
-    } else if (target === location.hash) {
+    } else if (target === location.hash && !anchor()) {
       e.preventDefault();
       setMenu(false);
       window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -1239,6 +1286,7 @@
     return { ok: r.ok, status: r.status, data };
   }
   const ERR = {
+    donation_amount: 'Enter an amount between £1 and £5,000.',
     custom_name: 'That name can only use up to 16 letters, numbers, spaces or . \' - &',
     offline: 'Couldn’t reach the club’s server. Check your connection and try again.',
     payments_not_configured: 'Online payments open soon. Message us on Instagram or email secretary@cuptc.com to join now.',
@@ -1313,6 +1361,12 @@
   function showPaid(res, s) {
     if (!res.ok) { s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = 'We couldn’t confirm that payment. If you were charged, email secretary@cuptc.com and we’ll sort it.'; return; }
     const d = res.data;
+    if (d.kind === 'donation') {
+      s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:22px;font-weight:400">Thank you</b><span class="muted"></span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
+      $('.muted', s.main).textContent = 'Your donation of £' + Number(d.amount).toFixed(2).replace(/\.00$/, '') + (d.monthly ? ' a month' : '') + ' pays for extra court time and travel to competitions.' + (d.monthly ? ' To change or stop it, email secretary@cuptc.com.' : '');
+      $('button', s.main).addEventListener('click', s.close);
+      return;
+    }
     if (d.kind === 'merch') {
       s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:21px;font-weight:400">Order placed</b><span class="muted"></span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
       $('.muted', s.main).textContent = (d.custom ? 'Name on the back: ' + d.custom + '. ' : '') + (d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.');
@@ -2078,6 +2132,36 @@
       wheelTimer = setTimeout(() => { wheel = 0; }, 220);
       if (wheel > 60) { wheel = 0; commit(); }
     }, { passive: true });
+  })();
+
+  // ---------------------------------------------------------------- donations
+  (() => {
+    const form = $('#donate'), go = $('#d-go'), other = $('#d-other'), err = $('#d-err');
+    let often = 'once', pick = '25';
+    const amount = () => (pick === 'other' ? Math.round(Number(other.value) * 100) / 100 : Number(pick));
+    const label = () => {
+      const a = amount();
+      go.textContent = a >= 1 ? 'Donate £' + a.toFixed(2).replace(/\.00$/, '') + (often === 'monthly' ? ' a month' : '') : 'Donate';
+    };
+    const choose = (group, attr, v) => $$('[' + attr + ']', group).forEach((b) => b.setAttribute('aria-checked', String(b.getAttribute(attr) === v)));
+    $('.seg', form).addEventListener('click', (e) => { const b = e.target.closest('[data-often]'); if (!b) return; often = b.dataset.often; choose($('.seg', form), 'data-often', often); label(); });
+    $('.amounts', form).addEventListener('click', (e) => {
+      const b = e.target.closest('[data-amount]');
+      if (!b) return;
+      pick = b.dataset.amount;
+      choose($('.amounts', form), 'data-amount', pick);
+      $('#d-other-f').hidden = pick !== 'other';
+      if (pick === 'other') other.focus();
+      err.textContent = '';
+      label();
+    });
+    other.addEventListener('input', () => { err.textContent = ''; label(); });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const a = amount();
+      if (!(a >= 1 && a <= 5000)) { err.textContent = 'Enter an amount between £1 and £5,000.'; other.focus(); return; }
+      startCheckout({ kind: 'donation', amount: a, monthly: often === 'monthly', name: $('#d-name').value.trim(), message: $('#d-msg').value.trim() }, go);
+    });
   })();
 
   // ---------------------------------------------------------------- phones: pull Home down to go back to the start
