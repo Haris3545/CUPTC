@@ -4,13 +4,23 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 // ------------------------------------------------------------------ settings (set these in Vercel)
-export const env = (k) => (process.env[k] || '').trim();
+// Values are trimmed and any quotes pasted around them are ignored.
+export const env = (...keys) => {
+  for (const k of keys) {
+    const v = String(process.env[k] || '').trim().replace(/^(["'])(.*)\1$/, '$2').trim();
+    if (v) return v;
+  }
+  return '';
+};
 export const PASSWORDS = () => ({
-  member: env('MEMBER_PASSWORD'),
+  member: env('MEMBER_PASSWORD', 'MEMBERS_PASSWORD'),
   committee: env('COMMITTEE_PASSWORD'),
-  full: env('FULL_MEMBER_CODE'),
-  discount: env('COMMITTEE_DISCOUNT_CODE')
+  full: env('FULL_MEMBER_CODE', 'FULL_CODE'),
+  discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE')
 });
+// Passwords and codes ignore capitals and spaces, so "cuptcmember2026" matches "CUPTCMEMBER2026".
+export const norm = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
+export const matches = (typed, want) => !!want && !!typed && same(norm(typed), norm(want));
 
 // ------------------------------------------------------------------ prices (in pounds)
 export const SALE_END = new Date('2026-10-11T23:59:59+01:00');
@@ -19,13 +29,13 @@ export const saleOn = () => Date.now() < SALE_END.getTime();
 export function membershipPrice(kind, discountCode) {
   if (kind === 'full') return PRICES.full;
   const codes = PASSWORDS();
-  if (discountCode && codes.discount && same(discountCode.toUpperCase(), codes.discount.toUpperCase())) return PRICES.committee;
+  if (matches(discountCode, codes.discount)) return PRICES.committee;
   return saleOn() ? PRICES.socialSale : PRICES.social;
 }
 
 // ------------------------------------------------------------------ sign-in tokens
 // A token is "role.expiry.signature". Roles: member, committee (committee can do everything a member can).
-const secret = () => env('AUTH_SECRET') || crypto.createHash('sha256').update('cuptc:' + env('COMMITTEE_PASSWORD') + ':' + env('MEMBER_PASSWORD')).digest('hex');
+const secret = () => env('AUTH_SECRET') || crypto.createHash('sha256').update('cuptc:' + PASSWORDS().committee + ':' + PASSWORDS().member).digest('hex');
 const sign = (s) => crypto.createHmac('sha256', secret()).update(s).digest('base64url');
 export function same(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(String(b));

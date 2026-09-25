@@ -94,18 +94,16 @@
   // triggered by the game. Both are scheduled by rally hits once the rally gets going.
   const PICKUPS = {
     big: { name: 'BIG RACKET', color: '#b8dccb', shots: 4 },
-    guardian: { name: 'GLASS GUARDIAN', color: '#ffc93a' },
-    golden: { name: 'GOLDEN BALL', color: '#ffc93a', shots: 6 }
+    guardian: { name: 'GLASS GUARDIAN', color: '#ffc93a' }
   };
   const EVENTS = {
     weather: { name: 'RAIN!', color: '#7fd6ff', dur: 15 },
-    night: { name: 'NIGHT SESSION', color: '#b8dccb', dur: 15 },
     doubles: { name: 'DOUBLES!', color: '#e9ff3b', dur: 20 },
     wave: { name: 'CROWD WAVE X2', color: '#ffb86b', dur: 10 },
     zone: { name: 'SMASH ZONE', color: '#ffc93a', dur: 16 }
   };
   const freshPU = () => ({
-    big: 0, guardian: false, golden: 0,
+    big: 0, guardian: false,
     pickup: null, event: null, eventT: 0, zone: null, streak: 0,
     nextPickup: 6, nextEvent: 10, lastEvent: null
   });
@@ -331,7 +329,7 @@
     who.prep = null;
 
     const p = scene.project(ball.x, ball.y, ball.z);
-    sparks(p.x, p.y, high ? 18 : 10, pu.golden > 0 ? ['#ffffff', '#ffc93a', '#fff4c2'] : ['#ffffff', '#e9ff3b', '#85b4a0'], 50, high ? 170 : 120);
+    sparks(p.x, p.y, high ? 18 : 10, ['#ffffff', '#e9ff3b', '#85b4a0'], 50, high ? 170 : 120);
     ring(p.x, p.y, high ? 16 : 10, '#ffffff', 0.22);
 
     if (state.mode === 'attract') {
@@ -342,12 +340,12 @@
       return;
     }
 
-    // ---- scoring: base point, golden ball, crowd wave, combo multiplier, bonuses
+    // ---- scoring: base point, crowd wave, combo multiplier, bonuses
     state.hits++;
     pu.streak = glass || volley || high ? pu.streak + 1 : 0;
     const mult = pu.streak >= 10 ? 3 : pu.streak >= 5 ? 2 : 1;
     if (pu.streak === 5 || pu.streak === 10) worldLabel('COMBO X' + mult + '!', who, '#e9ff3b');
-    let pts = pu.golden > 0 ? 3 : 1;
+    let pts = 1;
     if (pu.event === 'wave') pts *= 2;
     pts *= mult;
     let bonus = 0;
@@ -358,7 +356,6 @@
       state.cheerT = Math.max(state.cheerT, 1.2);
       if (pu.zone.left <= 0) endEvent();
     }
-    if (pu.golden > 0 && --pu.golden === 0) worldLabel('GOLDEN BALL OVER', who, '#ffc93a');
     if (pu.big > 0) pu.big--;
     const gained = pts + bonus;
     state.score += gained;
@@ -1055,7 +1052,7 @@
     }
 
     const dtLocal = dt * state.slowmo;
-    const worldDt = dtLocal * state.speed * (pu.golden > 0 ? 1.25 : 1);
+    const worldDt = dtLocal * state.speed;
     updatePlayer(dtLocal);
     updateOpp(worldDt);
     updatePowerUps(dt, dtLocal, worldDt);
@@ -1158,7 +1155,6 @@
   const ICON_ART = {
     big: ['..kkkk...', '.kgGgGk..', 'kgGgGgGk.', 'kGgGgGgk.', 'kgGgGgGk.', '.kgGgGk..', '..kkkk...', '...kk....', '...kk....'],
     guardian: ['.kkkkkkk.', 'kyyyyyyYk', 'kylyyyyYk', 'kyylyyyYk', 'kyyylyyYk', 'kyyyyyyYk', '.kyyyyYk.', '..kyyYk..', '...kkk...'],
-    golden: ['...kkk...', '.kkyyykk.', '.kyllyyk.', 'kyylyyyYk', 'kyyyyyyYk', 'kyyyyyYYk', '.kyyyYYk.', '.kkYYYkk.', '...kkk...']
   };
   const iconCache = {};
   function icon(name) {
@@ -1225,50 +1221,6 @@
     ctx.restore();
   }
 
-  let nightCanvas = null;
-  function drawNight(ox, oy) {
-    if (!nightCanvas || nightCanvas.width !== W || nightCanvas.height !== H) {
-      nightCanvas = document.createElement('canvas');
-      nightCanvas.width = W;
-      nightCanvas.height = H;
-    }
-    const g = nightCanvas.getContext('2d');
-    g.globalCompositeOperation = 'source-over';
-    g.clearRect(0, 0, W, H);
-    g.fillStyle = 'rgba(6, 12, 28, 0.76)';
-    g.fillRect(0, 0, W, H);
-    g.globalCompositeOperation = 'destination-out';
-    const hole = (x, z, R) => {
-      const c = scene.project(x, 0, z);
-      [[1.35, 'rgba(0,0,0,0.45)'], [1, '#000']].forEach(([k, col]) => {
-        const rx = R * k * c.s, ry = Math.max(2, rx * floorSquash(x, z)) + 10 * k;
-        g.fillStyle = col;
-        const rr = Math.round(ry);
-        for (let j = -rr; j <= rr; j++) {
-          const half = rx * Math.sqrt(Math.max(0, 1 - (j / (rr + 0.5)) ** 2));
-          g.fillRect(Math.round(c.x - half + ox), Math.round(c.y - ry * 0.55 + j + oy), Math.max(1, Math.round(half * 2)), 1);
-        }
-      });
-    };
-    [player, opp, mate, opp2].forEach((f) => f && hole(f.x, f.z, 1.3));
-    if (ball.visible) {
-      const b = scene.project(ball.x, ball.y, ball.z);
-      g.fillStyle = '#000';
-      g.beginPath();
-      g.arc(b.x + ox, b.y + oy, 7, 0, Math.PI * 2);
-      g.fill();
-    }
-    g.globalCompositeOperation = 'source-over';
-    ctx.drawImage(nightCanvas, 0, 0);
-    // floodlights on the four corners of the court
-    ctx.fillStyle = '#fff4c2';
-    [[-5, 10], [5, 10], [-5, -10], [5, -10]].forEach(([x, z]) => {
-      const p = scene.project(x, 4.4, z);
-      ctx.fillRect(Math.round(p.x) - 1 + ox, Math.round(p.y) - 1 + oy, 3, 2);
-    });
-    if (ball.visible) drawBall(ox, oy);
-  }
-
   function drawRain() {
     ctx.fillStyle = 'rgba(40, 52, 66, 0.16)';
     ctx.fillRect(0, 0, W, H);
@@ -1310,10 +1262,10 @@
       const tp = scene.project(t.x, t.y, t.z);
       const k = (i + 1) / n;
       const s = Math.max(1, Math.round(r * (0.3 + 0.9 * k)));
-      ctx.fillStyle = pu.golden > 0 ? (k > 0.5 ? '#fff4c2' : '#ffc93a') : k > 0.7 ? '#f4ff9a' : k > 0.4 ? '#ffe14d' : '#ffb86b';
+      ctx.fillStyle = k > 0.7 ? '#f4ff9a' : k > 0.4 ? '#ffe14d' : '#ffb86b';
       ctx.fillRect(Math.round(tp.x - s / 2) + ox, Math.round(tp.y - s / 2) + oy, s, s);
     }
-    const spr = Sprites.ball(r, pu.golden > 0);
+    const spr = Sprites.ball(r, false);
     ctx.drawImage(spr.c, Math.round(p.x - spr.a) + ox, Math.round(p.y - spr.a) + oy);
   }
 
@@ -1412,7 +1364,6 @@
     }
     const items = [];
     if (pu.big > 0) items.push({ icon: 'big', n: pu.big });
-    if (pu.golden > 0) items.push({ icon: 'golden', n: pu.golden });
     if (pu.guardian) items.push({ icon: 'guardian', n: '' });
     if (pu.event) {
       const info = EVENTS[pu.event];
@@ -1474,7 +1425,6 @@
     if (pu.guardian) drawGuardian(ox, oy);
     if (pu.pickup) near.push({ z: pu.pickup.z, shadow: () => {}, draw: () => drawPickup(ox, oy) });
     drawSide(near);
-    if (pu.event === 'night') drawNight(ox, oy);
     drawFx(ox, oy);
     if (pu.event === 'weather') drawRain();
 
