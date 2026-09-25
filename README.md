@@ -14,6 +14,7 @@ The pages are plain HTML with no build step. A few small server functions in `ap
 | `api/checkout.js`, `api/confirm.js` | Payments through Stripe Checkout (card, Apple Pay, Google Pay). After a paid membership, shows the members password. |
 | `api/merch.js` | The members' shop. Prices are only sent to signed-in members; the committee can add, edit and remove items. |
 | `api/committee.js` | Committee photo uploads. Signed in as committee, each person on the home page gets **Change photo**. |
+| `api/merch-image.js` | Shop photo uploads, from the **Upload photo** button in the committee merch form. |
 
 ## Put it live on Vercel
 

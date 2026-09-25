@@ -88,6 +88,8 @@ export async function putImage(name, buf) {
   await fs.writeFile(path.join(LOCAL, 'uploads', file), buf);
   return '/.data/uploads/' + file;
 }
+// Uploaded images live in Blob storage (or .data/uploads locally); everything else is a built-in image name.
+export const isUploaded = (v) => /^(https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\.com\/|\/\.data\/uploads\/)[\w./%-]+$/i.test(String(v || ''));
 export async function removeImage(url) {
   if (!url) return;
   try {

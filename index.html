@@ -454,6 +454,7 @@
   .crop:active { cursor: grabbing; }
   .crop img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; }
   .zoom { width: 100%; accent-color: var(--green-dark); }
+  .m-preview { width: 120px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 10px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -690,7 +691,7 @@
             <div class="field"><label for="m-price">Price (£)</label><input class="input" id="m-price" type="number" min="0" step="0.01" required></div>
             <div class="field"><label for="m-delivery">Delivery time</label><input class="input" id="m-delivery" placeholder="e.g. 3 to 4 weeks" maxlength="60"></div>
             <div class="field"><label for="m-sizes">Sizes (comma separated)</label><input class="input" id="m-sizes" placeholder="XS, S, M, L, XL" maxlength="80"></div>
-            <div class="field"><label for="m-image">Image</label><select class="input" id="m-image"></select></div>
+            <div class="field"><label for="m-image">Image</label><div class="inline"><select class="input" id="m-image"></select><button class="btn line sm" type="button" id="m-upload">Upload photo</button></div><img id="m-preview" class="m-preview" alt="" hidden></div>
             <div class="field"><label for="m-order">Position in shop</label><input class="input" id="m-order" type="number" step="1" value="10"></div>
             <div class="field full"><label for="m-desc">Description</label><textarea class="input" id="m-desc" maxlength="400"></textarea></div>
             <div class="full actions">
@@ -747,7 +748,7 @@
     ['kit-shirt', 'Kit: shirt (front and back)'], ['kit-skort', 'Kit: skort'], ['kit-shorts', 'Kit: shorts'],
     ['mill', 'Logo: mill'], ['mantis', 'Logo: Mantis Sport'], ['cuptc-logo', 'Logo: CUPTC']
   ].concat(PHOTOS.map((p, i) => [p, 'Club photo ' + (i + 1)]));
-  const imgSrc = (key) => 'img/' + key + (/logo|mill|mantis|game/.test(key) ? '.png' : '.jpg');
+  const imgSrc = (key) => (/^(https:|\/)/.test(key) ? key : 'img/' + key + (/logo|mill|mantis|game/.test(key) ? '.png' : '.jpg'));
   const TEAM = [
     { name: 'Haris Khan', role: 'President', img: 'c-haris' },
     { name: 'Keira Au', role: 'Vice-President', img: 'c-keira' },
@@ -1157,7 +1158,7 @@
       const card = document.createElement('article');
       card.className = 'product';
       const pimg = document.createElement('div');
-      pimg.className = 'pimg' + (/^p\d/.test(m.image || '') ? ' cover' : '');
+      pimg.className = 'pimg' + (/^(p\d|https:|\/)/.test(m.image || '') ? ' cover' : '');
       if (m.image) {
         const img = document.createElement('img');
         img.src = imgSrc(m.image);
@@ -1214,7 +1215,40 @@
   const imgSel = $('#m-image');
   [['', 'No image']].concat(IMAGES).forEach(([k, label]) => { const o = document.createElement('option'); o.value = k; o.textContent = label; imgSel.appendChild(o); });
 
+  // Upload a shop photo (cropped to the shop's 4:5 shape) and select it for this item.
+  function useImage(value) {
+    if (value && !$$('option', imgSel).some((o) => o.value === value)) {
+      const o = document.createElement('option');
+      o.value = value;
+      o.textContent = 'Uploaded photo';
+      imgSel.insertBefore(o, imgSel.children[1]);
+    }
+    imgSel.value = value || '';
+    const pv = $('#m-preview');
+    pv.hidden = !value;
+    if (value) pv.src = imgSrc(value);
+  }
+  imgSel.addEventListener('change', () => useImage(imgSel.value));
+  $('#m-upload').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', () => {
+      if (!input.files[0]) return;
+      cropImage(input.files[0], {
+        title: 'Shop photo', hint: 'Drag and zoom to frame the item.', ratio: 1.25, outW: 1000,
+        save: async (data) => {
+          const res = await api('merch-image', { body: { image: data } });
+          if (res.ok) { useImage(res.data.url); $('#m-msg').className = 'msg full ok'; $('#m-msg').textContent = 'Photo uploaded. Save the item to use it in the shop.'; }
+          return res;
+        }
+      });
+    });
+    input.click();
+  });
+
   function resetForm() {
+    useImage('');
     $('#merch-form').reset();
     $('#m-id').value = '';
     $('#m-order').value = String(((state.merch || []).length + 1) * 10);
@@ -1265,7 +1299,7 @@
         $('#m-price').value = m.price || 0;
         $('#m-delivery').value = m.delivery || '';
         $('#m-sizes').value = m.sizes || '';
-        imgSel.value = m.image || '';
+        useImage(m.image || '');
         $('#m-desc').value = m.description || '';
         $('#m-order').value = m.order || 0;
         $('#m-save').textContent = 'Save changes';
@@ -1328,27 +1362,40 @@
   // Square crop: drag to position, slider to zoom. Saves a 640 x 640 JPEG.
   function cropper(file, fig) {
     const p = TEAM.find((t) => t.slug === fig.dataset.slug);
-    const s = sheet('Photo for ' + p.name);
-    s.main.innerHTML = '<div class="crop"><img alt="" draggable="false"></div><label class="lbl" style="display:block;margin-top:14px">Zoom<input class="zoom" type="range" min="1" max="3" step="0.01" value="1"></label><p class="note" style="text-align:left;margin:6px 0 14px">Drag to frame the face and shoulders.</p><button class="btn" type="button" style="width:100%">Save photo</button><p class="msg" role="status"></p>';
+    cropImage(file, {
+      title: 'Photo for ' + p.name, hint: 'Drag to frame the face and shoulders.', ratio: 1, outW: 640,
+      save: async (data) => {
+        const res = await api('committee', { body: { slug: fig.dataset.slug, image: data } });
+        if (res.ok) setPhoto(fig, res.data.url);
+        return res;
+      }
+    });
+  }
+  // Crop to a fixed shape (ratio = height / width): drag to position, slider to zoom, then save(jpegDataURL).
+  function cropImage(file, { title, hint, ratio, outW, save }) {
+    const s = sheet(title);
+    s.main.innerHTML = '<div class="crop"><img alt="" draggable="false"></div><label class="lbl" style="display:block;margin-top:14px">Zoom<input class="zoom" type="range" min="1" max="3" step="0.01" value="1"></label><p class="note" style="text-align:left;margin:6px 0 14px"></p><button class="btn" type="button" style="width:100%">Save photo</button><p class="msg" role="status"></p>';
+    $('.note', s.main).textContent = hint;
     const view = $('.crop', s.main), img = $('img', view), zoom = $('.zoom', s.main);
+    view.style.aspectRatio = '1 / ' + ratio;
     const url = URL.createObjectURL(file);
     let W = 0, H = 0, base = 1, z = 1, x = 0, y = 0;
-    const V = () => view.clientWidth;
+    const V = () => view.clientWidth, VH = () => view.clientWidth * ratio;
     const clamp = () => {
-      const sc = base * z, v = V();
-      x = Math.min(0, Math.max(v - W * sc, x));
-      y = Math.min(0, Math.max(v - H * sc, y));
+      const sc = base * z;
+      x = Math.min(0, Math.max(V() - W * sc, x));
+      y = Math.min(0, Math.max(VH() - H * sc, y));
       img.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + sc + ')';
     };
-    img.onload = () => { W = img.naturalWidth; H = img.naturalHeight; base = V() / Math.min(W, H); x = (V() - W * base) / 2; y = (V() - H * base) / 4; clamp(); };
+    img.onload = () => { W = img.naturalWidth; H = img.naturalHeight; base = Math.max(V() / W, VH() / H); x = (V() - W * base) / 2; y = (VH() - H * base) / (ratio === 1 ? 4 : 2); clamp(); };
     img.onerror = () => { $('.msg', s.main).className = 'msg err'; $('.msg', s.main).textContent = 'That file isn’t an image this browser can open.'; };
     img.src = url;
     zoom.addEventListener('input', () => {
-      const v = V() / 2, old = base * z;
+      const cx = V() / 2, cy = VH() / 2, old = base * z;
       z = +zoom.value;
       const sc = base * z;
-      x = v - (v - x) * sc / old;
-      y = v - (v - y) * sc / old;
+      x = cx - (cx - x) * sc / old;
+      y = cy - (cy - y) * sc / old;
       clamp();
     });
     let drag = null;
@@ -1358,16 +1405,17 @@
     $('.btn', s.main).addEventListener('click', async () => {
       if (!W) return;
       const c = document.createElement('canvas');
-      c.width = c.height = 640;
-      const sc = base * z, k = 640 / V();
+      c.width = outW;
+      c.height = Math.round(outW * ratio);
+      const sc = base * z, k = outW / V();
       const g = c.getContext('2d');
       g.imageSmoothingQuality = 'high';
       g.drawImage(img, x * k, y * k, W * sc * k, H * sc * k);
       const data = c.toDataURL('image/jpeg', 0.86);
       spin(s.main, 'Saving');
-      const res = await api('committee', { body: { slug: fig.dataset.slug, image: data } });
+      const res = await save(data);
       URL.revokeObjectURL(url);
-      if (res.ok) { setPhoto(fig, res.data.url); s.close(); } else { s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = errText(res, 'Couldn’t save that photo. Try again.'); }
+      if (res.ok) s.close(); else { s.main.innerHTML = '<p class="sh-state muted"></p>'; $('p', s.main).textContent = errText(res, 'Couldn’t save that photo. Try again.'); }
     });
   }
   loadCommitteePhotos();
