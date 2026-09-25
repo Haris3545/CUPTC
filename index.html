@@ -74,16 +74,14 @@
   }
   html.at-start .start { opacity: 1; visibility: visible; transition: opacity .8s ease .75s, visibility 0s, translate .6s var(--out); }
   /* Phones: swiping up on the start screen carries you into the home page */
-  html.dragging .sphoto, html.dragging .start { transition: none !important; }
-  html.swipe-out .start { translate: 0 -60px; }
-  html.swipe-out .sphoto { clip-path: inset(50% 0 0 0); translate: 0 -55%; opacity: 0; transition: translate .8s var(--out), opacity .6s ease .1s; }
-  /* A swipe keeps its momentum: words go at once, the green folds straight away and Home rises in from below */
-  html.swipe-out .curtain { transition: clip-path .75s var(--ease); }
-  html.swipe-out .start { transition: opacity .18s ease, visibility 0s .2s, translate .6s var(--out); }
-  html.swipe-out.entering { --base: .3s; }
-  html.swipe-out.entering .pages { transition: opacity .55s ease .25s; }
-  html.swipe-out .pages { animation: pagesUp 1s var(--out) .2s both; }
-  @keyframes pagesUp { from { transform: translateY(80px); } }
+  /* Phones: the start screen and Home behave like two sections of one page. Swiping moves the start screen up
+     with your finger while the header and Home come up right behind it; letting go glides the rest of the way. */
+  html.at-start.swiping .curtain, html.at-start.swiping .sphoto, html.at-start.swiping .start { translate: 0 var(--drag, 0px); transition: none !important; }
+  html.at-start.swiping .pages { opacity: 1 !important; translate: 0 calc(var(--vh, 100vh) + var(--drag, 0px)); transition: none !important; }
+  html.at-start.swiping .hdr, html.at-start.swiping .signed-bar { opacity: 1 !important; visibility: visible !important; transform: none !important; translate: 0 calc(var(--vh, 100vh) + var(--drag, 0px)); transition: none !important; }
+  html.at-start.swiping .hdr { background: var(--green); }
+  html.at-start.swiping.glide .curtain, html.at-start.swiping.glide .sphoto, html.at-start.swiping.glide .start,
+  html.at-start.swiping.glide .pages, html.at-start.swiping.glide .hdr, html.at-start.swiping.glide .signed-bar { transition: translate var(--glide, .45s) cubic-bezier(.2, .8, .25, 1) !important; }
   .swipe-hint { display: none; }
   /* Phones: pulling Home down from the top takes you back to the start screen */
   .page { translate: 0 var(--pull, 0px); transition: translate .5s var(--out); }
@@ -1127,7 +1125,7 @@
   const PAGES = ['home', 'membership', 'members', 'privacy'];
   const ALIAS = { memberships: 'membership', 'data-protection': 'privacy', support: 'home', donate: 'home' };
   const pageFromHash = () => { const h = location.hash.slice(1); const p = ALIAS[h] || h; return PAGES.indexOf(p) >= 0 ? p : null; };
-  let current = null, swapTimer = 0, enterTimer = 0;
+  let current = null, swapTimer = 0, enterTimer = 0, quietEnter = false;
 
   function showPage(page) {
     $$('.page').forEach((p) => p.classList.toggle('active', p.dataset.page === page));
@@ -1149,9 +1147,31 @@
       current = null;
       document.title = 'CUPTC';
       hero.run(false);
+      // Keep Home ready underneath the start screen, so a swipe on a phone scrolls straight onto it.
+      clearTimeout(swapTimer);
+      const act = $('.page.active');
+      if (!act || act.dataset.page !== 'home') {
+        swapTimer = setTimeout(() => {
+          if (!root.classList.contains('at-start')) return;
+          showPage('home');
+          hero.run(false);
+          document.title = 'CUPTC';
+          $$('[data-go]').forEach((a) => a.removeAttribute('aria-current'));
+        }, first ? 0 : 350);
+      }
       return;
     }
-    if (first || current === null) {               // entering from the start screen
+    if (!first && current === null && quietEnter) {  // arrived by swiping: Home is already in place, just drop the start screen
+      quietEnter = false;
+      const act = $('.page.active');
+      if (!act || act.dataset.page !== page) showPage(page);
+      else {
+        hero.run(page === 'home');
+        $$('[data-go]').forEach((a) => { if (a.dataset.go === page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+      }
+      document.title = TITLES[page];
+      root.classList.remove('at-start');
+    } else if (first || current === null) {        // entering from the start screen
       if (!first) {
         root.classList.add('entering');
         clearTimeout(enterTimer);
@@ -2081,47 +2101,65 @@
   })();
 
   // ---------------------------------------------------------------- phones: swipe up from the start screen
-  // The start screen follows your finger a little; a long enough (or quick enough) swipe carries on into Home,
-  // a short one springs back. A scroll-wheel/trackpad scroll does the same.
+  // Feels like scrolling a page: the start screen moves 1:1 with your finger, Home follows right behind it,
+  // and letting go carries on at the speed you were moving (or settles back if it was only a nudge).
   (() => {
-    let y0 = null, t0 = 0, dy = 0, armed = false, wheel = 0, wheelTimer = 0, leaving = false;
-    const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !leaving;
-    const drag = (v) => root.style.setProperty('--drag', v + 'px');
-    function commit() {
-      leaving = true;
-      root.classList.remove('dragging');
-      root.classList.add('swipe-out');
-      drag(0);
-      location.hash = '#home';
-      // tidy up without animating the (already hidden) start photo back into place
-      setTimeout(() => {
+    let y0 = null, dy = 0, armed = false, samples = [], busy = false, wheel = 0, wheelTimer = 0;
+    const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !busy;
+    const set = (v) => root.style.setProperty('--drag', v + 'px');
+    const vh = () => innerHeight;
+    function glideTo(target, v, done) {
+      busy = true;
+      const cur = dy, dist = Math.abs(target - cur);
+      const dur = Math.min(0.55, Math.max(0.26, dist / Math.max(Math.abs(v) * 1000 * 1.6, 1400)));
+      root.style.setProperty('--glide', dur.toFixed(3) + 's');
+      root.classList.add('glide');
+      void root.offsetWidth;
+      set(target);
+      setTimeout(() => { root.classList.remove('glide'); busy = false; done && done(); }, dur * 1000 + 30);
+    }
+    function enterHome(v) {
+      root.style.setProperty('--vh', vh() + 'px');
+      root.classList.add('swiping');
+      glideTo(-vh(), v, () => {
         root.classList.add('no-anim');
-        root.classList.remove('swipe-out');
+        quietEnter = true;
+        history.pushState(null, '', location.pathname + location.search + '#home');
+        route(false);
+        root.classList.remove('swiping');
+        set(0);
+        dy = 0;
         void root.offsetWidth;
-        requestAnimationFrame(() => root.classList.remove('no-anim'));
-        leaving = false;
-      }, 1400);
+        requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
+      });
     }
     document.addEventListener('touchstart', (e) => {
       if (!active() || e.touches.length > 1) return;
-      y0 = e.touches[0].clientY; t0 = performance.now(); dy = 0; armed = false;
+      y0 = e.touches[0].clientY; dy = 0; armed = false; samples = [[performance.now(), y0]];
     }, { passive: true });
     document.addEventListener('touchmove', (e) => {
       if (y0 == null) return;
-      const d = e.touches[0].clientY - y0;
-      if (!armed && Math.abs(d) < 8) return;
-      armed = true;
+      const y = e.touches[0].clientY, d = y - y0;
+      if (!armed) {
+        if (Math.abs(d) < 6) return;
+        armed = true;
+        root.style.setProperty('--vh', vh() + 'px');
+        root.classList.add('swiping');
+      }
       e.preventDefault();
-      root.classList.add('dragging');
-      dy = d;
-      drag(d < 0 ? Math.max(d * 0.55, -240) : Math.min(d * 0.15, 28));
+      dy = d < 0 ? d : d * 0.25;                  // up follows the finger exactly; down just gives a little
+      set(dy);
+      samples.push([performance.now(), y]);
+      if (samples.length > 6) samples.shift();
     }, { passive: false });
     const end = () => {
       if (y0 == null) return;
-      const v = dy / Math.max(1, performance.now() - t0);
       y0 = null;
-      root.classList.remove('dragging');
-      if (armed && (dy < -90 || (dy < -30 && v < -0.45))) commit(); else drag(0);
+      if (!armed) return;
+      const [t1, ya] = samples[0], [t2, yb] = samples[samples.length - 1];
+      const v = (yb - ya) / Math.max(1, t2 - t1);    // px per ms, negative = upwards
+      if (dy < -vh() * 0.2 || v < -0.35) enterHome(v);
+      else glideTo(0, v, () => root.classList.remove('swiping'));
     };
     document.addEventListener('touchend', end);
     document.addEventListener('touchcancel', end);
@@ -2130,7 +2168,7 @@
       wheel += e.deltaY;
       clearTimeout(wheelTimer);
       wheelTimer = setTimeout(() => { wheel = 0; }, 220);
-      if (wheel > 60) { wheel = 0; commit(); }
+      if (wheel > 60) { wheel = 0; dy = 0; enterHome(-1.2); }
     }, { passive: true });
   })();
 
