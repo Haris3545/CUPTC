@@ -456,7 +456,6 @@ body {
 .lb-list li:nth-child(2) { color: #e8f1ff; }
 .lb-list li:nth-child(3) { color: #ffb86b; }
 .lb-list li.is-you { background: rgba(133, 180, 160, .22); }
-.lb-list li.lb-gap { display: block; text-align: center; color: var(--green-light); border-bottom: 0; }
 .lb-list .lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-list .lb-score { text-align: right; }
 

@@ -1,5 +1,5 @@
 // Padel Pong leaderboard. No accounts: a player picks a name the first time they add a score.
-// GET: the top scores { entries: [{ id, name, score }] }.
+// GET: the top 5 { entries: [{ id, name, score }] } (every entry for a signed-in committee member).
 // POST { op: 'submit', key, name, score }: a player's score. `key` is a random code kept on their device,
 //   so the same device updates its own entry (only ever upwards) instead of adding another.
 //   Names are unique; once an entry has a name it keeps it (only the committee can change it).
@@ -8,28 +8,32 @@ import crypto from 'node:crypto';
 import { isCommittee, readJSON, writeJSON, storageReady, send, body, fromRequest } from './_lib/core.js';
 
 // Scores already on the board before it went live. Anyone who adds a score under one of these names
-// takes over that entry (the higher score stays).
+// takes over that entry (the higher score stays). Raising a score here also raises it on the live board.
 const SEED = [
   { id: 'seed-haris', name: 'Haris', score: 187, owner: '', at: '2026-09-26' },
-  { id: 'seed-aki', name: 'Aki', score: 175, owner: '', at: '2026-09-26' }
+  { id: 'seed-aki', name: 'Aki', score: 260, owner: '', at: '2026-09-26' }
 ];
 const NAME_OK = /^[A-Za-z0-9][A-Za-z0-9 .'_-]{0,11}$/;
 const KEY_OK = /^[A-Za-z0-9]{16,64}$/;
 const MAX_SCORE = 5000;
 const KEEP = 300; // entries stored
-const SHOW = 50;  // entries shown
+const SHOW = 5;   // entries shown in the game
 
 const tidy = (v) => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
 const same = (a, b) => a.replace(/\s+/g, '').toLowerCase() === b.replace(/\s+/g, '').toLowerCase();
 const ownerOf = (key) => crypto.createHash('sha256').update('padel-pong:' + key).digest('hex');
 const ranked = (list) => list.slice().sort((a, b) => b.score - a.score || String(a.at).localeCompare(String(b.at)));
-const pub = (list) => ranked(list).slice(0, SHOW).map((r) => ({ id: r.id, name: r.name, score: r.score }));
+const pub = (list, all) => ranked(list).slice(0, all ? KEEP : SHOW).map((r) => ({ id: r.id, name: r.name, score: r.score }));
 
 // A short-lived copy, so a burst of players finishing games doesn't hit storage every time.
 let cache = null;
 async function load() {
   if (cache && Date.now() - cache.at < 15000) return cache.list.map((r) => ({ ...r }));
   const list = await readJSON('leaderboard', SEED);
+  for (const s of SEED) {
+    const row = list.find((r) => r.id === s.id);
+    if (row && row.score < s.score) row.score = s.score;
+  }
   cache = { at: Date.now(), list };
   return list.map((r) => ({ ...r }));
 }
@@ -45,6 +49,7 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const list = await load();
+      if (isCommittee(req)) return send(res, 200, { entries: pub(list, true) });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=15, stale-while-revalidate=60');
@@ -101,7 +106,7 @@ export default async function handler(req, res) {
       return send(res, 400, { error: 'op' });
     }
     list = await save(list);
-    return send(res, 200, { entries: pub(list) });
+    return send(res, 200, { entries: pub(list, true) });
   } catch (e) {
     console.error(e);
     return send(res, 500, { error: 'server' });

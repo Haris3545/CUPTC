@@ -860,19 +860,7 @@
       lbEl.list.appendChild(li);
       return li;
     };
-    let mine = null;
-    entries.forEach((e, i) => {
-      const li = row('#' + (i + 1), e.name, e.score, e.id === lb.id);
-      if (e.id === lb.id) mine = li;
-    });
-    if (!mine && lb.name && lb.best) {
-      const gap = document.createElement('li');
-      gap.className = 'lb-gap';
-      gap.textContent = '...';
-      lbEl.list.appendChild(gap);
-      row('YOU', lb.name, lb.best, true);
-    }
-    if (mine) mine.scrollIntoView({ block: 'nearest' });
+    entries.slice(0, 5).forEach((e, i) => row('#' + (i + 1), e.name, e.score, e.id === lb.id));
   }
 
   // ------------------------------------------------------------------ 1v1: linking up
