@@ -454,7 +454,11 @@
     if (!types.length) return;
     let x = rand(-3.8, 3.8);
     if (Math.abs(x - player.x) < 1.5) x = clamp(player.x + (player.x > 0 ? -2.5 : 2.5), -3.8, 3.8);
-    pu.pickup = { type: force || pick(types), x: x, z: rand(-8.2, -3.4), t: 0, life: 9 };
+    // the Glass Guardian is a spare life, so it's rarer: not before 12 hits, then about 1 pickup in 3
+    let type = force || pick(types);
+    if (!force && type === 'guardian' && (state.hits < 12 || Math.random() < 0.35)) type = types.includes('big') ? 'big' : null;
+    if (!type) return;
+    pu.pickup = { type: type, x: x, z: rand(-8.2, -3.4), t: 0, life: 9 };
     sfx.spawn();
   }
 
@@ -528,13 +532,14 @@
     fx.labels.push({ text: '+' + n, x: W / 2 + (W >= 400 ? 34 : 24), y: hudTop + 4, c: '#e9ff3b', life: 0.8, max: 0.8 });
   }
 
-  function oppHit(feed) {
+  function oppHit(feed, hitter) {
+    const who = hitter || opp;
     const d = state.mode === 'attract' ? 0.45 : clamp(state.score / 60, 0, 1);
     const atNet = player.z > -4.5;
     const high = ball.y > 1.6;
     let kind;
     if (feed) kind = 'feed';
-    else if (opp.stretched) kind = Math.random() < 0.7 ? 'lob' : 'drive';
+    else if (who === opp && opp.stretched) kind = Math.random() < 0.7 ? 'lob' : 'drive';
     else if (high && Math.random() < 0.35 + d * 0.45) kind = 'smash';
     else {
       const wDrive = 1;
@@ -573,9 +578,9 @@
     ball.bH = bH;
     ball.wallHits = 0;
 
-    opp.swing = kind === 'smash' || high ? 'sm' : ball.x <= opp.x ? 'fh' : 'bh';
-    opp.swingT = 0;
-    opp.prep = null;
+    who.swing = kind === 'smash' || high ? 'sm' : ball.x <= who.x ? 'fh' : 'bh';
+    who.swingT = 0;
+    who.prep = null;
     opp.plan = null;
     opp.stretched = false;
     opp.maxV = 6;
@@ -584,7 +589,7 @@
 
     if (state.mode !== 'attract') {
       if (kind === 'smash') { sfx.smash(); shake(2, 0.15); } else sfx.oppHit();
-      if (label && (kind !== 'lob' || Math.random() < 0.6)) worldLabel(label, opp, kind === 'smash' ? '#ff7eb6' : '#ffb86b');
+      if (label && (kind !== 'lob' || Math.random() < 0.6)) worldLabel(label, who, kind === 'smash' ? '#ff7eb6' : '#ffb86b');
     }
     const p = scene.project(ball.x, ball.y, ball.z);
     sparks(p.x, p.y, 6, ['#ffffff', '#ff7eb6'], 30, 70);
@@ -1354,34 +1359,52 @@
           continue;
         }
         if (ball.side < 0 && ball.bounces >= 2) {
-          if (pu.guardian && state.mode === 'play') guardianSave();
-          else { miss('DOUBLE BOUNCE!'); continue; }
+          if (!guardianCatch()) miss('DOUBLE BOUNCE!');
+          continue;
         }
       } else if (canPlay && ball.lastHit === 'player' && !vs.on) {
+        if (opp2 && !opp2.leaving && ball.z > -0.2 && ball.x * opp2.side > -0.3 && ball.y < REACH_H && Math.hypot(ball.x - opp2.x, ball.z - opp2.z) < REACH) {
+          oppHit(false, opp2);
+          continue;
+        }
         if (oppContact(ball) || (ball.side > 0 && ball.bounces >= 2)) oppHit(false);
       }
       if (ball.y < -1 || Math.abs(ball.x) > 12 || Math.abs(ball.z) > 16) {
+        if (ball.lastHit === 'opp' && guardianCatch()) continue;
         if (ball.lastHit === 'opp') miss('MISSED!');
         ball.live = false;
       }
     }
   }
 
-  // Glass Guardian: the ball that would have died pops back up off the glass.
+  // Glass Guardian: a second life. The ball you would have lost is sent back over the net for you.
+  function guardianCatch() {
+    if (!pu.guardian || state.mode !== 'play' || vs.on) return false;
+    guardianSave();
+    return true;
+  }
+
   function guardianSave() {
     pu.guardian = false;
-    ball.bounces = 1;
-    ball.y = Math.max(ball.y, 0.3);
-    ball.vy = 6.2;
-    ball.vz = Math.max(ball.vz, 1.6);
-    ball.vx *= 0.5;
+    ball.x = clamp(ball.x, -4.5, 4.5);
+    ball.z = clamp(ball.z, -9.6, -0.8);
+    ball.y = clamp(ball.y, 0.6, 2.5);
+    ball.side = -1;
+    launch(ball, rand(-3.6, 3.6), rand(6.2, 8.8), 1.3, 1.2);
+    ball.lastHit = 'player';
+    ball.bounces = 0;
+    ball.wallHits = 0;
+    ball.bV = 0.72;
+    ball.bH = 0.86;
+    marker = null;
+    planOpp();
     const p = scene.project(ball.x, ball.y, ball.z);
     sparks(p.x, p.y, 18, ['#ffc93a', '#fff4c2', '#ffffff'], 40, 120);
     ring(p.x, p.y, 16, '#ffc93a', 0.35);
     worldLabel('SAVED!', player, '#ffc93a');
     sfx.glass();
     sfx.powerup();
-    updateMarker();
+    vibrate(20);
   }
 
   function handleEvent(ev) {
@@ -1398,7 +1421,7 @@
       if (state.mode !== 'attract') sfx.glass();
       if (ball.lastHit === 'opp') updateMarker();
     } else if (ev.t === 'net') {
-      if (ball.lastHit === 'opp' && ev.side > 0 && (state.mode === 'play' || state.mode === 'attract')) miss('MISSED!');
+      if (ball.lastHit === 'opp' && ev.side > 0 && (state.mode === 'play' || state.mode === 'attract') && !guardianCatch()) miss('MISSED!');
     }
   }
 
@@ -1516,6 +1539,7 @@
       steerFig(f, dv[0], dv[1], f === mate ? dtLocal : worldDt, 60);
       if (f.leaving) f.prep = null;
       else if (f === mate && !f.swing && ball.live && ball.lastHit === 'opp' && ball.z < 2) f.prep = ball.x >= f.x ? 'fh' : 'bh';
+      else if (f === opp2 && !f.swing && ball.live && ball.lastHit === 'player' && ball.z > -2) f.prep = ball.x <= f.x ? 'fh' : 'bh';
       else if (!f.swing) f.prep = null;
     }
     // rain
@@ -1928,7 +1952,7 @@
     window.__padel = {
       state: state, ball: ball, player: player, opp: opp, startGame: startGame, scene: () => scene,
       predict: (fn) => predict(ball, fn || aiPlayerContact, 5),
-      pu: pu, vs: vs,
+      pu: pu, vs: vs, get opp2() { return opp2; },
       startEvent: (e) => { if (pu.event) endEvent(); startEvent(e); },
       endEvent: () => { if (pu.event) endEvent(); },
       spawnPickup: (t) => spawnPickup(t),
