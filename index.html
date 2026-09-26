@@ -1273,7 +1273,9 @@
     $$('[data-cd="h"]').forEach((e) => (e.textContent = pad(h)));
     $$('[data-cd="m"]').forEach((e) => (e.textContent = pad(m)));
     $$('[data-cd="s"]').forEach((e) => (e.textContent = pad(s)));
-    $$('[data-clock]').forEach((e) => (e.textContent = d + ' days, ' + pad(h) + ':' + pad(m) + ':' + pad(s)));
+    const unit = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+    const clock = unit(d, 'day') + ', ' + unit(h, 'hour') + ', ' + unit(m, 'minute') + ' and ' + unit(s, 'second');
+    $$('[data-clock]').forEach((e) => (e.textContent = clock));
     if (!saleOn()) $$('[data-sale]').forEach((e) => (e.hidden = true));
     renderSocialPrice();
   }
