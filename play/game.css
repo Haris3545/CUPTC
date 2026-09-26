@@ -334,6 +334,56 @@ body {
 
 .px-btn[hidden] { display: none; }
 
+/* ---------------- Play a friend ---------------- */
+
+.vs-entry { margin: 18px 0 0; }
+
+.vs-link {
+  padding: 6px 4px;
+  border: 0;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--green-light);
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.vs-link:hover { color: var(--yellow); }
+.vs-link:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+
+.vs-msg { margin: 16px auto 0; max-width: 320px; font-size: 9px; line-height: 1.9; color: #d9e6ff; }
+
+.vs-code {
+  margin: 16px 0 0;
+  font-size: 30px;
+  letter-spacing: 8px;
+  color: var(--yellow);
+  text-shadow: 3px 3px 0 var(--ink);
+}
+
+.vs-code[hidden] { display: none; }
+
+.vs-status { margin: 16px 0 0; min-height: 9px; font-size: 9px; letter-spacing: 1px; color: var(--green-light); }
+.vs-status.is-waiting { animation: blink 1.2s steps(2) infinite; }
+.vs-status.is-bad { color: var(--red); }
+
+.vs-tip {
+  margin: 16px auto 0;
+  max-width: 320px;
+  padding: 10px 8px;
+  font-size: 8px;
+  line-height: 2;
+  color: #d9e6ff;
+  background: rgba(8, 22, 17, .35);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .12);
+}
+
+.vs-tip[hidden] { display: none; }
+
 /* ---------------- Animations ---------------- */
 
 @keyframes palette {
@@ -374,6 +424,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .title span, .newbest, .kicker--red, .px-btn--big { animation: none; }
+  .title span, .newbest, .kicker--red, .px-btn--big, .vs-status.is-waiting { animation: none; }
   .overlay, .panel { animation: none; }
 }
