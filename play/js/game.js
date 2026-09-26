@@ -34,7 +34,7 @@
   const $ = (id) => document.getElementById(id);
   const canvas = $('screen');
   const ctx = canvas.getContext('2d');
-  const scr = { title: $('scr-title'), pause: $('scr-pause'), over: $('scr-over'), vs: $('scr-vs'), vsover: $('scr-vsover') };
+  const scr = { title: $('scr-title'), pause: $('scr-pause'), over: $('scr-over'), vs: $('scr-vs'), vsover: $('scr-vsover'), lb: $('scr-lb') };
   const btnSound = $('btn-sound');
   const btnPause = $('btn-pause');
 
@@ -675,8 +675,11 @@
     setBestText();
     showScreen('over');
     updateHudButtons();
+    lbAfterGame(state.score);
     const again = $('btn-again');
-    if (again && !matchMedia('(pointer: coarse)').matches) again.focus({ preventScroll: true });
+    const fine = !matchMedia('(pointer: coarse)').matches;
+    if (fine && !lbEl.form.hidden) lbEl.name.focus({ preventScroll: true });
+    else if (again && fine) again.focus({ preventScroll: true });
   }
 
   function resetPowerUps() {
@@ -724,6 +727,152 @@
     if (navigator.vibrate && matchMedia('(pointer: coarse)').matches) {
       try { navigator.vibrate(ms); } catch (e) { /* ignore */ }
     }
+  }
+
+  // ------------------------------------------------------------------ leaderboard
+  // No accounts: the first time you add a score you pick a name. A random code saved on this device
+  // lets later, higher scores update the same entry automatically.
+  const LB_KEY = 'cuptc-padel-lb';
+  const lbEl = {
+    box: $('lb-box'), form: $('lb-form'), name: $('lb-name'), msg: $('lb-msg'), skip: $('lb-skip'),
+    list: $('lb-list'), listMsg: $('lb-list-msg')
+  };
+  const LB_ERRORS = {
+    name_taken: 'THAT NAME IS TAKEN. TRY ANOTHER.',
+    bad_name: 'USE UP TO 12 LETTERS OR NUMBERS.',
+    storage_not_configured: "THE LEADERBOARD ISN'T SWITCHED ON YET."
+  };
+  let lb = {};
+  try { lb = JSON.parse(localStorage.getItem(LB_KEY) || '{}') || {}; } catch (e) { lb = {}; }
+  let lbSkipped = false, lbReturn = 'title';
+  function lbStore() {
+    try { localStorage.setItem(LB_KEY, JSON.stringify(lb)); } catch (e) { /* private browsing */ }
+  }
+  function lbDeviceKey() {
+    if (!lb.key) {
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      lb.key = Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
+      lbStore();
+    }
+    return lb.key;
+  }
+  async function lbFetch(opts) {
+    try {
+      const r = await fetch('/api/leaderboard', opts);
+      let data = {};
+      try { data = await r.json(); } catch (e) { data = {}; }
+      return { ok: r.ok, data: data };
+    } catch (e) {
+      return { ok: false, data: { error: 'offline' } };
+    }
+  }
+  function lbSay(text, kind) {
+    lbEl.msg.textContent = text;
+    lbEl.msg.className = 'lb-msg' + (kind ? ' is-' + kind : '');
+  }
+
+  async function lbSubmit(name, score) {
+    const res = await lbFetch({
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op: 'submit', key: lbDeviceKey(), name: name, score: score })
+    });
+    if (!res.ok || !res.data.you) return { error: res.data.error || 'failed' };
+    const you = res.data.you;
+    lb.id = you.id;
+    lb.name = you.name;
+    lb.best = you.score;
+    lbStore();
+    return { you: you };
+  }
+
+  // After a one-player game: ask for a name the first time, then save new bests by themselves.
+  async function lbAfterGame(score) {
+    lbEl.form.hidden = true;
+    lbSay('');
+    if (score < 1) return;
+    if (!lb.name) {
+      if (lbSkipped) return;
+      lbEl.form.hidden = false;
+      lbEl.name.value = '';
+      return;
+    }
+    if (score <= (lb.best || 0)) {
+      lbSay('YOUR LEADERBOARD BEST: ' + lb.best);
+      return;
+    }
+    lbSay('SAVING YOUR NEW BEST...');
+    const r = await lbSubmit(lb.name, score);
+    if (state.mode !== 'over') return;
+    if (r.you) lbSay('NEW BEST SAVED! YOU’RE #' + r.you.rank + ' ON THE LEADERBOARD.', 'good');
+    else lbSay(r.error === 'offline' ? "COULDN'T SAVE YOUR SCORE. CHECK YOUR CONNECTION." : LB_ERRORS[r.error] || "COULDN'T SAVE YOUR SCORE.", 'bad');
+  }
+
+  lbEl.form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = lbEl.name.value.trim().replace(/\s+/g, ' ');
+    if (!/^[A-Za-z0-9][A-Za-z0-9 .'_-]{0,11}$/.test(name)) { lbSay(LB_ERRORS.bad_name, 'bad'); return; }
+    const btn = lbEl.form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    lbSay('SAVING...');
+    const r = await lbSubmit(name, state.score);
+    btn.disabled = false;
+    if (r.you) {
+      lbEl.form.hidden = true;
+      lbEl.name.blur();
+      lbSay('SAVED! YOU’RE #' + r.you.rank + ' WITH ' + r.you.score + '.', 'good');
+    } else {
+      lbSay(r.error === 'offline' ? "COULDN'T SAVE. CHECK YOUR CONNECTION AND TRY AGAIN." : LB_ERRORS[r.error] || "COULDN'T SAVE. TRY AGAIN.", 'bad');
+    }
+  });
+  lbEl.skip.addEventListener('click', () => {
+    lbSkipped = true;
+    lbEl.form.hidden = true;
+    lbSay('');
+  });
+
+  async function lbOpen(from) {
+    Sound.unlock();
+    sfx.click();
+    lbReturn = from;
+    lbEl.list.innerHTML = '';
+    lbEl.listMsg.textContent = 'LOADING...';
+    lbEl.listMsg.className = 'lb-msg';
+    showScreen('lb');
+    const res = await lbFetch({ method: 'GET' });
+    if (scr.lb.hidden) return;
+    if (!res.ok) {
+      lbEl.listMsg.textContent = "COULDN'T LOAD THE LEADERBOARD.";
+      lbEl.listMsg.className = 'lb-msg is-bad';
+      return;
+    }
+    const entries = res.data.entries || [];
+    lbEl.listMsg.textContent = entries.length ? '' : 'NO SCORES YET. BE THE FIRST!';
+    const row = (rank, name, score, you) => {
+      const li = document.createElement('li');
+      if (you) li.className = 'is-you';
+      [rank, name, score].forEach((v, i) => {
+        const s = document.createElement('span');
+        s.className = ['lb-rank', 'lb-name', 'lb-score'][i];
+        s.textContent = v;
+        li.appendChild(s);
+      });
+      lbEl.list.appendChild(li);
+      return li;
+    };
+    let mine = null;
+    entries.forEach((e, i) => {
+      const li = row('#' + (i + 1), e.name, e.score, e.id === lb.id);
+      if (e.id === lb.id) mine = li;
+    });
+    if (!mine && lb.name && lb.best) {
+      const gap = document.createElement('li');
+      gap.className = 'lb-gap';
+      gap.textContent = '...';
+      lbEl.list.appendChild(gap);
+      row('YOU', lb.name, lb.best, true);
+    }
+    if (mine) mine.scrollIntoView({ block: 'nearest' });
   }
 
   // ------------------------------------------------------------------ 1v1: linking up
@@ -1058,6 +1207,11 @@
 
   window.addEventListener('keydown', (e) => {
     Sound.unlock();
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (!scr.lb.hidden) {
+      if (e.code === 'Escape') showScreen(lbReturn);
+      return;
+    }
     const k = KEYMAP[e.code];
     if (k) {
       keys[k] = true;
@@ -1146,6 +1300,9 @@
   });
   $('btn-again').addEventListener('click', startGame);
   $('btn-vs').addEventListener('click', (e) => { e.stopPropagation(); vsHost(); });
+  $('btn-lb-title').addEventListener('click', (e) => { e.stopPropagation(); lbOpen('title'); });
+  $('btn-lb-over').addEventListener('click', () => lbOpen('over'));
+  $('btn-lb-back').addEventListener('click', () => { sfx.click(); showScreen(lbReturn); });
   vsEl.share.addEventListener('click', vsShare);
   vsEl.back.addEventListener('click', vsLeave);
   vsEl.rematch.addEventListener('click', vsRematch);

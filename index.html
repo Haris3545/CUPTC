@@ -432,6 +432,9 @@
   .admin-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
   .admin-row button { border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer; font-size: 14px; background: var(--green-soft); }
   .admin-row .del { color: #b3261e; }
+  .lb-admin { margin-top: 56px; }
+  .lb-admin .h3 { margin-bottom: 8px; }
+  .lb-admin .admin-row .rank { color: var(--ink-3); margin-right: 8px; }
 
   /* ================================================================ Checkout sheet */
   .scrim { position: fixed; inset: 0; z-index: 80; background: rgba(12, 18, 15, .45); display: grid; align-items: end; justify-items: center; animation: fade .3s ease both; overflow-y: auto; overscroll-behavior: contain; }
@@ -851,7 +854,7 @@
       <div class="narrow center">
         <h2 class="h2 rv">Committee.</h2>
         <hr class="rule rv" style="--d:.06s">
-        <p class="lede rv" style="--d:.1s">Sign in to manage the shop and change committee photos.</p>
+        <p class="lede rv" style="--d:.1s">Sign in to manage the shop, change committee photos and tidy up the Padel Pong leaderboard.</p>
       </div>
       <div class="narrow rv" style="--d:.18s;margin-top:40px">
         <form class="gate" id="admin-gate" autocomplete="off">
@@ -881,6 +884,12 @@
             <p class="msg full" id="m-msg" role="status"></p>
           </form>
           <div id="admin-list"></div>
+          <div class="lb-admin">
+            <h3 class="h3">Padel Pong leaderboard.</h3>
+            <p class="muted">Players choose their own names. Rename or remove any entry here, for example to take down an inappropriate name. Changes show in the game within a minute.</p>
+            <div id="lb-admin-list"></div>
+            <p class="msg" id="lb-admin-msg" role="status"></p>
+          </div>
         </div>
       </div>
     </section>
@@ -999,6 +1008,7 @@
 <p>This website is hosted by Vercel, which processes technical information such as your IP address in order to deliver the site securely. Fonts are loaded from Google Fonts, which also receives your IP address.</p>
 <p>When you sign in to the Members Area, a sign-in token is kept in your browser for that tab only, and is removed when you close the tab or sign out. We do not use tracking or advertising cookies. We use Vercel Web Analytics to count visits to each page; it does not use cookies or identify you.</p>
 <p>If you play Padel Pong against a friend, your two devices connect directly to each other, so each can see the other’s IP address. PeerJS (peerjs.com) runs the free service that introduces the two devices using a short game code, and relays the game if a direct connection isn’t possible, so it also receives your IP address. Nothing else about you is sent, and nothing about the match is kept.</p>
+<p>If you add your score to the Padel Pong leaderboard, we keep the name you enter, your best score and a random code saved in your browser, which lets your new best replace your old one. The name and score are shown publicly on the leaderboard. The committee may rename or remove entries. To have yours removed, email <a class="link" href="mailto:secretary@cuptc.com">secretary@cuptc.com</a>.</p>
 <p>Committee members' names, roles and photos are shown with their consent. To have yours changed or removed, email <a class="link" href="mailto:secretary@cuptc.com">secretary@cuptc.com</a>.</p>
       </article>
     </section>
@@ -1518,6 +1528,7 @@
     root.classList.toggle('is-committee', state.admin);
     renderShop();
     renderAdminList();
+    loadBoardAdmin();
   }
 
   // ---------------------------------------------------------------- shop
@@ -1806,6 +1817,64 @@
     msg.textContent = res.ok ? (item.id ? 'Saved. The shop is updated.' : 'Added to the shop.') : errText(res, 'Couldn’t save. Try again in a moment.');
     if (res.ok) { resetForm(); loadShop(); }
   });
+
+  // ---------------------------------------------------------------- Padel Pong leaderboard (committee)
+  async function loadBoardAdmin() {
+    const list = $('#lb-admin-list');
+    list.innerHTML = '';
+    if (!state.admin) return;
+    const res = await api('leaderboard?fresh=' + Date.now());
+    if (!res.ok) { boardMsg(errText(res, 'The leaderboard can’t load right now.'), true); return; }
+    renderBoardAdmin(res.data.entries || []);
+  }
+  function boardMsg(text, bad) {
+    const m = $('#lb-admin-msg');
+    m.className = 'msg' + (bad ? ' err' : '');
+    m.textContent = text;
+  }
+  function renderBoardAdmin(entries) {
+    const list = $('#lb-admin-list');
+    list.innerHTML = '';
+    if (!entries.length) { list.innerHTML = '<p class="muted">No scores yet.</p>'; return; }
+    entries.forEach((e, i) => {
+      const row = document.createElement('div');
+      row.className = 'admin-row';
+      const name = document.createElement('span');
+      name.innerHTML = '<span class="rank"></span><b></b>';
+      name.querySelector('.rank').textContent = '#' + (i + 1);
+      name.querySelector('b').textContent = e.name;
+      const score = document.createElement('span');
+      score.textContent = e.score;
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.textContent = 'Rename';
+      edit.addEventListener('click', () => {
+        const next = prompt('New name for ' + e.name + ' (up to 12 letters or numbers)', e.name);
+        if (next != null && next.trim() && next.trim() !== e.name) boardChange({ op: 'rename', id: e.id, name: next.trim() });
+      });
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'del';
+      del.textContent = 'Remove';
+      del.addEventListener('click', () => {
+        if (confirm('Remove ' + e.name + ' (' + e.score + ') from the leaderboard?')) boardChange({ op: 'remove', id: e.id });
+      });
+      row.append(name, score, edit, del);
+      list.appendChild(row);
+    });
+  }
+  const BOARD_ERR = {
+    bad_name: 'Names can be up to 12 letters, numbers, spaces or . \' _ - and must start with a letter or number.',
+    name_taken: 'Someone else already has that name.',
+    not_found: 'That entry has already gone. Refreshing the list.'
+  };
+  async function boardChange(body) {
+    boardMsg('Saving…');
+    const res = await api('leaderboard', { body });
+    if (res.ok) { boardMsg(body.op === 'remove' ? 'Removed.' : 'Renamed.'); renderBoardAdmin(res.data.entries || []); return; }
+    boardMsg(BOARD_ERR[res.data.error] || errText(res, 'Couldn’t save that change (error ' + res.status + ').'), true);
+    if (res.data.error === 'not_found') loadBoardAdmin();
+  }
 
   function renderAdminList() {
     const list = $('#admin-list');
