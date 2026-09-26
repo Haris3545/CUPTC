@@ -60,7 +60,7 @@
           <li>RUN OVER POWER-UPS TO GRAB THEM</li>
         </ul>
         <button class="px-btn px-btn--big" id="btn-play" type="button">PLAY</button>
-        <p class="vs-entry"><button class="vs-link" id="btn-vs" type="button">PLAY A FRIEND</button></p>
+        <p class="vs-entry"><button class="vs-link" id="btn-vs" type="button">PLAY A FRIEND</button><button class="vs-link" id="btn-lb-title" type="button">LEADERBOARD</button></p>
         <p class="best">BEST SCORE <span data-best>0</span></p>
       </div>
     </section>
@@ -71,6 +71,18 @@
         <div class="actions">
           <button class="px-btn" id="btn-resume" type="button">RESUME</button>
           <a class="px-btn px-btn--ghost" href="../">HOME</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay" id="scr-lb" aria-labelledby="lb-heading" hidden>
+      <div class="panel panel--lb">
+        <p class="kicker">CUPTC ARCADE</p>
+        <h2 class="title title--small" id="lb-heading">LEADERBOARD</h2>
+        <ol class="lb-list" id="lb-list"></ol>
+        <p class="lb-msg" id="lb-list-msg" role="status"></p>
+        <div class="actions">
+          <button class="px-btn" id="btn-lb-back" type="button">BACK</button>
         </div>
       </div>
     </section>
@@ -111,6 +123,19 @@
         <p class="best">RALLY <span id="over-hits">0</span> HITS</p>
         <p class="newbest" id="over-new" hidden>NEW BEST!</p>
         <p class="best">BEST SCORE <span data-best>0</span></p>
+        <div class="lb-box" id="lb-box">
+          <form class="lb-form" id="lb-form" autocomplete="off" hidden>
+            <label class="lb-q" for="lb-name">ADD YOUR SCORE TO THE LEADERBOARD?</label>
+            <div class="lb-row">
+              <input class="lb-input" id="lb-name" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="YOUR NAME">
+              <button class="px-btn px-btn--small" type="submit">ADD</button>
+            </div>
+            <p class="lb-hint">WE ONLY NEED A NAME. YOUR BEST SCORE UPDATES BY ITSELF AFTER THIS.</p>
+            <button class="vs-link vs-link--small" id="lb-skip" type="button">NO THANKS</button>
+          </form>
+          <p class="lb-msg" id="lb-msg" role="status"></p>
+          <button class="vs-link vs-link--small" id="btn-lb-over" type="button">SEE LEADERBOARD</button>
+        </div>
         <div class="actions">
           <button class="px-btn" id="btn-again" type="button">PLAY AGAIN</button>
           <button class="px-btn px-btn--ghost" id="btn-share" type="button" hidden>SHARE</button>
