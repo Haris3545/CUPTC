@@ -34,7 +34,7 @@
   const $ = (id) => document.getElementById(id);
   const canvas = $('screen');
   const ctx = canvas.getContext('2d');
-  const scr = { title: $('scr-title'), pause: $('scr-pause'), over: $('scr-over') };
+  const scr = { title: $('scr-title'), pause: $('scr-pause'), over: $('scr-over'), vs: $('scr-vs'), vsover: $('scr-vsover') };
   const btnSound = $('btn-sound');
   const btnPause = $('btn-pause');
 
@@ -113,6 +113,16 @@
   const rain = [];
 
   const fx = { parts: [], rings: [], labels: [], banner: null, shakeAmp: 0, shakeT: 0, flash: 0 };
+
+  // ------------------------------------------------------------------ 1v1 against a friend
+  // Each phone plays from its own end: the friend's court is ours turned round (x -> -x, z -> -z).
+  // Whoever the ball is heading towards decides the point: their phone reports a hit or a miss,
+  // and the other phone follows. No power-ups, first to VS_TARGET points, serve alternates.
+  const VS_TARGET = 7;
+  const vs = {
+    on: false, role: null, link: null, pending: null, me: 0, them: 0,
+    rtt: 0.12, lastRx: 0, posT: 0, pingT: 0, again: false, theirAgain: false, first: true
+  };
 
   // ------------------------------------------------------------------ sizing
   function readSafeArea() {
@@ -317,7 +327,8 @@
     const high = ball.y > 1.75;
     const volley = ball.bounces === 0;
     const glass = ball.wallHits > 0;
-    const tx = clamp(ball.x * 0.3 + off * 3.4 + who.vx * 0.14 + rand(-0.4, 0.4), -4.3, 4.3);
+    let tx = clamp(ball.x * 0.3 + off * 3.4 + who.vx * 0.14 + rand(-0.4, 0.4), -4.3, 4.3);
+    if (vs.on) tx = clamp(tx - opp.x * 0.3, -4.3, 4.3);
     const tz = high ? rand(7, 9) : rand(5.8, 8.8);
     launch(ball, tx, tz, high ? 0.7 : volley ? 0.9 : 0.98, 1.1);
     ball.lastHit = 'player';
@@ -336,6 +347,27 @@
       player.tx = clamp(player.x * 0.5, PB.x0, PB.x1);
       player.tz = PLAYER_HOME.z;
       planOpp();
+      marker = null;
+      return;
+    }
+
+    if (vs.on) {
+      state.hits++;
+      vsSpeed();
+      if (high) {
+        sfx.smash();
+        shake(4, 0.28);
+        fx.flash = 0.12;
+        vibrate(28);
+        worldLabel('SMASH!', who, '#ffe14d');
+      } else {
+        sfx.hit(state.hits);
+        shake(1.5, 0.12);
+        vibrate(12);
+        if (glass) worldLabel('OFF THE GLASS!', who, '#7fd6ff');
+        else if (volley && who.z > -5 && Math.random() < 0.6) worldLabel('VOLLEY!', who, '#85b4a0');
+      }
+      vsSendHit(who.swing);
       marker = null;
       return;
     }
@@ -583,6 +615,7 @@
       return;
     }
     if (state.mode !== 'play') return;
+    if (vs.on) { vsLosePoint(reason); return; }
     state.mode = 'missed';
     state.missTimer = 1.6;
     state.missReason = reason;
@@ -659,7 +692,7 @@
   }
 
   function setPaused(p) {
-    if (state.mode !== 'play' && state.mode !== 'countdown') p = false;
+    if ((state.mode !== 'play' && state.mode !== 'countdown') || vs.on) p = false;
     state.paused = p;
     showScreen(p ? 'pause' : null);
     updateHudButtons();
@@ -674,7 +707,7 @@
   }
 
   function updateHudButtons() {
-    const inGame = state.mode === 'play' || state.mode === 'countdown';
+    const inGame = (state.mode === 'play' || state.mode === 'countdown') && !vs.on;
     btnPause.hidden = !inGame;
     btnPause.setAttribute('aria-label', state.paused ? 'Resume' : 'Pause');
     btnSound.setAttribute('aria-pressed', Sound.isMuted() ? 'true' : 'false');
@@ -686,6 +719,315 @@
     if (navigator.vibrate && matchMedia('(pointer: coarse)').matches) {
       try { navigator.vibrate(ms); } catch (e) { /* ignore */ }
     }
+  }
+
+  // ------------------------------------------------------------------ 1v1: linking up
+  const VS_HASH = /^#vs-([A-HJ-NP-Z2-9]{4})$/i;
+  const vsEl = {
+    heading: $('vs-heading'), msg: $('vs-msg'), code: $('vs-code'), status: $('vs-status'), tip: $('vs-tip'),
+    share: $('btn-vs-share'), back: $('btn-vs-back'),
+    oKicker: $('vso-kicker'), oHeading: $('vso-heading'), oScore: $('vso-score'), oStatus: $('vso-status'), rematch: $('btn-rematch')
+  };
+  const VS_ERRORS = {
+    notfound: "THAT GAME HAS FINISHED OR THE LINK IS WRONG. ASK YOUR FRIEND FOR A NEW ONE.",
+    timeout: "COULDN'T REACH YOUR FRIEND. CHECK YOU'RE BOTH ONLINE AND TRY AGAIN.",
+    offline: "COULDN'T CONNECT. CHECK YOUR INTERNET AND TRY AGAIN.",
+    failed: "SOMETHING WENT WRONG. TRY AGAIN."
+  };
+
+  function vsScreen(o) {
+    vsEl.heading.textContent = o.heading || 'PLAY A FRIEND';
+    vsEl.msg.textContent = o.msg || '';
+    vsEl.code.hidden = !o.code;
+    vsEl.code.textContent = o.code || '';
+    vsEl.status.textContent = o.status || '';
+    vsEl.status.className = 'vs-status' + (o.wait ? ' is-waiting' : '') + (o.bad ? ' is-bad' : '');
+    vsEl.tip.hidden = !!o.bad;
+    vsEl.share.hidden = !o.code;
+    vsEl.share.textContent = navigator.share ? 'SEND LINK' : 'COPY LINK';
+    showScreen('vs');
+  }
+
+  const vsUrl = (code) => location.origin + location.pathname + '#vs-' + code;
+
+  function vsHost() {
+    Sound.unlock();
+    sfx.click();
+    vsScreen({ msg: 'GETTING YOUR LINK...', wait: true });
+    vs.pending = PP.Net.host({
+      code(c) {
+        vs.code = c;
+        vsScreen({
+          msg: 'SEND YOUR FRIEND THIS LINK. THE MATCH STARTS AS SOON AS THEY OPEN IT.',
+          code: c, status: 'WAITING FOR YOUR FRIEND...', wait: true
+        });
+      },
+      open(link) { vsConnected(link, 'host'); },
+      error(kind) { vsScreen({ msg: VS_ERRORS[kind] || VS_ERRORS.failed, status: 'NO MATCH', bad: true }); }
+    });
+  }
+
+  function vsJoin(code) {
+    history.replaceState(null, '', location.pathname + location.search);
+    vsScreen({ msg: "JOINING YOUR FRIEND'S MATCH...", status: 'CONNECTING...', wait: true });
+    vs.pending = PP.Net.join(code.toUpperCase(), {
+      open(link) { vsConnected(link, 'guest'); },
+      error(kind) { vsScreen({ msg: VS_ERRORS[kind] || VS_ERRORS.failed, status: 'NO MATCH', bad: true }); }
+    });
+  }
+
+  function vsShare() {
+    Sound.unlock();
+    const url = vsUrl(vs.code);
+    if (navigator.share) {
+      navigator.share({ title: 'CUPTC Padel Pong', text: 'Play me at Padel Pong! First to 7.', url: url }).catch(() => {});
+      return;
+    }
+    const done = () => { vsEl.share.textContent = 'COPIED!'; setTimeout(() => { vsEl.share.textContent = 'COPY LINK'; }, 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => window.prompt('Copy this link', url));
+    else window.prompt('Copy this link', url);
+  }
+
+  // Back to the one-player game, with everything reset.
+  function vsLeave() {
+    if (vs.pending) vs.pending.cancel();
+    if (vs.link) { vs.link.send({ t: 'bye' }); vs.link.close(); }
+    location.replace(location.pathname + location.search);
+  }
+
+  function vsConnected(link, role) {
+    vs.pending = null;
+    vs.on = true;
+    vs.role = role;
+    vs.link = link;
+    vs.first = true;
+    vs.lastRx = performance.now();
+    link.onmessage = vsOnMessage;
+    link.onclose = () => vsLost('YOUR FRIEND LEFT THE MATCH.');
+    window.addEventListener('pagehide', () => { if (vs.link) vs.link.send({ t: 'bye' }); });
+    vsStartMatch();
+  }
+
+  function vsLost(msg) {
+    if (!vs.on) return;
+    vs.on = false;
+    if (vs.link) vs.link.close();
+    vs.link = null;
+    state.mode = 'over';
+    ball.live = false;
+    ball.visible = false;
+    marker = null;
+    fx.banner = null;
+    updateHudButtons();
+    vsScreen({ heading: 'MATCH OVER', msg: msg + ' SCORE ' + vs.me + '-' + vs.them + '.', status: 'DISCONNECTED', bad: true });
+  }
+
+  // ------------------------------------------------------------------ 1v1: the match
+  const vsIServe = () => ((vs.me + vs.them) % 2 === 0) === (vs.role === 'host');
+  function vsSpeed() {
+    state.speed = 1.12 + 1.3 * (1 - Math.exp(-state.hits / 12));
+  }
+
+  function vsStartMatch() {
+    showScreen(null);
+    resetCourt();
+    resetPowerUps();
+    vs.me = 0;
+    vs.them = 0;
+    vs.again = false;
+    vs.theirAgain = false;
+    fx.labels.length = 0;
+    fx.banner = null;
+    input.drag = null;
+    vsNextPoint();
+    if (vs.first) state.countdown = 3;
+    vs.first = false;
+  }
+
+  function vsNextPoint() {
+    Object.assign(state, {
+      mode: 'countdown', paused: false, score: 0, hits: 0, speed: 1.12, level: 0, hitstop: 0, slowmo: 1,
+      cheerT: 0, countdown: 1.8, lastCount: 0
+    });
+    ball.live = false;
+    ball.visible = false;
+    trail.length = 0;
+    marker = null;
+    opp.cheer = 0;
+    player.cheer = 0;
+    updateHudButtons();
+  }
+
+  function vsServe() {
+    ball.x = clamp(player.x + 0.4, -4.5, 4.5);
+    ball.y = 1.0;
+    ball.z = player.z + 0.3;
+    ball.side = -1;
+    ball.bounces = 0;
+    ball.wallHits = 0;
+    ball.live = true;
+    ball.visible = true;
+    trail.length = 0;
+    launch(ball, rand(-2.8, 2.8), rand(6.4, 8.6), 1.45, 1.05);
+    ball.lastHit = 'player';
+    ball.bV = 0.72;
+    ball.bH = 0.86;
+    player.swing = 'fh';
+    player.swingT = 0;
+    player.prep = null;
+    state.hits = 1;
+    vsSpeed();
+    sfx.hit(1);
+    vsSendHit('fh');
+  }
+
+  const r3 = (v) => Math.round(v * 1000) / 1000;
+  function vsSendHit(swing) {
+    if (!vs.link) return;
+    vs.link.send({
+      t: 'h', sw: swing, n: state.hits, sp: r3(state.speed),
+      b: [ball.x, ball.y, ball.z, ball.vx, ball.vy, ball.vz, ball.bV, ball.bH].map(r3)
+    });
+  }
+
+  // The friend hit the ball: take it from their racket, turned round to our end of the court.
+  function vsOnHit(m) {
+    if (state.mode === 'over' || state.mode === 'attract') return;
+    if (state.mode === 'missed') vsNextPoint();
+    if (state.mode !== 'play') { state.mode = 'play'; fx.banner = null; updateHudButtons(); }
+    const b = m.b;
+    Object.assign(ball, {
+      x: -b[0], y: b[1], z: -b[2], vx: -b[3], vy: b[4], vz: -b[5], bV: b[6], bH: b[7],
+      side: -b[2] < 0 ? -1 : 1, bounces: 0, wallHits: 0, lastHit: 'opp', live: true, visible: true
+    });
+    trail.length = 0;
+    state.hits = m.n;
+    state.speed = m.sp;
+    // catch up the time the message spent travelling
+    let lag = Math.min(0.15, vs.rtt / 2) * state.speed;
+    while (lag > 0) {
+      stepBall(ball, Math.min(1 / 240, lag), null);
+      lag -= 1 / 240;
+    }
+    opp.swing = m.sw;
+    opp.swingT = 0;
+    opp.prep = null;
+    if (m.sw === 'sm') {
+      sfx.smash();
+      shake(2, 0.15);
+      worldLabel(pick(['VIBORA!', 'BANDEJA!', 'REMATE!']), opp, '#ff7eb6');
+    } else {
+      sfx.oppHit();
+    }
+    const p = scene.project(ball.x, ball.y, ball.z);
+    sparks(p.x, p.y, 6, ['#ffffff', '#ff7eb6'], 30, 70);
+    updateMarker();
+    if (DEBUG_AUTO) planPlayerAI();
+  }
+
+  function vsLosePoint(reason) {
+    vs.them++;
+    if (vs.link) vs.link.send({ t: 'pt' });
+    state.mode = 'missed';
+    state.missTimer = 1.8;
+    state.slowmo = 0.3;
+    state.scorePop = 0.16;
+    opp.cheer = 2.5;
+    sfx.miss();
+    shake(5, 0.4);
+    vibrate(90);
+    banner(reason, { color: '#ff4d6d', life: 1.6 });
+  }
+
+  function vsWinPoint() {
+    if (state.mode === 'over' || state.mode === 'missed') return;
+    vs.me++;
+    state.mode = 'missed';
+    state.missTimer = 1.8;
+    state.slowmo = 1;
+    state.scorePop = 0.16;
+    state.cheerT = 1.4;
+    player.cheer = 2;
+    marker = null;
+    sfx.milestone();
+    vibrate(30);
+    banner(vs.me >= VS_TARGET ? 'MATCH POINT WON!' : 'POINT!', { color: '#e9ff3b', life: 1.6 });
+  }
+
+  function vsMatchOver() {
+    const won = vs.me > vs.them;
+    state.mode = 'over';
+    state.slowmo = 1;
+    ball.live = false;
+    ball.visible = false;
+    marker = null;
+    vsEl.oKicker.textContent = 'MATCH OVER';
+    vsEl.oKicker.className = 'kicker' + (won ? '' : ' kicker--red');
+    vsEl.oHeading.textContent = won ? 'YOU WIN!' : 'YOU LOSE';
+    vsEl.oScore.textContent = vs.me + '-' + vs.them;
+    vsEl.oStatus.textContent = '';
+    vsEl.oStatus.className = 'vs-status';
+    vsEl.rematch.hidden = false;
+    vsEl.rematch.disabled = false;
+    if (won) { confetti(W > 400 ? 90 : 60); state.cheerT = 2; player.cheer = 3; }
+    else opp.cheer = 3;
+    showScreen('vsover');
+    updateHudButtons();
+  }
+
+  function vsRematch() {
+    if (!vs.on || vs.again) return;
+    Sound.unlock();
+    sfx.click();
+    vs.again = true;
+    vs.link.send({ t: 'again' });
+    if (vs.theirAgain) { vsStartMatch(); return; }
+    vsEl.rematch.disabled = true;
+    vsEl.oStatus.textContent = 'WAITING FOR YOUR FRIEND...';
+    vsEl.oStatus.className = 'vs-status is-waiting';
+  }
+
+  function vsOnMessage(m) {
+    if (!vs.on || !m || typeof m !== 'object') return;
+    vs.lastRx = performance.now();
+    if (m.t === 'p') {
+      opp.tx = clamp(-m.x, OB.x0, OB.x1);
+      opp.tz = clamp(-m.z, OB.z0, OB.z1);
+    } else if (m.t === 'h') {
+      vsOnHit(m);
+    } else if (m.t === 'pt') {
+      vsWinPoint();
+    } else if (m.t === 'ping') {
+      vs.link.send({ t: 'pong', s: m.s });
+    } else if (m.t === 'pong') {
+      const rtt = (performance.now() - m.s) / 1000;
+      if (rtt >= 0 && rtt < 5) vs.rtt = vs.rtt * 0.7 + rtt * 0.3;
+    } else if (m.t === 'again') {
+      vs.theirAgain = true;
+      if (vs.again && state.mode === 'over') vsStartMatch();
+      else if (state.mode === 'over') {
+        vsEl.oStatus.textContent = 'YOUR FRIEND WANTS A REMATCH!';
+        vsEl.oStatus.className = 'vs-status is-waiting';
+      }
+    } else if (m.t === 'bye') {
+      vsLost('YOUR FRIEND LEFT THE MATCH.');
+    }
+  }
+
+  // Send our position, keep the lag estimate fresh, and notice if the friend has gone quiet.
+  function vsTick(dt) {
+    if (!vs.link) return;
+    vs.posT -= dt;
+    if (vs.posT <= 0) {
+      vs.posT = 0.05;
+      vs.link.send({ t: 'p', x: r3(player.x), z: r3(player.z) });
+    }
+    vs.pingT -= dt;
+    if (vs.pingT <= 0) {
+      vs.pingT = 1;
+      vs.link.send({ t: 'ping', s: performance.now() });
+    }
+    if (performance.now() - vs.lastRx > 10000) vsLost('LOST THE CONNECTION TO YOUR FRIEND.');
   }
 
   // ------------------------------------------------------------------ input
@@ -718,6 +1060,10 @@
       return;
     }
     const onButton = document.activeElement && /^(BUTTON|A)$/.test(document.activeElement.tagName);
+    if (vs.on || !scr.vs.hidden) {
+      if (e.code === 'KeyM') toggleMute();
+      return;
+    }
     if ((e.code === 'Space' || e.code === 'Enter') && !onButton) {
       if (state.mode === 'attract' || state.mode === 'over') { e.preventDefault(); startGame(); }
       else if (state.paused) { e.preventDefault(); setPaused(false); }
@@ -794,6 +1140,11 @@
     startGame();
   });
   $('btn-again').addEventListener('click', startGame);
+  $('btn-vs').addEventListener('click', (e) => { e.stopPropagation(); vsHost(); });
+  vsEl.share.addEventListener('click', vsShare);
+  vsEl.back.addEventListener('click', vsLeave);
+  vsEl.rematch.addEventListener('click', vsRematch);
+  $('btn-vs-leave').addEventListener('click', vsLeave);
   $('btn-resume').addEventListener('click', () => setPaused(false));
   btnPause.addEventListener('click', () => { Sound.unlock(); setPaused(!state.paused); });
   btnSound.addEventListener('click', toggleMute);
@@ -810,7 +1161,7 @@
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && controllable()) setPaused(true);
+    if (document.hidden && controllable() && !vs.on) setPaused(true);
   });
 
   let resizeTimer = 0;
@@ -955,6 +1306,20 @@
   }
 
   function updateOpp(dt) {
+    if (vs.on) {
+      // the friend's player follows the positions their phone sends
+      if (!opp.swing && ball.live && ball.lastHit === 'player' && ball.z > -2) {
+        const d = Math.hypot(ball.x - opp.x, ball.z - opp.z);
+        opp.prep = ball.y > 2.1 && d < 3.5 ? 'sm' : ball.x <= opp.x ? 'fh' : 'bh';
+      } else if (!opp.swing) {
+        opp.prep = null;
+      }
+      const dv = towards(opp, 16);
+      steerFig(opp, dv[0], dv[1], dt, 110);
+      opp.x = clamp(opp.x, OB.x0, OB.x1);
+      opp.z = clamp(opp.z, OB.z0, OB.z1);
+      return;
+    }
     if (opp.plan) {
       opp.plan.t -= dt;
       opp.prep = opp.plan.t < 0.42 ? (opp.plan.y > 1.6 ? 'sm' : opp.plan.fh ? 'fh' : 'bh') : null;
@@ -992,7 +1357,7 @@
           if (pu.guardian && state.mode === 'play') guardianSave();
           else { miss('DOUBLE BOUNCE!'); continue; }
         }
-      } else if (canPlay && ball.lastHit === 'player') {
+      } else if (canPlay && ball.lastHit === 'player' && !vs.on) {
         if (oppContact(ball) || (ball.side > 0 && ball.bounces >= 2)) oppHit(false);
       }
       if (ball.y < -1 || Math.abs(ball.x) > 12 || Math.abs(ball.z) > 16) {
@@ -1055,7 +1420,8 @@
         state.mode = 'play';
         banner('GO!', { life: 0.7 });
         sfx.go();
-        feed();
+        if (!vs.on) feed();
+        else if (vsIServe()) vsServe();
         updateHudButtons();
       }
     } else if (state.mode === 'attract' && !ball.live) {
@@ -1067,13 +1433,18 @@
       }
     } else if (state.mode === 'missed') {
       state.missTimer -= dt;
-      if (state.missTimer <= 0) gameOver();
+      if (state.missTimer <= 0) {
+        if (!vs.on) gameOver();
+        else if (vs.me >= VS_TARGET || vs.them >= VS_TARGET) vsMatchOver();
+        else vsNextPoint();
+      }
     }
 
     const dtLocal = dt * state.slowmo;
     const worldDt = dtLocal * state.speed;
     updatePlayer(dtLocal);
-    updateOpp(worldDt);
+    updateOpp(vs.on ? dt : worldDt);
+    if (vs.on) vsTick(dt);
     updatePowerUps(dt, dtLocal, worldDt);
     for (const f of [player, opp, mate, opp2]) {
       if (f && f.swing) {
@@ -1089,7 +1460,7 @@
   }
 
   function updatePowerUps(dt, dtLocal, worldDt) {
-    if (state.mode !== 'play') return;
+    if (state.mode !== 'play' || vs.on) return;
     // pickups
     if (pu.pickup) {
       pu.pickup.t += dt;
@@ -1367,7 +1738,14 @@
   function drawHud() {
     const u = W >= 400 ? 2 : 1;
     const inGame = state.mode === 'play' || state.mode === 'countdown' || state.mode === 'missed';
-    if (inGame) {
+    if (inGame && vs.on) {
+      const big = W >= 400 ? 4 : 3;
+      const pop = state.scorePop > 0 ? 1 : 0;
+      drawText(vs.me + '-' + vs.them, W / 2, hudTop - pop * 2, {
+        scale: big + pop, color: '#ffffff', color2: pop ? '#e9ff3b' : '#cfeee0'
+      });
+      drawText('YOU - FRIEND', W / 2, hudTop + 7 * big + 5, { scale: 1, color: '#b6d8c9' });
+    } else if (inGame) {
       const big = W >= 400 ? 4 : 3;
       const pop = state.scorePop > 0 ? 1 : 0;
       drawText(String(state.score), W / 2, hudTop - pop * 2, {
@@ -1383,7 +1761,8 @@
       const t = (state.countdown % 0.6) / 0.6;
       const s = (u === 2 ? 7 : 5) + (t > 0.8 ? 1 : 0);
       drawText(String(n), W / 2, midY - (7 * s) / 2, { scale: s, color: '#ffffff', color2: '#e9ff3b' });
-      drawText('GET READY', W / 2, midY + (7 * s) / 2 + 8, { scale: u, color: '#ffffff' });
+      const sub = !vs.on ? 'GET READY' : vsIServe() ? 'YOUR SERVE' : 'FRIEND SERVES';
+      drawText(sub, W / 2, midY + (7 * s) / 2 + 8, { scale: u, color: '#ffffff' });
     }
 
     if (fx.banner) {
@@ -1530,7 +1909,7 @@
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
-    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    const dt = Math.min(vs.on ? 0.1 : 0.05, Math.max(0, (now - last) / 1000));
     last = now;
     if (!state.paused) update(dt);
     render();
@@ -1542,12 +1921,14 @@
   buildCrest();
   toAttract();
   requestAnimationFrame(frame);
+  const vsMatch = VS_HASH.exec(location.hash);
+  if (vsMatch) vsJoin(vsMatch[1]);
 
   if (/[?&]debug\b/.test(location.search)) {
     window.__padel = {
       state: state, ball: ball, player: player, opp: opp, startGame: startGame, scene: () => scene,
       predict: (fn) => predict(ball, fn || aiPlayerContact, 5),
-      pu: pu,
+      pu: pu, vs: vs,
       startEvent: (e) => { if (pu.event) endEvent(); startEvent(e); },
       endEvent: () => { if (pu.event) endEvent(); },
       spawnPickup: (t) => spawnPickup(t),

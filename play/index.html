@@ -60,6 +60,7 @@
           <li>RUN OVER POWER-UPS TO GRAB THEM</li>
         </ul>
         <button class="px-btn px-btn--big" id="btn-play" type="button">PLAY</button>
+        <p class="vs-entry"><button class="vs-link" id="btn-vs" type="button">PLAY A FRIEND</button></p>
         <p class="best">BEST SCORE <span data-best>0</span></p>
       </div>
     </section>
@@ -70,6 +71,34 @@
         <div class="actions">
           <button class="px-btn" id="btn-resume" type="button">RESUME</button>
           <a class="px-btn px-btn--ghost" href="../">HOME</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay" id="scr-vs" aria-labelledby="vs-heading" hidden>
+      <div class="panel">
+        <p class="kicker">1 V 1 &middot; FIRST TO 7</p>
+        <h2 class="title title--small" id="vs-heading">PLAY A FRIEND</h2>
+        <p class="vs-msg" id="vs-msg">GETTING YOUR LINK...</p>
+        <p class="vs-code" id="vs-code" hidden></p>
+        <p class="vs-status" id="vs-status"></p>
+        <p class="vs-tip" id="vs-tip">DRAG TO MOVE. YOUR SWING IS AUTOMATIC. MISS THE BALL AND YOUR FRIEND WINS THE POINT.</p>
+        <div class="actions">
+          <button class="px-btn" id="btn-vs-share" type="button" hidden>SEND LINK</button>
+          <button class="px-btn px-btn--ghost" id="btn-vs-back" type="button">BACK</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay" id="scr-vsover" aria-labelledby="vso-heading" hidden>
+      <div class="panel">
+        <p class="kicker" id="vso-kicker">MATCH OVER</p>
+        <h2 class="title title--small" id="vso-heading">YOU WIN!</h2>
+        <p class="final"><span class="final-label">YOU &ndash; FRIEND</span><span class="final-score" id="vso-score">0-0</span></p>
+        <p class="vs-status" id="vso-status"></p>
+        <div class="actions">
+          <button class="px-btn" id="btn-rematch" type="button">REMATCH</button>
+          <button class="px-btn px-btn--ghost" id="btn-vs-leave" type="button">LEAVE</button>
         </div>
       </div>
     </section>
@@ -95,6 +124,7 @@
   <script src="js/audio.js"></script>
   <script src="js/sprites.js"></script>
   <script src="js/court.js"></script>
+  <script src="js/net.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>
