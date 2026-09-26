@@ -331,6 +331,7 @@
   .apple:active { transform: scale(.985); }
   .apple:disabled { opacity: .28; cursor: not-allowed; }
   .note { font-size: 14px; color: var(--ink-3); font-style: italic; text-align: center; }
+  .email-tip { font-size: 14px; line-height: 1.45; margin: 0 0 12px; padding: 10px 12px; border-left: 3px solid var(--red); background: rgba(223,35,38,.06); border-radius: 6px; }
 
   .faq { border-top: 1px solid var(--line); }
   .faq details { border-bottom: 1px solid var(--line); }
@@ -782,6 +783,7 @@
             <div class="inline"><input class="input" id="code-social" autocomplete="off" placeholder="Enter code"><button class="btn line sm" type="button" id="apply-code">Apply</button></div>
             <p class="msg" id="code-msg" role="status"></p>
           </div>
+          <p class="email-tip"><b>Pay with your Cambridge email address</b> (@cam.ac.uk). That's how we add you to the newsletter, which is where you book onto social padel.</p>
           <button class="apple" type="button" id="buy-social">Buy now</button>
           <p class="note">Secure checkout by Stripe. Card, Apple Pay and Google Pay. <a class="link" href="#privacy">How we use your data</a></p>
         </article>
@@ -802,6 +804,7 @@
             <div class="inline"><input class="input" id="code-full" autocomplete="off" placeholder="Full-member code"><button class="btn line sm" type="button" id="unlock-full">Unlock</button></div>
             <p class="msg" id="full-msg" role="status">You'll get this code if you're selected at trials.</p>
           </div>
+          <p class="email-tip"><b>Pay with your Cambridge email address</b> (@cam.ac.uk). That's how we add you to the newsletter, which is where you book onto social padel.</p>
           <button class="apple" type="button" id="buy-full" disabled>Buy now</button>
           <p class="note">Secure checkout by Stripe. Card, Apple Pay and Google Pay. <a class="link" href="#privacy">How we use your data</a></p>
         </article>

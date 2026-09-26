@@ -65,6 +65,7 @@ export default async function handler(req, res) {
         metadata: meta,
         ...(recurring ? { subscription_data: { metadata: meta } } : { customer_creation: 'always' }),
         ...(meta.kind === 'donation' && !recurring ? { submit_type: 'donate' } : {}),
+        ...(meta.kind === 'social' || meta.kind === 'full' ? { custom_text: { submit: { message: 'Please use your Cambridge email address (@cam.ac.uk). That is how we add you to the newsletter, where you book onto social padel.' } } } : {}),
         shipping_address_collection: meta.kind === 'merch' ? { allowed_countries: ['GB'] } : undefined,
         success_url: back + '?paid={CHECKOUT_SESSION_ID}#' + where,
         cancel_url: back + '#' + where
