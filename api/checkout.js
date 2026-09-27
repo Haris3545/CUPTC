@@ -1,6 +1,8 @@
 // POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size?, custom? }
 // custom: the name to print on the back, for items the committee has marked customisable.
 // Donations: { kind: 'donation', amount (pounds), monthly?, name?, message? }
+// Memberships also need details: { ecName, ecPhone, medical?, policies: true, photos: bool, privacy: true },
+// the answers to the questions asked before paying. They're saved with the payment in Stripe.
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
 import { PASSWORDS, matches, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
@@ -8,6 +10,30 @@ import { DEFAULT_MERCH } from './_lib/merch.js';
 
 // Letters (any language), numbers, spaces and . ' - &, up to 16 characters.
 const NAME_OK = /^[\p{L}\p{N} .'&-]{1,16}$/u;
+const PHONE_OK = /^\+?[0-9 ()-]{7,20}$/;
+const PRIVACY_VERSION = 'August 2026';
+const text = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+
+// The questions every new member answers before paying. Returns the Stripe metadata, or an error code.
+function memberDetails(d) {
+  d = d && typeof d === 'object' ? d : {};
+  const ecName = text(d.ecName, 80), ecPhone = text(d.ecPhone, 20), medical = text(d.medical, 450);
+  if (!ecName) return { error: 'details_ec_name' };
+  if (!PHONE_OK.test(ecPhone) || ecPhone.replace(/\D/g, '').length < 7) return { error: 'details_ec_phone' };
+  if (d.policies !== true) return { error: 'details_policies' };
+  if (d.privacy !== true) return { error: 'details_privacy' };
+  return {
+    meta: {
+      emergency_contact_name: ecName,
+      emergency_contact_phone: ecPhone,
+      medical_conditions: medical || 'None given',
+      club_policies: 'Agreed',
+      photography_consent: d.photos === true ? 'Yes' : 'No',
+      privacy_notice: 'Agreed (' + PRIVACY_VERSION + ' version)',
+      agreed_at: new Date().toISOString()
+    }
+  };
+}
 
 export default async function handler(req, res) {
   fromRequest(req);
@@ -16,6 +42,11 @@ export default async function handler(req, res) {
     const b = body(req);
     let title, name, amount, meta = { kind: b.kind };
     const lines = [];
+    if (b.kind === 'social' || b.kind === 'full') {
+      const det = memberDetails(b.details);
+      if (det.error) return send(res, 400, { error: det.error });
+      Object.assign(meta, det.meta);
+    }
     if (b.kind === 'social') {
       amount = membershipPrice('social', b.code);
       title = 'CUPTC Social membership';
@@ -63,7 +94,7 @@ export default async function handler(req, res) {
         mode: recurring ? 'subscription' : 'payment',
         line_items: lines.map(([n, a]) => ({ quantity: 1, price_data: { currency: 'gbp', unit_amount: Math.round(a * 100), product_data: { name: n }, ...(recurring ? { recurring: { interval: 'month' } } : {}) } })),
         metadata: meta,
-        ...(recurring ? { subscription_data: { metadata: meta } } : { customer_creation: 'always' }),
+        ...(recurring ? { subscription_data: { metadata: meta } } : { customer_creation: 'always', payment_intent_data: { metadata: meta } }),
         ...(meta.kind === 'donation' && !recurring ? { submit_type: 'donate' } : {}),
         ...(meta.kind === 'social' || meta.kind === 'full' ? { custom_text: { submit: { message: 'Please use your Cambridge email address (@cam.ac.uk). That is how we add you to the newsletter, where you book onto social padel.' } } } : {}),
         shipping_address_collection: meta.kind === 'merch' ? { allowed_countries: ['GB'] } : undefined,
