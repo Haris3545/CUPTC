@@ -105,7 +105,7 @@
   const freshPU = () => ({
     big: 0, guardian: false,
     pickup: null, event: null, eventT: 0, zone: null, streak: 0,
-    nextPickup: 6, nextEvent: 10, lastEvent: null
+    nextPickup: 6, nextEvent: 10, lastEvent: null, doublesLast: false
   });
   const pu = freshPU();
   const phys = { bV: 1, bH: 1 };
@@ -454,9 +454,9 @@
     if (!types.length) return;
     let x = rand(-3.8, 3.8);
     if (Math.abs(x - player.x) < 1.5) x = clamp(player.x + (player.x > 0 ? -2.5 : 2.5), -3.8, 3.8);
-    // the Glass Guardian is a spare life, so it's rarer: not before 12 hits, then about 1 pickup in 3
+    // the Glass Guardian is a spare life, so it's rare: not before 15 hits, then about 1 pickup in 5
     let type = force || pick(types);
-    if (!force && type === 'guardian' && (state.hits < 12 || Math.random() < 0.35)) type = types.includes('big') ? 'big' : null;
+    if (!force && type === 'guardian' && (state.hits < 15 || Math.random() < 0.6)) type = types.includes('big') ? 'big' : null;
     if (!type) return;
     pu.pickup = { type: type, x: x, z: rand(-8.2, -3.4), t: 0, life: 9 };
     sfx.spawn();
@@ -477,7 +477,10 @@
 
   function startEvent(force) {
     const pool = Object.keys(EVENTS).filter((e) => e !== pu.lastEvent);
-    const e = force || pick(pool), info = EVENTS[e];
+    let e = force || pick(pool);
+    // Doubles is the rarest event: half the time it's swapped for another one
+    if (!force && e === 'doubles' && Math.random() < 0.5) e = pick(pool.filter((k) => k !== 'doubles'));
+    const info = EVENTS[e];
     pu.event = e;
     pu.lastEvent = e;
     pu.eventT = info.dur || 30;
@@ -500,6 +503,7 @@
   function endEvent() {
     const e = pu.event;
     pu.event = null;
+    pu.doublesLast = false;
     phys.bV = 1;
     phys.bH = 1;
     pu.zone = null;
@@ -564,6 +568,13 @@
       tx = pu.zone.x + rand(-0.4, 0.4);
     }
 
+    // the last shot of Doubles comes straight to you, since your partner is about to leave
+    const lastOfDoubles = !feed && state.mode === 'play' && pu.event === 'doubles' && pu.doublesLast;
+    if (lastOfDoubles) {
+      if (kind !== 'lob') kind = 'drive';
+      tx = clamp(player.x + rand(-0.8, 0.8), -4.2, 4.2);
+    }
+
     let tz = -6.8, T = 1.55, bV = 0.72, bH = 0.86, label = null;
     if (kind === 'floater') { tz = pu.zone.z + rand(-0.3, 0.3); T = 1.75; }
     else if (kind === 'drive') { tz = rand(-7.8, -5.2); T = lerp(1.4, 1.22, d); }
@@ -595,6 +606,7 @@
     sparks(p.x, p.y, 6, ['#ffffff', '#ff7eb6'], 30, 70);
 
     updateMarker();
+    if (lastOfDoubles) endEvent();
     if (state.mode === 'attract' || DEBUG_AUTO) planPlayerAI();
   }
 
@@ -1638,7 +1650,11 @@
     // timed events
     if (pu.event && EVENTS[pu.event].dur) {
       pu.eventT -= dt;
-      if (pu.eventT <= 0) endEvent();
+      // Doubles doesn't end mid-rally: the opponents' next shot is aimed at you, then the partners leave.
+      if (pu.eventT <= 0) {
+        if (pu.event === 'doubles' && ball.live) pu.doublesLast = true;
+        else endEvent();
+      }
     }
     // doubles partners
     for (const f of [mate, opp2]) {
@@ -1964,7 +1980,7 @@
     if (pu.event) {
       const info = EVENTS[pu.event];
       let label = info.name.replace('!', '').split(' ')[0];
-      let n = info.dur ? Math.ceil(pu.eventT) : '';
+      let n = info.dur ? Math.max(0, Math.ceil(pu.eventT)) : '';
       if (pu.event === 'zone') { label = 'ZONE'; n = pu.zone ? pu.zone.left : ''; }
       items.push({ text: label, n: n, color: info.color });
     }
