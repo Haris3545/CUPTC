@@ -593,7 +593,7 @@
   .check input { width: 18px; height: 18px; accent-color: var(--green-dark); margin: 0; flex: none; }
   .join-form { display: grid; gap: 16px; }
   .join-intro { font-size: 15px; }
-  .join-form textarea.input { resize: vertical; min-height: 72px; font: inherit; }
+  .join-form textarea.input { display: block; height: 50px; padding: 12px 2px 10px; line-height: 1.4; resize: none; overflow: hidden; }
   .join-check { align-items: flex-start; font-size: 15px !important; line-height: 1.45; }
   .join-check input { margin-top: 2px; }
   .join-check i { color: var(--ink-3); }
@@ -1402,7 +1402,7 @@
     '<p class="muted join-intro">A few questions before you pay. Only the committee sees your answers.</p>' +
     '<div class="field"><label for="j-ec-name">Emergency contact name</label><input class="input" id="j-ec-name" maxlength="80" autocomplete="off" required></div>' +
     '<div class="field"><label for="j-ec-phone">Emergency contact phone number</label><input class="input" id="j-ec-phone" type="tel" maxlength="20" autocomplete="off" placeholder="e.g. 07700 900123" required></div>' +
-    '<div class="field"><label for="j-medical">Do you have any relevant medical conditions, such as allergies or asthma, or anything else that might affect your ability to play?</label><textarea class="input" id="j-medical" maxlength="450" rows="3" placeholder="Leave blank if none"></textarea></div>' +
+    '<div class="field"><label for="j-medical">Do you have any relevant medical conditions, such as allergies or asthma, or anything else that might affect your ability to play?</label><textarea class="input" id="j-medical" maxlength="450" rows="1" placeholder="Leave blank if none"></textarea></div>' +
     '<label class="check join-check"><input type="checkbox" id="j-policies"> <span>I agree to abide by the Club Policies.</span></label>' +
     '<label class="check join-check"><input type="checkbox" id="j-photos"> <span>I consent to being photographed or filmed at club events, and to the club using these photos and videos. <i>Optional</i></span></label>' +
     '<label class="check join-check"><input type="checkbox" id="j-privacy"> <span>I have read and agree to the club’s <a class="link" href="/#privacy" target="_blank" rel="noopener">Privacy Notice</a>.</span></label>' +
@@ -1416,7 +1416,12 @@
     const d = state.joinDetails || {};
     $('#j-ec-name', f).value = d.ecName || '';
     $('#j-ec-phone', f).value = d.ecPhone || '';
-    $('#j-medical', f).value = d.medical || '';
+    const med = $('#j-medical', f);
+    med.value = d.medical || '';
+    // grows a line at a time as they type, with the underline always just below the text
+    const fit = () => { med.style.height = '50px'; med.style.height = Math.max(50, med.scrollHeight + 2) + 'px'; };
+    med.addEventListener('input', fit);
+    requestAnimationFrame(fit);
     $('#j-policies', f).checked = !!d.policies;
     $('#j-photos', f).checked = !!d.photos;
     $('#j-privacy', f).checked = !!d.privacy;
