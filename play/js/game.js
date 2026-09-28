@@ -747,7 +747,7 @@
   const LB_KEY = 'cuptc-padel-lb';
   const lbEl = {
     box: $('lb-box'), form: $('lb-form'), name: $('lb-name'), msg: $('lb-msg'), skip: $('lb-skip'),
-    list: $('lb-list'), listMsg: $('lb-list-msg')
+    list: $('lb-list'), listMsg: $('lb-list-msg'), retry: $('btn-lb-retry')
   };
   const LB_ERRORS = {
     name_taken: 'THAT NAME IS TAKEN. TRY ANOTHER.',
@@ -769,14 +769,19 @@
     }
     return lb.key;
   }
+  // Never wait more than 10 seconds for the server.
   async function lbFetch(opts) {
+    const ctl = window.AbortController ? new AbortController() : null;
+    const timer = setTimeout(() => { if (ctl) ctl.abort(); }, 10000);
     try {
-      const r = await fetch('/api/leaderboard', opts);
+      const r = await fetch('/api/leaderboard', Object.assign({ cache: 'no-store' }, opts, ctl ? { signal: ctl.signal } : {}));
       let data = {};
       try { data = await r.json(); } catch (e) { data = {}; }
       return { ok: r.ok, data: data };
     } catch (e) {
       return { ok: false, data: { error: 'offline' } };
+    } finally {
+      clearTimeout(timer);
     }
   }
   function lbSay(text, kind) {
@@ -848,14 +853,17 @@
     sfx.click();
     lbReturn = from;
     lbEl.list.innerHTML = '';
+    lbEl.retry.hidden = true;
     lbEl.listMsg.textContent = 'LOADING...';
     lbEl.listMsg.className = 'lb-msg';
     showScreen('lb');
     const res = await lbFetch({ method: 'GET' });
     if (scr.lb.hidden) return;
     if (!res.ok) {
-      lbEl.listMsg.textContent = "COULDN'T LOAD THE LEADERBOARD.";
+      lbEl.listMsg.textContent = res.data.error === 'offline'
+        ? "COULDN'T REACH THE LEADERBOARD. CHECK YOUR CONNECTION." : "THE LEADERBOARD ISN'T RESPONDING RIGHT NOW.";
       lbEl.listMsg.className = 'lb-msg is-bad';
+      lbEl.retry.hidden = false;
       return;
     }
     const entries = res.data.entries || [];
@@ -1303,6 +1311,7 @@
   $('btn-lb-title').addEventListener('click', (e) => { e.stopPropagation(); lbOpen('title'); });
   $('btn-lb-over').addEventListener('click', () => lbOpen('over'));
   $('btn-lb-back').addEventListener('click', () => { sfx.click(); showScreen(lbReturn); });
+  lbEl.retry.addEventListener('click', () => lbOpen(lbReturn));
   vsEl.share.addEventListener('click', vsShare);
   vsEl.back.addEventListener('click', vsLeave);
   vsEl.rematch.addEventListener('click', vsRematch);
