@@ -26,10 +26,18 @@ const ranked = (list) => list.slice().sort((a, b) => b.score - a.score || String
 const pub = (list, all) => ranked(list).slice(0, all ? KEEP : SHOW).map((r) => ({ id: r.id, name: r.name, score: r.score }));
 
 // A short-lived copy, so a burst of players finishing games doesn't hit storage every time.
+// If storage is slow or down, the last copy is used rather than leaving players waiting.
 let cache = null;
+const within = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('storage_timeout')), ms))]);
 async function load() {
   if (cache && Date.now() - cache.at < 15000) return cache.list.map((r) => ({ ...r }));
-  const list = await readJSON('leaderboard', SEED);
+  let list;
+  try {
+    list = await within(readJSON('leaderboard', SEED), 6000);
+  } catch (e) {
+    if (cache) return cache.list.map((r) => ({ ...r }));
+    throw e;
+  }
   for (const s of SEED) {
     const row = list.find((r) => r.id === s.id);
     if (row && row.score < s.score) row.score = s.score;
@@ -108,7 +116,7 @@ export default async function handler(req, res) {
     list = await save(list);
     return send(res, 200, { entries: pub(list, true) });
   } catch (e) {
-    console.error(e);
-    return send(res, 500, { error: 'server' });
+    console.error('leaderboard', e);
+    return send(res, 503, { error: 'unavailable' });
   }
 }
