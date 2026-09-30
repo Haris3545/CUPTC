@@ -282,7 +282,9 @@
   .sale-note { color: var(--red); font-style: italic; font-size: 16px; }
   .trials { background: var(--green-soft); border-bottom: 1px solid var(--line); padding: 26px 0; }
   .trials-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 22px; text-align: center; }
-  .trials-in p { margin: 0; font-size: clamp(19px, 2vw, 23px); }
+  .trials-in { flex-direction: column; gap: 16px; }
+  .trials-in p { margin: 0; white-space: nowrap; font-size: min(24px, 4.05vw); }   /* always one line, shrinking on narrow phones */
+  .trials-in .btn { font-size: 21px; padding: 18px 44px; min-width: min(100%, 340px); justify-content: center; }
   .trials[hidden] { display: none; }
 
   .dates { border-top: 1px solid var(--line); }
