@@ -483,11 +483,23 @@ body {
 }
 
 /* soft fades so rows slide in and out of view while the list runs */
-.lb-board { position: relative; margin-top: 16px; }
-.lb-board .lb-list { margin-top: 0; position: relative; padding-block: 14px; }
-.lb-board::before, .lb-board::after { content: ""; position: absolute; left: 2px; right: 2px; height: 22px; z-index: 2; pointer-events: none; }
-.lb-board::before { top: 2px; background: linear-gradient(#10251d, rgba(16, 37, 29, 0)); }
-.lb-board::after { bottom: 2px; background: linear-gradient(rgba(16, 37, 29, 0), #10251d); }
+/* The frame is a real border on the box around the list, so scrolling rows can never draw over it,
+   and the list itself fades out at its top and bottom edges into whatever is behind it. */
+.lb-board {
+  margin-top: 16px;
+  border: 2px solid rgba(255, 255, 255, .12);
+  background: rgba(8, 22, 17, .35);
+  overflow: hidden;
+}
+.lb-board .lb-list {
+  margin-top: 0;
+  position: relative;
+  padding-block: 14px;
+  background: none;
+  box-shadow: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 18px, #000 calc(100% - 18px), transparent);
+  mask-image: linear-gradient(transparent, #000 18px, #000 calc(100% - 18px), transparent);
+}
 .lb-board:has(.lb-list:empty) { display: none; }
 .lb-list .lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-list .lb-score { text-align: right; }
