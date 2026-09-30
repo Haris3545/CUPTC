@@ -1,11 +1,12 @@
 // Padel Pong leaderboard. No accounts: a player picks a name the first time they add a score.
 // GET: every entry, best first { entries: [{ id, name, score }] }.
-// POST { op: 'submit', key, name, score }: a player's score. `key` is a random code kept on their device,
+// POST { op: 'start' }: a signed ticket for a game that is starting { ticket }.
+// POST { op: 'submit', key, name, score, ticket }: a player's score. `key` is a random code kept on their device,
 //   so the same device updates its own entry (only ever upwards) instead of adding another.
 //   Names are unique; once an entry has a name it keeps it (only the committee can change it).
 // POST { op: 'rename', id, name } or { op: 'remove', id }: committee only, to tidy up names.
 import crypto from 'node:crypto';
-import { isCommittee, readJSON, writeJSON, storageReady, send, body, fromRequest } from './_lib/core.js';
+import { isCommittee, readJSON, writeJSON, storageReady, send, body, fromRequest, env, PASSWORDS } from './_lib/core.js';
 
 // Scores already on the board before it went live. Anyone who adds a score under one of these names
 // takes over that entry (the higher score stays). Raising a score here also raises it on the live board.
@@ -17,6 +18,30 @@ const NAME_OK = /^[A-Za-z0-9][A-Za-z0-9 .'_-]{0,11}$/;
 const KEY_OK = /^[A-Za-z0-9]{16,64}$/;
 const MAX_SCORE = 5000;
 const KEEP = 300; // entries stored
+
+// Anti-cheat. Every game gets a ticket from the server when it starts, signed so it can't be forged,
+// and a score is only accepted with a ticket old enough for that score to have been played for real:
+// even the best players stay well under POINTS_PER_SECOND over a whole game. This stops scores being
+// made up in the browser or sent without playing; the committee's Remove button handles the rest.
+const POINTS_PER_SECOND = 2.5;
+const POINTS_GRACE = 40;
+const TICKET_LIFE = 3 * 3600e3;
+const ticketKey = () => crypto.createHash('sha256').update('padel-pong-ticket:' + (env('AUTH_SECRET') || PASSWORDS().committee + ':' + PASSWORDS().member)).digest();
+const signTicket = (body) => crypto.createHmac('sha256', ticketKey()).update(body).digest('base64url');
+function newTicket() {
+  const body = Date.now().toString(36) + '.' + crypto.randomBytes(6).toString('base64url');
+  return body + '.' + signTicket(body);
+}
+// Returns the seconds since the game started, or null for a missing, forged or stale ticket.
+function ticketAge(t) {
+  const m = /^([a-z0-9]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(String(t || ''));
+  if (!m) return null;
+  const want = signTicket(m[1] + '.' + m[2]);
+  if (want.length !== m[3].length || !crypto.timingSafeEqual(Buffer.from(want), Buffer.from(m[3]))) return null;
+  const age = Date.now() - parseInt(m[1], 36);
+  return age >= 0 && age <= TICKET_LIFE ? age / 1000 : null;
+}
+const used = new Map(); // tickets already spent on a score (best effort, per server instance)
 
 const tidy = (v) => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
 const same = (a, b) => a.replace(/\s+/g, '').toLowerCase() === b.replace(/\s+/g, '').toLowerCase();
@@ -63,8 +88,9 @@ export default async function handler(req, res) {
       return res.end(JSON.stringify({ entries: pub(list) }));
     }
     if (req.method !== 'POST') return send(res, 405, { error: 'method' });
-    if (!storageReady()) return send(res, 503, { error: 'storage_not_configured' });
     const b = body(req);
+    if (b.op === 'start') return send(res, 200, { ticket: newTicket() });
+    if (!storageReady()) return send(res, 503, { error: 'storage_not_configured' });
     let list = await load();
 
     if (b.op === 'submit') {
@@ -72,6 +98,13 @@ export default async function handler(req, res) {
       const score = Number(b.score);
       if (!KEY_OK.test(key)) return send(res, 400, { error: 'bad_key' });
       if (!Number.isInteger(score) || score < 1 || score > MAX_SCORE) return send(res, 400, { error: 'bad_score' });
+      const secs = ticketAge(b.ticket);
+      if (secs == null) return send(res, 400, { error: 'unverified' });
+      if (score > POINTS_GRACE + POINTS_PER_SECOND * secs) return send(res, 400, { error: 'unverified' });
+      const spent = used.get(b.ticket);
+      if (spent != null && spent !== score) return send(res, 400, { error: 'unverified' });
+      used.set(b.ticket, score);
+      if (used.size > 5000) used.delete(used.keys().next().value);
       const owner = ownerOf(key);
       let row = list.find((r) => r.owner === owner);
       let changed = false;
