@@ -662,6 +662,11 @@
   function startGame() {
     Sound.unlock();
     sfx.click();
+    // re-fit the court to the screen now, in case Safari's toolbar or keyboard changed its size
+    // while a menu was showing
+    fixViewport();
+    resize();
+    lbStartTicket();
     showScreen(null);
     resetCourt();
     Object.assign(state, {
@@ -676,6 +681,7 @@
   }
 
   function gameOver() {
+    lbLastTicket = lbTicket;
     state.mode = 'over';
     state.slowmo = 1;
     ball.visible = false;
@@ -752,8 +758,16 @@
   const LB_ERRORS = {
     name_taken: 'THAT NAME IS TAKEN. TRY ANOTHER.',
     bad_name: 'USE UP TO 12 LETTERS OR NUMBERS.',
-    storage_not_configured: "THE LEADERBOARD ISN'T SWITCHED ON YET."
+    storage_not_configured: "THE LEADERBOARD ISN'T SWITCHED ON YET.",
+    unverified: "COULDN'T VERIFY THAT GAME, SO IT WASN'T SAVED."
   };
+  // Each game asks the server for a signed ticket as it starts; a score is only accepted with the
+  // ticket of the game it came from (see api/leaderboard.js).
+  let lbTicket = null, lbLastTicket = null;
+  function lbStartTicket() {
+    lbTicket = lbFetch({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'start' }) })
+      .then((r) => (r.ok && r.data.ticket) || null);
+  }
   let lb = {};
   try { lb = JSON.parse(localStorage.getItem(LB_KEY) || '{}') || {}; } catch (e) { lb = {}; }
   let lbSkipped = false, lbReturn = 'title';
@@ -790,9 +804,10 @@
   }
 
   async function lbSubmit(name, score) {
+    const ticket = lbLastTicket ? await lbLastTicket : null;
     const res = await lbFetch({
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ op: 'submit', key: lbDeviceKey(), name: name, score: score })
+      body: JSON.stringify({ op: 'submit', key: lbDeviceKey(), name: name, score: score, ticket: ticket })
     });
     if (!res.ok || !res.data.you) return { error: res.data.error || 'failed' };
     const you = res.data.you;
@@ -1273,7 +1288,9 @@
   };
   const input = { src: 'none', drag: null };
   const controllable = () => state.mode === 'play' || state.mode === 'countdown';
-  const DEBUG_AUTO = /[?&]autoplay\b/.test(location.search);
+  // Test tools (a self-playing bot and a debug hook) only work on a local copy, never on cuptc.com.
+  const LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  const DEBUG_AUTO = LOCAL_DEV && /[?&]autoplay\b/.test(location.search);
 
   function toGame(e) {
     const r = canvas.getBoundingClientRect();
@@ -1414,6 +1431,16 @@
     resizeTimer = setTimeout(resize, 120);
   }
   window.addEventListener('resize', queueResize);
+  // Phones can leave the page scrolled after the keyboard or toolbar moves it; put it back.
+  function fixViewport() {
+    const a = document.activeElement;
+    if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+    const se = document.scrollingElement;
+    if (se && se.scrollTop) se.scrollTop = 0;
+  }
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', queueResize);
+  document.addEventListener('focusout', () => setTimeout(() => { fixViewport(); queueResize(); }, 250));
   window.addEventListener('orientationchange', queueResize);
 
   // ------------------------------------------------------------------ effects
@@ -2191,7 +2218,7 @@
   const vsMatch = VS_HASH.exec(location.hash);
   if (vsMatch) vsJoin(vsMatch[1]);
 
-  if (/[?&]debug\b/.test(location.search)) {
+  if (LOCAL_DEV && /[?&]debug\b/.test(location.search)) {
     window.__padel = {
       state: state, ball: ball, player: player, opp: opp, startGame: startGame, scene: () => scene,
       predict: (fn) => predict(ball, fn || aiPlayerContact, 5),

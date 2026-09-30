@@ -10,7 +10,14 @@
   var muted = false;
   try { muted = localStorage.getItem(STORE_KEY) === '1'; } catch (e) { /* storage unavailable */ }
 
+  // iPhones treat web-game sound like a notification and silence it when the ring/silent switch is
+  // on. Asking for 'playback' makes it behave like a video's sound instead (Safari 16.4+).
+  function playbackSession() {
+    try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+  }
+
   function unlock() {
+    playbackSession();
     if (!ctx) {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
@@ -22,7 +29,8 @@
       var d = noiseBuf.getChannelData(0);
       for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     }
-    if (ctx.state === 'suspended') ctx.resume();
+    // 'interrupted' happens on iPhones after a call or switching apps
+    if (ctx.state === 'suspended' || ctx.state === 'interrupted') ctx.resume();
   }
 
   function ready() { return ctx && ctx.state === 'running' && !muted; }

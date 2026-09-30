@@ -100,6 +100,7 @@ body {
 
 .hud-btn {
   pointer-events: auto;
+  touch-action: manipulation;
   display: grid;
   place-items: center;
   width: 40px;
@@ -130,8 +131,11 @@ body {
   position: absolute;
   inset: 0;
   z-index: 2;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;             /* on a short screen the panel scrolls instead of hiding its buttons */
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   padding:
     max(64px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
     max(18px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
@@ -144,6 +148,7 @@ body {
 #scr-title { cursor: pointer; background: linear-gradient(180deg, rgba(19, 42, 34, .05), rgba(19, 42, 34, .5)); }
 
 .panel {
+  margin: auto;
   width: min(100%, 400px);
   padding: 22px 18px 20px;
   text-align: center;
@@ -273,6 +278,7 @@ body {
 
 .px-btn {
   position: relative;
+  touch-action: manipulation;
   display: inline-block;
   padding: 14px 18px 13px;
   border: 0;
@@ -430,7 +436,8 @@ body {
   list-style: none;
   margin: 16px 0 0;
   padding: 6px 10px;
-  max-height: min(52vh, 440px);
+  max-height: min(40vh, 360px);
+  max-height: min(40dvh, 360px);
   overflow-y: auto;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
@@ -477,7 +484,7 @@ body {
 
 /* soft fades so rows slide in and out of view while the list runs */
 .lb-board { position: relative; margin-top: 16px; }
-.lb-board .lb-list { margin-top: 0; position: relative; }
+.lb-board .lb-list { margin-top: 0; position: relative; padding-block: 14px; }
 .lb-board::before, .lb-board::after { content: ""; position: absolute; left: 2px; right: 2px; height: 22px; z-index: 2; pointer-events: none; }
 .lb-board::before { top: 2px; background: linear-gradient(#10251d, rgba(16, 37, 29, 0)); }
 .lb-board::after { bottom: 2px; background: linear-gradient(rgba(16, 37, 29, 0), #10251d); }
