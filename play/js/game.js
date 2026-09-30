@@ -852,6 +852,7 @@
     Sound.unlock();
     sfx.click();
     lbReturn = from;
+    lbStop();
     lbEl.list.innerHTML = '';
     lbEl.retry.hidden = true;
     lbEl.listMsg.textContent = 'LOADING...';
@@ -880,8 +881,43 @@
       lbEl.list.appendChild(li);
       return li;
     };
-    entries.slice(0, 5).forEach((e, i) => row('#' + (i + 1), e.name, e.score, e.id === lb.id));
+    let mine = null, rank = 0;
+    entries.forEach((e, i) => {
+      const li = row('#' + (i + 1), e.name, e.score, e.id === lb.id);
+      if (e.id === lb.id) { mine = li; rank = i + 1; }
+    });
+    if (mine) lbRun(mine, rank, entries.length);
   }
+
+  // The list races down from the top and slows to land on your row, which then flashes.
+  let lbRaf = 0, lbHold = 0;
+  function lbStop() { cancelAnimationFrame(lbRaf); clearTimeout(lbHold); }
+  function lbRun(mine, rank, total) {
+    lbStop();
+    const list = lbEl.list;
+    list.scrollTop = 0;
+    const target = Math.max(0, Math.min(mine.offsetTop - list.clientHeight / 2 + mine.offsetHeight / 2, list.scrollHeight - list.clientHeight));
+    const land = () => {
+      mine.classList.add('landed');
+      lbEl.listMsg.textContent = 'YOU\u2019RE #' + rank + ' OF ' + total + '.';
+      lbEl.listMsg.className = 'lb-msg is-good';
+    };
+    if (REDUCED_MOTION || target < 4) { list.scrollTop = target; land(); return; }
+    lbHold = setTimeout(() => {
+      const dur = Math.min(2600, 900 + target * 2.4);
+      const t0 = performance.now();
+      const step = (now) => {
+        if (scr.lb.hidden) return;
+        const t = Math.min(1, (now - t0) / dur);
+        list.scrollTop = target * (1 - Math.pow(1 - t, 4));
+        if (t < 1) lbRaf = requestAnimationFrame(step);
+        else land();
+      };
+      lbRaf = requestAnimationFrame(step);
+    }, 450);
+  }
+  // a player scrolling the list themselves takes over from the animation
+  ['pointerdown', 'wheel', 'touchstart'].forEach((ev) => lbEl.list.addEventListener(ev, lbStop, { passive: true }));
 
   // ------------------------------------------------------------------ 1v1: linking up
   const VS_HASH = /^#vs-([A-HJ-NP-Z2-9]{4})$/i;

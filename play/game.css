@@ -457,7 +457,24 @@ body {
 .lb-list li:nth-child(1) { color: var(--yellow); }
 .lb-list li:nth-child(2) { color: #e8f1ff; }
 .lb-list li:nth-child(3) { color: #ffb86b; }
-.lb-list li.is-you { background: rgba(133, 180, 160, .22); }
+.lb-list li.is-you { color: var(--ink); background: var(--yellow); box-shadow: 0 0 0 2px var(--ink); position: relative; z-index: 1; }
+.lb-list li.is-you.landed { animation: lb-land .9s steps(6) both; }
+@keyframes lb-land {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.05); }
+  40% { transform: scale(1); background: #fff; }
+  60% { background: var(--yellow); }
+  80% { background: #fff; }
+  100% { background: var(--yellow); }
+}
+
+/* soft fades so rows slide in and out of view while the list runs */
+.lb-board { position: relative; margin-top: 16px; }
+.lb-board .lb-list { margin-top: 0; position: relative; }
+.lb-board::before, .lb-board::after { content: ""; position: absolute; left: 2px; right: 2px; height: 22px; z-index: 2; pointer-events: none; }
+.lb-board::before { top: 2px; background: linear-gradient(#10251d, rgba(16, 37, 29, 0)); }
+.lb-board::after { bottom: 2px; background: linear-gradient(rgba(16, 37, 29, 0), #10251d); }
+.lb-board:has(.lb-list:empty) { display: none; }
 .lb-list .lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-list .lb-score { text-align: right; }
 

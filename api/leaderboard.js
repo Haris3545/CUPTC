@@ -1,5 +1,5 @@
 // Padel Pong leaderboard. No accounts: a player picks a name the first time they add a score.
-// GET: the top 5 { entries: [{ id, name, score }] } (every entry for a signed-in committee member).
+// GET: every entry, best first { entries: [{ id, name, score }] }.
 // POST { op: 'submit', key, name, score }: a player's score. `key` is a random code kept on their device,
 //   so the same device updates its own entry (only ever upwards) instead of adding another.
 //   Names are unique; once an entry has a name it keeps it (only the committee can change it).
@@ -17,13 +17,12 @@ const NAME_OK = /^[A-Za-z0-9][A-Za-z0-9 .'_-]{0,11}$/;
 const KEY_OK = /^[A-Za-z0-9]{16,64}$/;
 const MAX_SCORE = 5000;
 const KEEP = 300; // entries stored
-const SHOW = 5;   // entries shown in the game
 
 const tidy = (v) => String(v == null ? '' : v).trim().replace(/\s+/g, ' ');
 const same = (a, b) => a.replace(/\s+/g, '').toLowerCase() === b.replace(/\s+/g, '').toLowerCase();
 const ownerOf = (key) => crypto.createHash('sha256').update('padel-pong:' + key).digest('hex');
 const ranked = (list) => list.slice().sort((a, b) => b.score - a.score || String(a.at).localeCompare(String(b.at)));
-const pub = (list, all) => ranked(list).slice(0, all ? KEEP : SHOW).map((r) => ({ id: r.id, name: r.name, score: r.score }));
+const pub = (list) => ranked(list).slice(0, KEEP).map((r) => ({ id: r.id, name: r.name, score: r.score }));
 
 // A short-lived copy, so a burst of players finishing games doesn't hit storage every time.
 // If storage is slow or down, the last copy is used rather than leaving players waiting.
