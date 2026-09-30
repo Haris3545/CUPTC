@@ -280,6 +280,10 @@
   .price s { font-size: .55em; color: var(--ink-3); margin-left: 8px; }
   .tiers p { font-size: 17px; color: var(--ink-2); }
   .sale-note { color: var(--red); font-style: italic; font-size: 16px; }
+  .trials { background: var(--green-soft); border-bottom: 1px solid var(--line); padding: 26px 0; }
+  .trials-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 22px; text-align: center; }
+  .trials-in p { margin: 0; font-size: clamp(19px, 2vw, 23px); }
+  .trials[hidden] { display: none; }
 
   .dates { border-top: 1px solid var(--line); }
   .dates div { display: grid; grid-template-columns: 8em 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 18px; }
@@ -698,6 +702,13 @@
         <div class="actions rv" style="--d:.24s"><a class="btn onphoto" href="#membership">Become a member</a></div>
       </div>
       <div class="hero-dots" id="dots" aria-hidden="true"></div>
+    </section>
+
+    <section class="trials" id="trials" aria-label="Trials sign-up" data-until="2026-10-06T17:00:00+01:00">
+      <div class="wrap trials-in">
+        <p class="rv">Sign up for trials on the 6th October at 3-5 here:</p>
+        <a class="btn red rv" style="--d:.08s" href="https://forms.gle/ktzSdsWsaSL94oVe6" target="_blank" rel="noopener">Trials sign-up form</a>
+      </div>
     </section>
 
     <section class="sec">
@@ -1313,6 +1324,10 @@
   document.addEventListener('transitionend', (e) => {
     if (e.propertyName === 'clip-path' && e.target.classList.contains('ri') && e.target.classList.contains('in')) e.target.classList.add('shown');
   });
+
+  // The trials sign-up strip takes itself down once trials have finished.
+  const trials = $('#trials');
+  if (trials && Date.now() > new Date(trials.dataset.until).getTime()) trials.hidden = true;
 
   // ---------------------------------------------------------------- hero slideshow
   const hero = (() => {
