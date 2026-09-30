@@ -16,15 +16,40 @@ const SEED = [
 ];
 const NAME_OK = /^[A-Za-z0-9][A-Za-z0-9 .'_-]{0,11}$/;
 const KEY_OK = /^[A-Za-z0-9]{16,64}$/;
-const MAX_SCORE = 5000;
+const MAX_SCORE = 100000;
 const KEEP = 300; // entries stored
 
 // Anti-cheat. Every game gets a ticket from the server when it starts, signed so it can't be forged,
-// and a score is only accepted with a ticket old enough for that score to have been played for real:
-// even the best players stay well under POINTS_PER_SECOND over a whole game. This stops scores being
-// made up in the browser or sent without playing; the committee's Remove button handles the rest.
-const POINTS_PER_SECOND = 2.5;
-const POINTS_GRACE = 40;
+// and a score is only accepted if the game's own rules could produce it in the time since that ticket.
+// This stops scores being made up in the browser or sent without playing; the committee's Remove
+// button handles the rest.
+//
+// maxScore(secs) is the best score a perfect player could reach in that time with every lucky break:
+// every ball returned as fast as the rules allow (the fastest player shot is a 0.7s smash and the
+// fastest reply reaches the player 0.39s later, both sped up as the rally ramps to 2.32x), a 0.045s
+// freeze on each hit, the combo from the first hit (x2 from 5, x3 from 10), and every event either
+// Crowd Wave (points x2 for 10s) or Smash Zone (+5 on each of 3 hits), alternating, as soon as the
+// game allows (from 10 hits, then every 11). It starts after the 1.8s countdown. Keep it in step
+// with the scoring in play/js/game.js.
+function maxScore(secs) {
+  let t = 1.8, hits = 0, score = 0, next = 10, event = null, waveLeft = 0, zoneLeft = 0, last = 'zone';
+  for (;;) {
+    const dt = 1.09 / (1.12 + 1.2 * (1 - Math.exp(-hits / 40))) + 0.045;
+    if (t + dt > secs) return score;
+    t += dt;
+    if (event === 'wave' && (waveLeft -= dt) <= 0) event = null;
+    hits++;
+    let pts = (event === 'wave' ? 2 : 1) * (hits >= 10 ? 3 : hits >= 5 ? 2 : 1);
+    if (event === 'zone') { pts += 5; if (--zoneLeft <= 0) event = null; }
+    score += pts;
+    if (hits >= next && !event) {
+      event = last = last === 'wave' ? 'zone' : 'wave';
+      if (event === 'wave') waveLeft = 10; else zoneLeft = 3;
+      next = hits + 11;
+    }
+  }
+}
+const SCORE_MARGIN = 1.05; // a little slack for timing differences between the phone and the server
 const TICKET_LIFE = 3 * 3600e3;
 const ticketKey = () => crypto.createHash('sha256').update('padel-pong-ticket:' + (env('AUTH_SECRET') || PASSWORDS().committee + ':' + PASSWORDS().member)).digest();
 const signTicket = (body) => crypto.createHmac('sha256', ticketKey()).update(body).digest('base64url');
@@ -100,7 +125,7 @@ export default async function handler(req, res) {
       if (!Number.isInteger(score) || score < 1 || score > MAX_SCORE) return send(res, 400, { error: 'bad_score' });
       const secs = ticketAge(b.ticket);
       if (secs == null) return send(res, 400, { error: 'unverified' });
-      if (score > POINTS_GRACE + POINTS_PER_SECOND * secs) return send(res, 400, { error: 'unverified' });
+      if (score > maxScore(secs) * SCORE_MARGIN + 5) return send(res, 400, { error: 'unverified' });
       const spent = used.get(b.ticket);
       if (spent != null && spent !== score) return send(res, 400, { error: 'unverified' });
       used.set(b.ticket, score);
