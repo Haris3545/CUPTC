@@ -491,12 +491,13 @@
     else if (e === 'zone') pu.zone = { x: rand(-3, 3), z: rand(-3.4, -2.2), r: 1.15, left: 3 };
     else if (e === 'doubles') {
       const side = player.x > 0 ? -1 : 1;
-      mate = makeFig('player', { x: side * 6, z: -4.6 });
+      mate = makeFig('player', { x: side * 6, z: MATE_HOME_Z });
       mate.side = side;
-      mate.tx = side * 2.6;
+      mate.tx = side * 2.4;
       opp2 = makeFig('opp', { x: -side * 6, z: 4.8 });
       opp2.side = -side;
       opp2.tx = -side * 2.6;
+      if (ball.live && ball.lastHit === 'opp') planMate();
     }
   }
 
@@ -606,8 +607,29 @@
     sparks(p.x, p.y, 6, ['#ffffff', '#ff7eb6'], 30, 70);
 
     updateMarker();
+    planMate();
     if (lastOfDoubles) endEvent();
     if (state.mode === 'attract' || DEBUG_AUTO) planPlayerAI();
+  }
+
+  // Doubles partner: when the opponents' shot is heading for the partner's half, work out where it can
+  // be taken and run there (forwards and back as well as sideways), calling for it; otherwise drift
+  // back to the middle of their half.
+  const MATE_HOME_Z = -5.4;
+  function planMate() {
+    if (!mate || mate.leaving) return;
+    mate.plan = null;
+    const p = predict(ball, aiPlayerContact, 5);
+    if (!p || p.x * mate.side < -0.2) return;
+    const lo = mate.side > 0 ? 0.3 : PB.x0, hi = mate.side > 0 ? PB.x1 : -0.3;
+    mate.plan = {
+      x: clamp(p.x - mate.side * 0.45, lo, hi),
+      z: clamp(p.z - 0.35, PB.z0, -1.2)
+    };
+    if (state.mode === 'play' && !mate.called) {
+      worldLabel('MINE!', mate, '#e9ff3b');
+      mate.called = true;
+    }
   }
 
   function feed() {
@@ -1796,16 +1818,22 @@
         }
         f.y = exitHeight(Math.abs(f.x));
       } else if (f === mate) {
-        const lo = f.side > 0 ? 0.4 : -4.6, hi = f.side > 0 ? 4.6 : -0.4;
-        f.tx = ball.lastHit === 'opp' && ball.live ? clamp(ball.x, lo, hi) : f.side * 2.6;
-        f.tz = -4.6;
+        if (f.plan && ball.live && ball.lastHit === 'opp') {
+          f.tx = f.plan.x;
+          f.tz = f.plan.z;
+        } else {
+          f.plan = null;
+          f.called = false;
+          f.tx = f.side * 2.4;
+          f.tz = MATE_HOME_Z;
+        }
       } else {
         const lo = f.side > 0 ? 0.4 : -4.6, hi = f.side > 0 ? 4.6 : -0.4;
         f.tx = ball.lastHit === 'player' && ball.live ? clamp(ball.x, lo, hi) : f.side * 2.6;
         f.tz = 4.8;
       }
       // sprint across the court, then a slower scramble up the stands so you can watch them go
-      const dv = towards(f, f.leaving ? (Math.abs(f.x) > 7.6 ? 4.2 : 9.5) : f === mate ? 7.5 : 8);
+      const dv = towards(f, f.leaving ? (Math.abs(f.x) > 7.6 ? 4.2 : 9.5) : f === mate ? 10 : 8);
       steerFig(f, dv[0], dv[1], f === mate ? dtLocal : worldDt, 60);
       if (f.leaving) f.prep = null;
       else if (f === mate && !f.swing && ball.live && ball.lastHit === 'opp' && ball.z < 2) f.prep = ball.x >= f.x ? 'fh' : 'bh';
@@ -2222,7 +2250,7 @@
     window.__padel = {
       state: state, ball: ball, player: player, opp: opp, startGame: startGame, scene: () => scene,
       predict: (fn) => predict(ball, fn || aiPlayerContact, 5),
-      pu: pu, vs: vs, get opp2() { return opp2; },
+      pu: pu, vs: vs, get opp2() { return opp2; }, get mate() { return mate; },
       startEvent: (e) => { if (pu.event) endEvent(); startEvent(e); },
       endEvent: () => { if (pu.event) endEvent(); },
       spawnPickup: (t) => spawnPickup(t),
