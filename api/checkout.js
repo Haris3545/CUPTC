@@ -48,9 +48,15 @@ export default async function handler(req, res) {
       Object.assign(meta, det.meta);
     }
     if (b.kind === 'social') {
+      // Social membership is sold out: only the committee's own discounted membership can still be bought.
+      if (!matches(b.code, PASSWORDS().discount)) return send(res, 409, { error: 'social_sold_out' });
       amount = membershipPrice('social', b.code);
       title = 'CUPTC Social membership';
       name = 'Social membership 2026–27';
+    } else if (b.kind === 'waitlist') {
+      amount = 5;
+      title = 'CUPTC social waiting list';
+      name = 'Social padel waiting list place';
     } else if (b.kind === 'full') {
       if (!matches(b.fullCode, PASSWORDS().full)) return send(res, 403, { error: 'full_code' });
       amount = membershipPrice('full');
@@ -96,7 +102,7 @@ export default async function handler(req, res) {
         metadata: meta,
         ...(recurring ? { subscription_data: { metadata: meta } } : { customer_creation: 'always', payment_intent_data: { metadata: meta } }),
         ...(meta.kind === 'donation' && !recurring ? { submit_type: 'donate' } : {}),
-        ...(meta.kind === 'social' || meta.kind === 'full' ? { custom_text: { submit: { message: 'Please use your Cambridge email address (@cam.ac.uk). That is how we add you to the newsletter, where you book onto social padel.' } } } : {}),
+        ...(meta.kind === 'social' || meta.kind === 'full' || meta.kind === 'waitlist' ? { custom_text: { submit: { message: 'Please use your Cambridge email address (@cam.ac.uk). That is how we add you to the newsletter, where you book onto social padel.' } } } : {}),
         shipping_address_collection: meta.kind === 'merch' ? { allowed_countries: ['GB'] } : undefined,
         success_url: back + '?paid={CHECKOUT_SESSION_ID}#' + where,
         cancel_url: back + '#' + where

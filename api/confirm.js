@@ -1,6 +1,6 @@
 // POST { session } after Stripe sends someone back, or { demo: meta } in demo mode.
 // For a paid membership it returns the members password and signs them in.
-import { env, PASSWORDS, makeToken, send, body } from './_lib/core.js';
+import { env, PASSWORDS, makeToken, send, body, readJSON, writeJSON, storageReady } from './_lib/core.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
@@ -18,6 +18,14 @@ export default async function handler(req, res) {
 
     if (meta.kind === 'donation') {
       return send(res, 200, { kind: 'donation', amount: Number(meta.amount) || 0, monthly: meta.monthly === 'yes' });
+    }
+    if (meta.kind === 'waitlist') {
+      // demo mode keeps its own count; real payments are counted straight from Stripe
+      if (!b.session && storageReady()) {
+        const doc = await readJSON('waitlist', {});
+        await writeJSON('waitlist', { ...doc, demoPaid: (doc.demoPaid || 0) + 1 });
+      }
+      return send(res, 200, { kind: 'waitlist' });
     }
     if (meta.kind === 'social' || meta.kind === 'full') {
       return send(res, 200, { kind: meta.kind, password: PASSWORDS().member, token: makeToken('member') });

@@ -367,6 +367,13 @@
   .apple:active { transform: scale(.985); }
   .apple:disabled { opacity: .28; cursor: not-allowed; }
   .note { font-size: 14px; color: var(--ink-3); font-style: italic; text-align: center; }
+  .wl { margin: 14px 0 4px; display: grid; gap: 8px; }
+  .wl-bar { height: 10px; border-radius: 99px; background: var(--green-soft); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+  .wl-bar i { display: block; height: 100%; width: 0; background: var(--green-dark); border-radius: inherit; transition: width 1.2s var(--out); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wl-bar[hidden] { display: none; }
+  .wl-text { margin: 0; font-size: 16px; color: var(--ink-2); text-align: center; font-variant-numeric: tabular-nums; }
+  .wl-text b { color: var(--ink); font-weight: 700; }
   .email-tip { font-size: 14px; line-height: 1.45; margin: 0 0 12px; padding: 10px 12px; border-left: 3px solid var(--red); background: rgba(223,35,38,.06); border-radius: 6px; }
 
   .faq { border-top: 1px solid var(--line); }
@@ -720,7 +727,7 @@
           <h2 class="h2 rv">Two ways to play.</h2>
           <p class="lede rv" style="--d:.08s">One membership for the whole year. Both include weekly padel, every social and the members' shop.</p>
           <div class="tiers rv" style="--d:.16s">
-            <div><h3 class="h3">Social</h3><div class="price" data-social-price>£40<s>£50</s></div><p>An hour of social padel every week and every club social. About £448 of court time.</p></div>
+            <div><h3 class="h3">Social</h3><div class="price" data-social-price>Sold out</div><p>An hour of social padel every week and every club social. Sold out for this year: join the waiting list for a new session.</p></div>
             <div><h3 class="h3">Full</h3><div class="price">£80</div><p>Adds coached training, fitness sessions and a place in the team. About £896 of court time. Selected at trials.</p></div>
           </div>
           <p class="sale-note rv" data-sale style="--d:.22s">Freshers price ends in <span data-clock></span></p>
@@ -830,9 +837,9 @@
     <section class="wrap">
       <div class="plans">
         <article class="plan rv">
-          <div class="plan-top"><h3 class="h3">Social</h3><span class="plan-tag red" data-sale>Freshers price</span></div>
-          <div class="plan-price" data-social-amount>£40 <small>/ year</small></div>
-          <p class="was" data-sale>Usually <s>£50</s>, from 12 October.</p>
+          <div class="plan-top"><h3 class="h3">Social</h3><span class="plan-tag red">Sold out</span></div>
+          <div class="plan-price" data-social-amount>£5 <small>waiting list</small></div>
+          <p class="was">Social membership has sold out. Join the waiting list for £5: when 20 people are on it, we'll open a new weekly social session and get in touch.</p>
           <ul class="ticks">
             <li>An hour of social padel every week</li>
             <li>Every club social</li>
@@ -840,12 +847,16 @@
             <li>About £448 of court time over the year</li>
           </ul>
           <div class="field">
-            <label for="code-social">Discount code (optional)</label>
+            <label for="code-social">Committee code (committee members only)</label>
             <div class="inline"><input class="input" id="code-social" autocomplete="off" placeholder="Enter code"><button class="btn line sm" type="button" id="apply-code">Apply</button></div>
             <p class="msg" id="code-msg" role="status"></p>
           </div>
           <p class="email-tip"><b>Pay with your Cambridge email address</b> (@cam.ac.uk). That's how we add you to the newsletter, which is where you book onto social padel.</p>
-          <button class="apple" type="button" id="buy-social">Buy now</button>
+          <button class="apple" type="button" id="buy-social">Join the waiting list · £5</button>
+          <div class="wl" id="wl" aria-live="polite">
+            <div class="wl-bar" aria-hidden="true"><i id="wl-fill"></i></div>
+            <p class="wl-text" id="wl-text">Checking the waiting list…</p>
+          </div>
           <p class="note">Secure checkout by Stripe. Card, Apple Pay and Google Pay. <a class="link" href="#privacy">How we use your data</a></p>
         </article>
 
@@ -942,6 +953,13 @@
             <p class="msg full" id="m-msg" role="status"></p>
           </form>
           <div id="admin-list"></div>
+          <div class="lb-admin">
+            <h3 class="h3">Social waiting list.</h3>
+            <p class="muted">The count appears on the Membership page once 13 people have joined. Places paid for on the website are counted automatically from Stripe. If people have genuinely joined some other way (for example in person), add them here so the count shown on the Membership page includes them.</p>
+            <p id="wl-admin-now" class="muted"></p>
+            <div class="inline"><label class="sr-only" for="wl-extra">Joined some other way</label><input class="input" id="wl-extra" type="number" min="0" max="500" step="1" placeholder="Joined some other way"><button class="btn line sm" type="button" id="wl-save">Save</button></div>
+            <p class="msg" id="wl-admin-msg" role="status"></p>
+          </div>
           <div class="lb-admin">
             <h3 class="h3">Padel Pong leaderboard.</h3>
             <p class="muted">Players choose their own names. Rename or remove any entry here, for example to take down an inappropriate name. Changes show in the game within a minute.</p>
@@ -1522,14 +1540,18 @@
     const unit = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
     const clock = unit(d, 'day') + ', ' + unit(h, 'hour') + ', ' + unit(m, 'minute') + ' and ' + unit(s, 'second');
     $$('[data-clock]').forEach((e) => (e.textContent = clock));
-    if (!saleOn()) $$('[data-sale]').forEach((e) => (e.hidden = true));
+    $$('[data-sale]').forEach((e) => (e.hidden = true));   // social membership has sold out, so no freshers offer
     renderSocialPrice();
   }
   function renderSocialPrice() {
+    // Social membership is sold out: the card sells waiting-list places, or the committee's £20 membership
+    // once a valid committee code has been applied.
     const amt = $('[data-social-amount]');
-    if (amt) amt.innerHTML = '£' + socialPrice() + ' <small>/ year</small>';
+    if (amt) amt.innerHTML = state.discount ? '£' + PRICES.committee + ' <small>/ year</small>' : '£5 <small>waiting list</small>';
+    const buy = $('#buy-social');
+    if (buy) buy.textContent = state.discount ? 'Buy committee membership · £' + PRICES.committee : 'Join the waiting list · £5';
     const tile = $('[data-social-price]');
-    if (tile) tile.innerHTML = saleOn() ? '£40<s>£50</s>' : '£50';
+    if (tile) tile.innerHTML = 'Sold out';
   }
   tick();
   setInterval(tick, 1000);
@@ -1566,6 +1588,7 @@
   }
   const ERR = {
     donation_amount: 'Enter an amount between £1 and £5,000.',
+    social_sold_out: 'Social membership has sold out. Join the waiting list instead.',
     details_ec_name: 'Please enter the name of your emergency contact.',
     details_ec_phone: 'Please enter a valid phone number for your emergency contact.',
     details_policies: 'Please agree to the Code of Conduct to join.',
@@ -1706,6 +1729,12 @@
       $('button', s.main).addEventListener('click', s.close);
       return;
     }
+    if (d.kind === 'waitlist') {
+      s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:22px;font-weight:400">You’re on the waiting list</b><span class="muted">When 20 people are on it, we’ll open a new weekly social session and email you.</span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
+      $('button', s.main).addEventListener('click', s.close);
+      loadWaitlist();
+      return;
+    }
     if (d.kind === 'merch') {
       s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:21px;font-weight:400">Order placed</b><span class="muted"></span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
       $('.muted', s.main).textContent = (d.custom ? 'Name on the back: ' + d.custom + '. ' : '') + (d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.');
@@ -1741,10 +1770,29 @@
     const res = await api('code', { body: { kind: 'discount', code: v } });
     state.discount = res.ok && res.data.ok ? v : '';
     msg.className = 'msg ' + (state.discount ? 'ok' : 'err');
-    msg.textContent = state.discount ? 'Committee price applied: £20.' : res.ok ? "That code isn't valid. Check it and try again." : errText(res, 'Couldn’t check that code. Try again.');
+    msg.textContent = state.discount ? 'Committee code accepted: committee membership £20.' : res.ok ? "That code isn't valid. Check it and try again." : errText(res, 'Couldn’t check that code. Try again.');
     renderSocialPrice();
   });
-  $('#buy-social').addEventListener('click', () => joinSheet({ kind: 'social', code: state.discount || undefined }));
+  $('#buy-social').addEventListener('click', (e) => {
+    if (state.discount) joinSheet({ kind: 'social', code: state.discount });
+    else startCheckout({ kind: 'waitlist' }, e.currentTarget);
+  });
+  // The waiting list counter: real places only (paid on the site, plus any the committee took in person).
+  async function loadWaitlist() {
+    const res = await api('waitlist');
+    const text = $('#wl-text');
+    if (!res.ok) { text.textContent = 'A new social session opens when 20 people are on the waiting list.'; return; }
+    const { count, target } = res.data;
+    // the count only shows once 13 people have joined; before that, just how the list works
+    const SHOW_FROM = 13;
+    $('.wl-bar').hidden = count < SHOW_FROM;
+    if (count < SHOW_FROM) { text.textContent = 'A new social session opens when ' + target + ' people are on the waiting list.'; return; }
+    $('#wl-fill').style.width = Math.min(100, (count / target) * 100) + '%';
+    text.innerHTML = count >= target
+      ? '<b>' + count + '</b> on the waiting list. That’s enough for a new session, and we’ll be in touch.'
+      : '<b>' + count + ' of ' + target + '</b> on the waiting list. A new social session opens at ' + target + '.';
+  }
+  loadWaitlist();
   $('#unlock-full').addEventListener('click', async () => {
     const v = $('#code-full').value.trim();
     const msg = $('#full-msg');
@@ -1824,6 +1872,15 @@
     renderShop();
     renderAdminList();
     loadBoardAdmin();
+    loadWaitlistAdmin();
+  }
+  async function loadWaitlistAdmin() {
+    if (!state.admin) return;
+    const res = await api('waitlist?fresh=' + Date.now());
+    if (!res.ok) { $('#wl-admin-now').textContent = 'The waiting list count can’t load right now.'; return; }
+    const d = res.data;
+    $('#wl-admin-now').textContent = d.count + ' on the list: ' + d.paid + ' paid on the website, ' + d.extra + ' joined some other way.';
+    $('#wl-extra').value = d.extra;
   }
 
   // ---------------------------------------------------------------- shop
@@ -2163,6 +2220,15 @@
     name_taken: 'Someone else already has that name.',
     not_found: 'That entry has already gone. Refreshing the list.'
   };
+  $('#wl-save').addEventListener('click', async () => {
+    const v = Number($('#wl-extra').value);
+    const msg = $('#wl-admin-msg');
+    if (!Number.isInteger(v) || v < 0) { msg.className = 'msg err'; msg.textContent = 'Enter a whole number, 0 or more.'; return; }
+    const res = await api('waitlist', { body: { extra: v } });
+    msg.className = 'msg' + (res.ok ? '' : ' err');
+    msg.textContent = res.ok ? 'Saved.' : errText(res, 'Couldn’t save that (error ' + res.status + ').');
+    if (res.ok) { loadWaitlistAdmin(); loadWaitlist(); }
+  });
   async function boardChange(body) {
     boardMsg('Saving…');
     const res = await api('leaderboard', { body });
