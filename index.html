@@ -2489,6 +2489,7 @@
     const startEl = $('#start');
     const touched = [startEl, curtain, photo, pimg, heroCopy, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
     let geo = null, p = 0, y0 = null, armed = false, samples = [], anim = 0, busy = false, wheel = 0, wheelTimer = 0;
+    let entering = false, skipY = null, skipNeed = 8, lastY = 0;
     const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !busy;
     const clamp01 = (v) => Math.max(0, Math.min(1, v));
     function measure() {
@@ -2579,7 +2580,7 @@
       hero.run(false);                                          // slideshow back to the committee photo while the text fades
       $$('#slides img').forEach((im) => { im.style.transition = 'opacity .9s ease'; });
       measure();
-      const t0 = performance.now(), DUR = 2100;
+      const t0 = performance.now(), DUR = 1400;
       const step = (now) => {
         const t = clamp01((now - t0) / DUR);
         draw(1 - t);
@@ -2600,17 +2601,47 @@
     function play() {
       if (busy) return;
       busy = true;
+      entering = true;
       measure();
-      const t0 = performance.now(), DUR = 2300;
+      const t0 = performance.now(), DUR = 1500;
       const step = (now) => {
         const t = clamp01((now - t0) / DUR);
         draw(t);
         if (t < 1) { anim = requestAnimationFrame(step); return; }
         busy = false;
+        entering = false;
         arrive();
       };
       anim = requestAnimationFrame(step);
     }
+    // Swiping again while it plays (or carrying on well past the swipe that started it) skips to the end,
+    // and the rest of that swipe scrolls the page, so you can go straight on down.
+    function finishNow() {
+      if (!entering) return;
+      cancelAnimationFrame(anim);
+      busy = false;
+      entering = false;
+      arrive();
+    }
+    document.addEventListener('touchstart', (e) => {
+      if (!entering || e.touches.length > 1) return;
+      skipY = lastY = e.touches[0].clientY;
+      skipNeed = 8;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (skipY == null) return;
+      const y = e.touches[0].clientY;
+      if (entering) {
+        if (Math.abs(y - skipY) < skipNeed) { lastY = y; return; }
+        finishNow();
+      }
+      e.preventDefault();
+      window.scrollBy(0, lastY - y);
+      lastY = y;
+    }, { passive: false });
+    const endSkip = () => { skipY = null; };
+    document.addEventListener('touchend', endSkip);
+    document.addEventListener('touchcancel', endSkip);
     document.addEventListener('touchstart', (e) => {
       if (!active() || e.touches.length > 1) return;
       y0 = e.touches[0].clientY; armed = false; samples = [[performance.now(), y0]];
@@ -2626,7 +2657,12 @@
       e.preventDefault();
       samples.push([performance.now(), y]);
       if (samples.length > 6) samples.shift();
-      if (d < -28) { y0 = null; play(); }
+      if (d < -28) {
+        y0 = null;
+        play();
+        skipY = lastY = y;                                    // keep following this finger:
+        skipNeed = 140;                                       // a long swipe carries on through
+      }
     }, { passive: false });
     const end = () => {
       if (y0 == null) return;
@@ -2638,6 +2674,7 @@
     document.addEventListener('touchend', end);
     document.addEventListener('touchcancel', end);
     addEventListener('wheel', (e) => {
+      if (entering) { finishNow(); return; }
       if (!active()) return;
       wheel += e.deltaY;
       clearTimeout(wheelTimer);
