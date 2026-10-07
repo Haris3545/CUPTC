@@ -2489,7 +2489,7 @@
     const startEl = $('#start');
     const touched = [startEl, curtain, photo, pimg, heroCopy, logo, em, wm, nav, tags, pages, hdr, hdrImg, sbar];
     let geo = null, p = 0, y0 = null, armed = false, samples = [], anim = 0, busy = false, wheel = 0, wheelTimer = 0;
-    let entering = false, skipY = null, skipNeed = 8, lastY = 0;
+    let entering = false, rush = null, swipe2 = null;
     const active = () => root.classList.contains('at-start') && phoneMq.matches && !reduce && !busy;
     const clamp01 = (v) => Math.max(0, Math.min(1, v));
     function measure() {
@@ -2598,50 +2598,78 @@
       return true;
     };
     // One smooth, self-playing animation: a swipe up (or tapping "home") starts it and it plays through.
+    // Two ways in: swipe once and watch it play, or swipe again while it plays to say "let's go". The second
+    // swipe speeds the rest of the animation up smoothly, and Home then glides on down the page by an amount
+    // that follows how hard you swiped.
+    const DUR = 1500, RUSH = 340;
     function play() {
       if (busy) return;
       busy = true;
       entering = true;
+      rush = null;
       measure();
-      const t0 = performance.now(), DUR = 1500;
+      let t = 0, last = performance.now();
       const step = (now) => {
-        const t = clamp01((now - t0) / DUR);
+        const dt = now - last;
+        last = now;
+        if (rush) {
+          // ease the remaining part through in RUSH ms, starting from wherever it had got to
+          const k = clamp01((now - rush.t0) / RUSH);
+          t = rush.from + (1 - rush.from) * (1 - Math.pow(1 - k, 2));
+        } else {
+          t = clamp01(t + dt / DUR);
+        }
         draw(t);
         if (t < 1) { anim = requestAnimationFrame(step); return; }
         busy = false;
         entering = false;
+        const go = rush;
+        rush = null;
         arrive();
+        if (go) glide(go.dist);
       };
       anim = requestAnimationFrame(step);
+      rushFrom = () => t;
     }
-    // Swiping again while it plays (or carrying on well past the swipe that started it) skips to the end,
-    // and the rest of that swipe scrolls the page, so you can go straight on down.
-    function finishNow() {
-      if (!entering) return;
-      cancelAnimationFrame(anim);
-      busy = false;
-      entering = false;
-      arrive();
+    let rushFrom = () => 0;
+    function hurry(speed) {
+      if (!entering || rush) return;
+      rush = { t0: performance.now(), from: rushFrom(), dist: Math.max(240, Math.min(720, speed * 380)) };
     }
+    // a smooth, decelerating scroll once Home is in place
+    function glide(dist) {
+      const y0 = window.scrollY, t0 = performance.now(), dur = 650;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const to = Math.min(max, y0 + dist);
+      const stop = () => { cancelAnimationFrame(gl); removeEventListener('touchstart', stop); };
+      let gl = 0;
+      const step = (now) => {
+        const k = clamp01((now - t0) / dur);
+        window.scrollTo(0, y0 + (to - y0) * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) gl = requestAnimationFrame(step); else stop();
+      };
+      addEventListener('touchstart', stop, { passive: true });   // touching the screen takes over
+      gl = requestAnimationFrame(step);
+    }
+    // the second swipe: a new upward swipe while the animation is playing
     document.addEventListener('touchstart', (e) => {
-      if (!entering || e.touches.length > 1) return;
-      skipY = lastY = e.touches[0].clientY;
-      skipNeed = 8;
+      if (!entering || rush || e.touches.length > 1) return;
+      swipe2 = { y: e.touches[0].clientY, t: performance.now() };
     }, { passive: true });
     document.addEventListener('touchmove', (e) => {
-      if (skipY == null) return;
-      const y = e.touches[0].clientY;
-      if (entering) {
-        if (Math.abs(y - skipY) < skipNeed) { lastY = y; return; }
-        finishNow();
-      }
+      if (!swipe2) return;
       e.preventDefault();
-      window.scrollBy(0, lastY - y);
-      lastY = y;
+      const d = e.touches[0].clientY - swipe2.y;
+      if (d > 10) { swipe2 = null; return; }                  // a downward swipe doesn't count
+      if (d < -24) {
+        const speed = -d / Math.max(16, performance.now() - swipe2.t);   // px per ms
+        swipe2 = null;
+        hurry(speed);
+      }
     }, { passive: false });
-    const endSkip = () => { skipY = null; };
-    document.addEventListener('touchend', endSkip);
-    document.addEventListener('touchcancel', endSkip);
+    const end2 = () => { swipe2 = null; };
+    document.addEventListener('touchend', end2);
+    document.addEventListener('touchcancel', end2);
     document.addEventListener('touchstart', (e) => {
       if (!active() || e.touches.length > 1) return;
       y0 = e.touches[0].clientY; armed = false; samples = [[performance.now(), y0]];
@@ -2657,12 +2685,7 @@
       e.preventDefault();
       samples.push([performance.now(), y]);
       if (samples.length > 6) samples.shift();
-      if (d < -28) {
-        y0 = null;
-        play();
-        skipY = lastY = y;                                    // keep following this finger:
-        skipNeed = 140;                                       // a long swipe carries on through
-      }
+      if (d < -28) { y0 = null; play(); }
     }, { passive: false });
     const end = () => {
       if (y0 == null) return;
@@ -2674,7 +2697,7 @@
     document.addEventListener('touchend', end);
     document.addEventListener('touchcancel', end);
     addEventListener('wheel', (e) => {
-      if (entering) { finishNow(); return; }
+      if (entering) { hurry(Math.min(3, Math.abs(e.deltaY) / 40)); return; }
       if (!active()) return;
       wheel += e.deltaY;
       clearTimeout(wheelTimer);
