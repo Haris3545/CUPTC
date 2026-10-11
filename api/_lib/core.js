@@ -16,7 +16,9 @@ export const PASSWORDS = () => ({
   member: env('MEMBER_PASSWORD', 'MEMBERS_PASSWORD'),
   committee: env('COMMITTEE_PASSWORD'),
   full: env('FULL_MEMBER_CODE', 'FULL_CODE'),
-  discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE')
+  discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE'),
+  // given to people on the social waiting list: their £5 comes off social membership
+  waitlist: env('WAITLIST_CODE') || 'WAITINGLIST'
 });
 // Passwords and codes ignore capitals and spaces, so "cuptcmember2026" matches "CUPTCMEMBER2026".
 export const norm = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
@@ -24,12 +26,13 @@ export const matches = (typed, want) => !!want && !!typed && same(norm(typed), n
 
 // ------------------------------------------------------------------ prices (in pounds)
 export const SALE_END = new Date('2026-10-11T23:59:59+01:00');
-export const PRICES = { socialSale: 40, social: 50, committee: 20, full: 80 };
+export const PRICES = { socialSale: 40, social: 50, committee: 20, waitlist: 45, full: 80 };
 export const saleOn = () => Date.now() < SALE_END.getTime();
 export function membershipPrice(kind, discountCode) {
   if (kind === 'full') return PRICES.full;
   const codes = PASSWORDS();
   if (matches(discountCode, codes.discount)) return PRICES.committee;
+  if (matches(discountCode, codes.waitlist)) return PRICES.waitlist;
   return saleOn() ? PRICES.socialSale : PRICES.social;
 }
 

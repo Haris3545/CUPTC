@@ -1,11 +1,16 @@
-// Social padel waiting list (social membership is sold out). People pay £5 to join; at TARGET people
-// the club opens a new weekly social session.
-// GET: { count, target } where count = paid places (counted from Stripe) + `extra`.
+// Social padel waiting list (social membership is sold out). People pay £5 to join; every TARGET people
+// the club opens a new weekly social session, and the counter starts again from zero.
+// GET: { count, target, total, sessions } where total = paid places (counted from Stripe) + `extra`,
+//   count = how many are in the group now filling up (total % target), sessions = groups already filled.
 // POST { extra }: committee only. `extra` is for genuine sign-ups taken outside the website (for example
 //   names put down in person), so the count shown is always real people.
 import { env, isCommittee, readJSON, writeJSON, storageReady, send, body, fromRequest } from './_lib/core.js';
 
-export const TARGET = 20;
+export const TARGET = 22;
+const shape = (c) => {
+  const total = c.paid + c.extra;
+  return { count: total % TARGET, target: TARGET, total, sessions: Math.floor(total / TARGET) };
+};
 let cache = null;
 
 // Paid waiting-list places: Stripe payments tagged kind=waitlist. In demo mode (no Stripe key) the
@@ -38,11 +43,11 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const c = await waitlistCount(isCommittee(req));
-      if (isCommittee(req)) return send(res, 200, { count: c.paid + c.extra, paid: c.paid, extra: c.extra, target: TARGET });
+      if (isCommittee(req)) return send(res, 200, { ...shape(c), paid: c.paid, extra: c.extra });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=120');
-      return res.end(JSON.stringify({ count: c.paid + c.extra, target: TARGET }));
+      return res.end(JSON.stringify(shape(c)));
     }
     if (req.method !== 'POST') return send(res, 405, { error: 'method' });
     if (!isCommittee(req)) return send(res, 401, { error: 'committee_only' });
@@ -52,7 +57,7 @@ export default async function handler(req, res) {
     const doc = await readJSON('waitlist', {});
     await writeJSON('waitlist', { ...doc, extra });
     const c = await waitlistCount(true);
-    return send(res, 200, { count: c.paid + c.extra, paid: c.paid, extra: c.extra, target: TARGET });
+    return send(res, 200, { ...shape(c), paid: c.paid, extra: c.extra });
   } catch (e) {
     console.error('waitlist', e);
     return send(res, 503, { error: 'unavailable' });

@@ -839,7 +839,7 @@
         <article class="plan rv">
           <div class="plan-top"><h3 class="h3">Social</h3><span class="plan-tag red">Sold out</span></div>
           <div class="plan-price" data-social-amount>£5 <small>waiting list</small></div>
-          <p class="was">Social membership has sold out. Join the waiting list for £5: when 20 people are on it, we'll open a new weekly social session and get in touch.</p>
+          <p class="was">Social membership has sold out. Join the waiting list for £5: when 22 people are on it, we'll open a new weekly social session and get in touch. Your £5 comes off the membership price.</p>
           <ul class="ticks">
             <li>An hour of social padel every week</li>
             <li>Every club social</li>
@@ -847,7 +847,7 @@
             <li>About £448 of court time over the year</li>
           </ul>
           <div class="field">
-            <label for="code-social">Committee code (committee members only)</label>
+            <label for="code-social">Have a code? Waiting list or committee</label>
             <div class="inline"><input class="input" id="code-social" autocomplete="off" placeholder="Enter code"><button class="btn line sm" type="button" id="apply-code">Apply</button></div>
             <p class="msg" id="code-msg" role="status"></p>
           </div>
@@ -955,7 +955,7 @@
           <div id="admin-list"></div>
           <div class="lb-admin">
             <h3 class="h3">Social waiting list.</h3>
-            <p class="muted">The count appears on the Membership page once 13 people have joined. Places paid for on the website are counted automatically from Stripe. If people have genuinely joined some other way (for example in person), add them here so the count shown on the Membership page includes them.</p>
+            <p class="muted">The Membership page shows the group filling up now: it appears once 13 have joined, and starts again from 0 each time 22 is reached. People from the list buy social membership for £45 with the code WAITINGLIST. Places paid for on the website are counted automatically from Stripe. If people have genuinely joined some other way (for example in person), add them here so the count shown on the Membership page includes them.</p>
             <p id="wl-admin-now" class="muted"></p>
             <div class="inline"><label class="sr-only" for="wl-extra">Joined some other way</label><input class="input" id="wl-extra" type="number" min="0" max="500" step="1" placeholder="Joined some other way"><button class="btn line sm" type="button" id="wl-save">Save</button></div>
             <p class="msg" id="wl-admin-msg" role="status"></p>
@@ -1298,7 +1298,7 @@
 
   // Passwords and codes are checked on the server (api/). Prices here are for display; the server sets what's charged.
   const SALE_END = new Date('2026-10-11T23:59:59+01:00');
-  const PRICES = { socialSale: 40, social: 50, committee: 20, full: 80 };
+  const PRICES = { socialSale: 40, social: 50, committee: 20, waitlist: 45, full: 80 };
   const HERO = ['p2', 'p16', 'p15', 'p12', 'p19'];   // p2 is the start-screen photo, so it carries straight on
   const PHOTOS = ['p15','p12','p19','p16','p9','p13','p21','p10','p4','p18','p14','p20','p3','p6','p7','p5','p11'];
   const IMAGES = [
@@ -1547,9 +1547,11 @@
     // Social membership is sold out: the card sells waiting-list places, or the committee's £20 membership
     // once a valid committee code has been applied.
     const amt = $('[data-social-amount]');
-    if (amt) amt.innerHTML = state.discount ? '£' + PRICES.committee + ' <small>/ year</small>' : '£5 <small>waiting list</small>';
+    const price = state.discountType === 'waitlist' ? PRICES.waitlist : PRICES.committee;
+    if (amt) amt.innerHTML = state.discount ? '£' + price + ' <small>/ year</small>' : '£5 <small>waiting list</small>';
     const buy = $('#buy-social');
-    if (buy) buy.textContent = state.discount ? 'Buy committee membership · £' + PRICES.committee : 'Join the waiting list · £5';
+    if (buy) buy.textContent = !state.discount ? 'Join the waiting list · £5'
+      : state.discountType === 'waitlist' ? 'Buy social membership · £' + price : 'Buy committee membership · £' + price;
     const tile = $('[data-social-price]');
     if (tile) tile.innerHTML = 'Sold out';
   }
@@ -1730,7 +1732,7 @@
       return;
     }
     if (d.kind === 'waitlist') {
-      s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:22px;font-weight:400">You’re on the waiting list</b><span class="muted">When 20 people are on it, we’ll open a new weekly social session and email you.</span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
+      s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:22px;font-weight:400">You’re on the waiting list</b><span class="muted">When 22 people are on it, we’ll open a new weekly social session and email you a code so your £5 comes off the membership price.</span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
       $('button', s.main).addEventListener('click', s.close);
       loadWaitlist();
       return;
@@ -1769,8 +1771,10 @@
     if (!v) { state.discount = ''; msg.className = 'msg err'; msg.textContent = 'Enter a code first.'; return renderSocialPrice(); }
     const res = await api('code', { body: { kind: 'discount', code: v } });
     state.discount = res.ok && res.data.ok ? v : '';
+    state.discountType = state.discount ? res.data.type : '';
     msg.className = 'msg ' + (state.discount ? 'ok' : 'err');
-    msg.textContent = state.discount ? 'Committee code accepted: committee membership £20.' : res.ok ? "That code isn't valid. Check it and try again." : errText(res, 'Couldn’t check that code. Try again.');
+    msg.textContent = state.discountType === 'waitlist' ? 'Waiting list code accepted: social membership £45, with your £5 taken off.'
+      : state.discount ? 'Committee code accepted: committee membership £20.' : res.ok ? "That code isn't valid. Check it and try again." : errText(res, 'Couldn’t check that code. Try again.');
     renderSocialPrice();
   });
   $('#buy-social').addEventListener('click', (e) => {
@@ -1781,16 +1785,15 @@
   async function loadWaitlist() {
     const res = await api('waitlist');
     const text = $('#wl-text');
-    if (!res.ok) { text.textContent = 'A new social session opens when 20 people are on the waiting list.'; return; }
+    if (!res.ok) { text.textContent = 'A new social session opens when 22 people are on the waiting list.'; return; }
+    // count is the group filling up now: it starts again from 0 each time a group of 22 is reached
     const { count, target } = res.data;
     // the count only shows once 13 people have joined; before that, just how the list works
     const SHOW_FROM = 13;
     $('.wl-bar').hidden = count < SHOW_FROM;
     if (count < SHOW_FROM) { text.textContent = 'A new social session opens when ' + target + ' people are on the waiting list.'; return; }
     $('#wl-fill').style.width = Math.min(100, (count / target) * 100) + '%';
-    text.innerHTML = count >= target
-      ? '<b>' + count + '</b> on the waiting list. That’s enough for a new session, and we’ll be in touch.'
-      : '<b>' + count + ' of ' + target + '</b> on the waiting list. A new social session opens at ' + target + '.';
+    text.innerHTML = '<b>' + count + ' of ' + target + '</b> on the waiting list. A new social session opens at ' + target + '.';
   }
   loadWaitlist();
   $('#unlock-full').addEventListener('click', async () => {
@@ -1879,7 +1882,9 @@
     const res = await api('waitlist?fresh=' + Date.now());
     if (!res.ok) { $('#wl-admin-now').textContent = 'The waiting list count can’t load right now.'; return; }
     const d = res.data;
-    $('#wl-admin-now').textContent = d.count + ' on the list: ' + d.paid + ' paid on the website, ' + d.extra + ' joined some other way.';
+    $('#wl-admin-now').textContent = d.total + ' joined in total (' + d.paid + ' paid on the website, ' + d.extra + ' some other way). ' +
+      (d.sessions ? d.sessions + (d.sessions === 1 ? ' group' : ' groups') + ' of ' + d.target + ' filled so far. ' : '') +
+      'The current group has ' + d.count + ' of ' + d.target + '.';
     $('#wl-extra').value = d.extra;
   }
 
