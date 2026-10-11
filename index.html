@@ -291,7 +291,8 @@
   .dates div { display: grid; grid-template-columns: 8em 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 18px; }
   .dates time { font-style: italic; color: var(--green-dark); }
 
-  .team { display: grid; grid-template-columns: repeat(4, 1fr); gap: 48px 28px; margin-top: 64px; width: min(1040px, 100%); margin-inline: auto; }
+  .team { display: flex; flex-wrap: wrap; justify-content: center; gap: 48px 28px; margin-top: 64px; width: min(1040px, 100%); margin-inline: auto; }
+  .team > .person { width: calc((100% - 3 * 28px) / 4); margin: 0; }   /* rows of 4; a part-filled last row sits in the middle */
   .person { margin: 0; display: grid; gap: 16px; align-content: start; }
   .person .ri { aspect-ratio: 1; }
   .person figcaption { display: grid; gap: 2px; }
@@ -579,7 +580,8 @@
     .tiers > div + div { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; }
     .tiers > div:first-child { padding-right: 0; }
     .dates div { grid-template-columns: 1fr; gap: 2px; }
-    .team { grid-template-columns: 1fr 1fr; gap: 36px 16px; margin-top: 44px; }
+    .team { gap: 36px 16px; margin-top: 44px; }
+    .team > .person { width: calc((100% - 16px) / 2); }
     .person b { font-size: 19px; }
     .sponsors { grid-template-columns: 1fr; }
     .sponsors > .sponsor + .sponsor { border-left: 0; border-top: 1px solid var(--line); margin-top: 28px; }
@@ -1504,7 +1506,9 @@
 
   // ---------------------------------------------------------------- committee
   TEAM.forEach((p) => { p.slug = p.name === 'Unfilled' ? 'womens-captain' : p.name.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, ''); });
-  TEAM.forEach((p, n) => {
+  // Unfilled roles stay in the list but aren't shown, so the grid keeps full rows (16 people: 4 rows of 4).
+  // Put the person's name in when a role is filled and they appear.
+  TEAM.filter((p) => p.name !== 'Unfilled').forEach((p, n) => {
     const d = document.createElement('figure');
     d.className = 'person';
     d.dataset.slug = p.slug;
