@@ -48,11 +48,14 @@ export default async function handler(req, res) {
       Object.assign(meta, det.meta);
     }
     if (b.kind === 'social') {
-      // Social membership is sold out: only the committee's own discounted membership can still be bought.
-      if (!matches(b.code, PASSWORDS().discount)) return send(res, 409, { error: 'social_sold_out' });
+      // Social membership is sold out to the public: it can be bought with the committee code (£20), or by
+      // people from the waiting list with the waiting-list code (£45: their £5 comes off the £50).
+      const viaWaitlist = matches(b.code, PASSWORDS().waitlist);
+      if (!matches(b.code, PASSWORDS().discount) && !viaWaitlist) return send(res, 409, { error: 'social_sold_out' });
       amount = membershipPrice('social', b.code);
       title = 'CUPTC Social membership';
-      name = 'Social membership 2026–27';
+      name = viaWaitlist ? 'Social membership 2026–27 (waiting list: £5 already paid)' : 'Social membership 2026–27';
+      if (viaWaitlist) meta.price_code = 'waiting list';
     } else if (b.kind === 'waitlist') {
       amount = 5;
       title = 'CUPTC social waiting list';
