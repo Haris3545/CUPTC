@@ -1,5 +1,5 @@
 // POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size?, custom? }
-// custom: the name to print on the back, for items the committee has marked customisable.
+// custom: the buyer's customisation (what it is, e.g. a name on the back, is set per item), for items the committee has marked customisable.
 // Donations: { kind: 'donation', amount (pounds), monthly?, name?, message? }
 // Memberships also need details: { ecName, ecPhone, medical?, policies: true (the Code of Conduct), photos: bool, privacy: true },
 // the answers to the questions asked before paying. They're saved with the payment in Stripe.
@@ -78,8 +78,9 @@ export default async function handler(req, res) {
         const custom = String(b.custom).trim().replace(/\s+/g, ' ');
         if (!item.customisable) return send(res, 400, { error: 'not_customisable' });
         if (!NAME_OK.test(custom)) return send(res, 400, { error: 'custom_name' });
-        lines.push(['Name on the back: ' + custom, Number(item.customPrice ?? 2)]);
+        lines.push([(item.customLabel || 'Customisation') + ': ' + custom, Number(item.customPrice ?? 2)]);
         meta.custom = custom;
+        if (item.customLabel) meta.custom_label = item.customLabel;
       }
     } else if (b.kind === 'donation') {
       amount = Math.round(Number(b.amount) * 100) / 100;

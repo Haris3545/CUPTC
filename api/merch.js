@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const member = isMember(req);
       const out = items.slice().sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((m) => (member ? m : { id: m.id, name: m.name, description: m.description, image: m.image, order: m.order, customisable: !!m.customisable, images: m.images || [], sizeChart: m.sizeChart || '' }));
+        .map((m) => (member ? m : { id: m.id, name: m.name, description: m.description, image: m.image, order: m.order, customisable: !!m.customisable, customLabel: m.customLabel || '', images: m.images || [], sizeChart: m.sizeChart || '' }));
       return send(res, 200, { items: out, member });
     }
     if (!isCommittee(req)) return send(res, 401, { error: 'committee_only' });
@@ -31,6 +31,7 @@ export default async function handler(req, res) {
         images: (Array.isArray(i.images) ? i.images : []).map((v) => String(v || '')).filter((v) => isUploaded(v) || /^[a-z0-9-]{1,40}$/.test(v)).slice(0, 8),
         sizeChart: String(i.sizeChart || '').slice(0, 1200),
         customisable: !!i.customisable,
+        customLabel: clean(i.customLabel, 40),
         customPrice: Math.max(0, Math.round((i.customPrice === '' || i.customPrice == null ? 2 : Number(i.customPrice) || 0) * 100) / 100)
       };
       if (!item.name) return send(res, 400, { error: 'name_required' });
