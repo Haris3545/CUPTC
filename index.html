@@ -942,7 +942,8 @@
             <div class="field"><label for="m-delivery">Delivery time</label><input class="input" id="m-delivery" placeholder="e.g. 3 to 4 weeks" maxlength="60"></div>
             <div class="field"><label for="m-sizes">Sizes (comma separated)</label><input class="input" id="m-sizes" placeholder="XS, S, M, L, XL" maxlength="80"></div>
             <div class="field"><label for="m-image">Image</label><div class="inline"><select class="input" id="m-image"></select><button class="btn line sm" type="button" id="m-upload">Upload photo</button></div><img id="m-preview" class="m-preview" alt="" hidden></div>
-            <div class="field full"><label class="check"><input type="checkbox" id="m-custom"> <span>Offer customisation: buyers can add a name on the back</span></label></div>
+            <div class="field full"><label class="check"><input type="checkbox" id="m-custom"> <span>Offer customisation</span></label></div>
+            <div class="field" id="m-custom-label-f" hidden><label for="m-custom-label">What buyers add</label><input class="input" id="m-custom-label" maxlength="40" placeholder="e.g. Name on the back, Initials on the sleeve"></div>
             <div class="field" id="m-custom-price-f" hidden><label for="m-custom-price">Customisation price (£)</label><input class="input" id="m-custom-price" type="number" min="0" step="0.5" value="2"></div>
             <div class="field"><label for="m-order">Position in shop</label><input class="input" id="m-order" type="number" step="1" value="10"></div>
             <div class="field full"><label>More photos</label><div class="m-extra" id="m-extra"></div><div><button class="btn line sm" type="button" id="m-add-photo">Add photo</button></div></div>
@@ -1251,7 +1252,7 @@
 <p>Where you exercise your right to erasure, we will continue to maintain a core set of personal data (name, membership details, unique identification number and date of birth) to ensure we do not contact you inadvertently in future.</p>
 <h3>This website and payments</h3>
 <p>When you join, we ask for an emergency contact’s name and phone number, any medical conditions that might affect your ability to play, and whether you agree to the Code of Conduct, give photography consent and agree to this Privacy Notice. These answers are stored with your membership payment in Stripe, where only the committee can see them. They are used to look after you at club sessions and events. Please make sure your emergency contact is happy for you to share their details with us.</p>
-<p>Payments for memberships and club merchandise are processed by Stripe. When you pay, Stripe receives your name, email address and card details, and for merchandise your delivery address. We can see your name, email address, what you bought (including the size and any name printed on the back) and your delivery address, but never your full card details. Stripe's own privacy policy is at <a class="link" href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>.</p>
+<p>Payments for memberships and club merchandise are processed by Stripe. When you pay, Stripe receives your name, email address and card details, and for merchandise your delivery address. We can see your name, email address, what you bought (including the size and any customisation you choose, such as a name) and your delivery address, but never your full card details. Stripe's own privacy policy is at <a class="link" href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>.</p>
 <p>This website is hosted by Vercel, which processes technical information such as your IP address in order to deliver the site securely. Fonts are loaded from Google Fonts, which also receives your IP address.</p>
 <p>When you sign in to the Members Area, a sign-in token is kept in your browser for that tab only, and is removed when you close the tab or sign out. We do not use tracking or advertising cookies. We use Vercel Web Analytics to count visits to each page; it does not use cookies or identify you.</p>
 <p>If you play Padel Pong against a friend, your two devices connect directly to each other, so each can see the other’s IP address. PeerJS (peerjs.com) runs the free service that introduces the two devices using a short game code, and relays the game if a direct connection isn’t possible, so it also receives your IP address. Nothing else about you is sent, and nothing about the match is kept.</p>
@@ -1600,7 +1601,7 @@
     details_ec_phone: 'Please enter a valid phone number for your emergency contact.',
     details_policies: 'Please agree to the Code of Conduct to join.',
     details_privacy: 'Please agree to the Privacy Notice to join.',
-    custom_name: 'That name can only use up to 16 letters, numbers, spaces or . \' - &',
+    custom_name: 'Your customisation can only use up to 16 letters, numbers, spaces or . \' - &',
     offline: 'Couldn’t reach the club’s server. Check your connection and try again.',
     payments_not_configured: 'Online payments open soon. Message us on Instagram or email secretary@cuptc.com to join now.',
     storage_not_configured: 'Saving isn’t switched on yet (the site needs its storage connecting in Vercel).',
@@ -1744,7 +1745,7 @@
     }
     if (d.kind === 'merch') {
       s.main.innerHTML = '<div class="sh-state" style="gap:10px"><div class="done">&#10003;</div><b style="font-size:21px;font-weight:400">Order placed</b><span class="muted"></span></div><button class="btn" type="button" style="width:100%;margin-top:14px">Done</button>';
-      $('.muted', s.main).textContent = (d.custom ? 'Name on the back: ' + d.custom + '. ' : '') + (d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.');
+      $('.muted', s.main).textContent = (d.custom ? (d.customLabel || 'Customisation') + ': ' + d.custom + '. ' : '') + (d.delivery ? 'Expected delivery: ' + d.delivery + '.' : 'The committee will be in touch about delivery.');
       $('button', s.main).addEventListener('click', s.close);
       return;
     }
@@ -2021,7 +2022,7 @@
     const buyBox = $('.pd-buy', s.main);
     if (!priced) {
       buyBox.innerHTML = '<p class="lock"></p><a class="btn sm" href="#members">Sign in</a>';
-      $('p', buyBox).textContent = 'Sign in as a member to see the price and order.' + (m.customisable ? ' This item can be customised with a name on the back.' : '');
+      $('p', buyBox).textContent = 'Sign in as a member to see the price and order.' + (m.customisable ? ' This item can be customised' + (m.customLabel ? ' (' + m.customLabel.toLowerCase() + ').' : '.') : '');
       $('a', buyBox).addEventListener('click', () => { s.close(); setTimeout(() => { const g = $('#gate'); if (g) g.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); }, 350); });
       return;
     }
@@ -2036,14 +2037,15 @@
       sizes.forEach((x) => { const o = document.createElement('option'); o.textContent = x; sel.appendChild(o); });
       buyBox.appendChild(f);
     }
-    // Optional name on the back, for items the committee has marked customisable
+    // Optional customisation (the committee sets what it is, e.g. a name on the back), for items the committee has marked customisable
     let custom = null;
     if (m.customisable) {
       const extra = Number(m.customPrice ?? 2);
       const wrap = document.createElement('div');
       wrap.className = 'customise';
-      wrap.innerHTML = '<label class="check"><input type="checkbox"> <span>Customise <em></em></span></label><div class="field custom-name" hidden><label for="pd-name">Name on the back</label><input class="input" id="pd-name" maxlength="16" autocomplete="off" placeholder="e.g. BIGHAM"></div><p class="msg err" role="status"></p>';
+      wrap.innerHTML = '<label class="check"><input type="checkbox"> <span>Customise <em></em></span></label><div class="field custom-name" hidden><label for="pd-name"></label><input class="input" id="pd-name" maxlength="16" autocomplete="off" placeholder="Up to 16 characters"></div><p class="msg err" role="status"></p>';
       $('em', wrap).textContent = '+' + money(extra);
+      $('label[for=pd-name]', wrap).textContent = m.customLabel || 'Your customisation';
       const tick = $('input[type=checkbox]', wrap), box = $('.custom-name', wrap), nameIn = $('#pd-name', wrap);
       tick.addEventListener('change', () => {
         box.hidden = !tick.checked;
@@ -2064,7 +2066,7 @@
       if (custom && custom.tick.checked) {
         const v = custom.nameIn.value.trim();
         if (!/^[\p{L}\p{N} .'&-]{1,16}$/u.test(v)) {
-          custom.msg.textContent = v ? 'Use up to 16 letters, numbers, spaces or . \' - &' : 'Add the name for the back, or untick Customise.';
+          custom.msg.textContent = v ? 'Use up to 16 letters, numbers, spaces or . \' - &' : 'Fill this in, or untick Customise.';
           custom.nameIn.focus();
           return;
         }
@@ -2117,7 +2119,7 @@
     if (f) { e.preventDefault(); merchCrop(f); }
   });
 
-  $('#m-custom').addEventListener('change', () => { $('#m-custom-price-f').hidden = !$('#m-custom').checked; });
+  $('#m-custom').addEventListener('change', () => { $('#m-custom-price-f').hidden = $('#m-custom-label-f').hidden = !$('#m-custom').checked; });
   // Extra photos for the expanded view
   let extra = [];
   function renderExtra() {
@@ -2146,7 +2148,7 @@
     renderExtra();
     useImage('');
     $('#merch-form').reset();
-    $('#m-custom-price-f').hidden = true;
+    $('#m-custom-price-f').hidden = $('#m-custom-label-f').hidden = true;
     $('#m-id').value = '';
     $('#m-order').value = String(((state.merch || []).length + 1) * 10);
     $('#m-save').textContent = 'Add item';
@@ -2169,7 +2171,8 @@
       customisable: $('#m-custom').checked,
       images: extra.slice(),
       sizeChart: $('#m-chart').value.trim(),
-      customPrice: $('#m-custom-price').value
+      customPrice: $('#m-custom-price').value,
+      customLabel: $('#m-custom-label').value.trim()
     };
     if (!item.name) { msg.textContent = 'Give the item a name.'; return; }
     $('#m-save').disabled = true;
@@ -2275,7 +2278,8 @@
         renderExtra();
         $('#m-chart').value = m.sizeChart || '';
         $('#m-custom-price').value = m.customPrice ?? 2;
-        $('#m-custom-price-f').hidden = !m.customisable;
+        $('#m-custom-label').value = m.customLabel || '';
+        $('#m-custom-price-f').hidden = $('#m-custom-label-f').hidden = !m.customisable;
         $('#m-save').textContent = 'Save changes';
         $('#m-cancel').hidden = false;
         $('#m-name').focus();
