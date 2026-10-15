@@ -997,11 +997,11 @@
   const VS_HASH = /^#vs-([A-HJ-NP-Z2-9]{4})$/i;
   const vsEl = {
     heading: $('vs-heading'), msg: $('vs-msg'), code: $('vs-code'), status: $('vs-status'), tip: $('vs-tip'),
-    share: $('btn-vs-share'), back: $('btn-vs-back'),
+    join: $('vs-join'), input: $('vs-in'), joinMsg: $('vs-join-msg'), back: $('btn-vs-back'),
     oKicker: $('vso-kicker'), oHeading: $('vso-heading'), oScore: $('vso-score'), oStatus: $('vso-status'), rematch: $('btn-rematch')
   };
   const VS_ERRORS = {
-    notfound: "THAT GAME HAS FINISHED OR THE LINK IS WRONG. ASK YOUR FRIEND FOR A NEW ONE.",
+    notfound: "NO GAME WITH THAT CODE. CHECK IT ON YOUR FRIEND'S SCREEN AND TRY AGAIN.",
     timeout: "COULDN'T REACH YOUR FRIEND. CHECK YOU'RE BOTH ONLINE AND TRY AGAIN.",
     offline: "COULDN'T CONNECT. CHECK YOUR INTERNET AND TRY AGAIN.",
     failed: "SOMETHING WENT WRONG. TRY AGAIN."
@@ -1015,28 +1015,42 @@
     vsEl.status.textContent = o.status || '';
     vsEl.status.className = 'vs-status' + (o.wait ? ' is-waiting' : '') + (o.bad ? ' is-bad' : '');
     vsEl.tip.hidden = !!o.bad;
-    vsEl.share.hidden = !o.code;
-    vsEl.share.textContent = navigator.share ? 'SEND LINK' : 'COPY LINK';
+    vsEl.join.hidden = !o.join;
+    vsEl.joinMsg.textContent = o.joinMsg || '';
     showScreen('vs');
   }
 
-  const vsUrl = (code) => location.origin + location.pathname + '#vs-' + code;
-
-  function vsHost() {
+  // Both phones open PLAY A FRIEND and each shows its own code. One player types the other's code in
+  // and the match starts: whoever's code was typed hosts.
+  function vsHost(joinMsg) {
     Sound.unlock();
-    sfx.click();
-    vsScreen({ msg: 'GETTING YOUR LINK...', wait: true });
+    if (!joinMsg) sfx.click();
+    vs.code = '';
+    vsEl.input.value = '';
+    const waiting = { msg: 'GETTING YOUR CODE...', wait: true, join: true, joinMsg: joinMsg };
+    vsScreen(waiting);
     vs.pending = PP.Net.host({
       code(c) {
         vs.code = c;
         vsScreen({
-          msg: 'SEND YOUR FRIEND THIS LINK. THE MATCH STARTS AS SOON AS THEY OPEN IT.',
-          code: c, status: 'WAITING FOR YOUR FRIEND...', wait: true
+          msg: 'SHOW YOUR FRIEND THIS CODE. THEY TAP PLAY A FRIEND AND TYPE IT IN.',
+          code: c, status: 'WAITING FOR YOUR FRIEND...', wait: true, join: true, joinMsg: vsEl.joinMsg.textContent
         });
       },
       open(link) { vsConnected(link, 'host'); },
-      error(kind) { vsScreen({ msg: VS_ERRORS[kind] || VS_ERRORS.failed, status: 'NO MATCH', bad: true }); }
+      error(kind) { vsScreen({ msg: VS_ERRORS[kind] || VS_ERRORS.failed, status: 'NO CODE', bad: true, join: true }); }
     });
+  }
+
+  function vsSubmitCode(e) {
+    if (e) e.preventDefault();
+    const code = vsEl.input.value.trim().toUpperCase();
+    if (!/^[A-HJ-NP-Z2-9]{4}$/.test(code)) { vsEl.joinMsg.textContent = 'A CODE IS 4 LETTERS AND NUMBERS.'; return; }
+    if (code === vs.code) { vsEl.joinMsg.textContent = "THAT'S YOUR CODE. TYPE YOUR FRIEND'S."; return; }
+    vsEl.input.blur();
+    if (vs.pending) vs.pending.cancel();
+    vs.pending = null;
+    vsJoin(code);
   }
 
   function vsJoin(code) {
@@ -1044,20 +1058,9 @@
     vsScreen({ msg: "JOINING YOUR FRIEND'S MATCH...", status: 'CONNECTING...', wait: true });
     vs.pending = PP.Net.join(code.toUpperCase(), {
       open(link) { vsConnected(link, 'guest'); },
-      error(kind) { vsScreen({ msg: VS_ERRORS[kind] || VS_ERRORS.failed, status: 'NO MATCH', bad: true }); }
+      // didn't work: back to showing a code of your own, with the problem under the code box
+      error(kind) { vs.pending = null; vsHost(VS_ERRORS[kind] || VS_ERRORS.failed); }
     });
-  }
-
-  function vsShare() {
-    Sound.unlock();
-    const url = vsUrl(vs.code);
-    if (navigator.share) {
-      navigator.share({ title: 'CUPTC Padel Pong', text: 'Play me at Padel Pong! First to 7.', url: url }).catch(() => {});
-      return;
-    }
-    const done = () => { vsEl.share.textContent = 'COPIED!'; setTimeout(() => { vsEl.share.textContent = 'COPY LINK'; }, 1600); };
-    if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => window.prompt('Copy this link', url));
-    else window.prompt('Copy this link', url);
   }
 
   // Back to the one-player game, with everything reset.
@@ -1424,7 +1427,13 @@
   $('btn-lb-over').addEventListener('click', () => lbOpen('over'));
   $('btn-lb-back').addEventListener('click', () => { sfx.click(); showScreen(lbReturn); });
   lbEl.retry.addEventListener('click', () => lbOpen(lbReturn));
-  vsEl.share.addEventListener('click', vsShare);
+  vsEl.join.addEventListener('submit', vsSubmitCode);
+  vsEl.input.addEventListener('input', () => {
+    const v = vsEl.input.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+    if (v !== vsEl.input.value) vsEl.input.value = v;
+    vsEl.joinMsg.textContent = '';
+    if (/^[A-HJ-NP-Z2-9]{4}$/.test(v) && v !== vs.code) vsSubmitCode();
+  });
   vsEl.back.addEventListener('click', vsLeave);
   vsEl.rematch.addEventListener('click', vsRematch);
   $('btn-vs-leave').addEventListener('click', vsLeave);

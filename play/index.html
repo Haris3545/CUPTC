@@ -94,12 +94,19 @@
       <div class="panel">
         <p class="kicker">1 V 1 &middot; FIRST TO 7</p>
         <h2 class="title title--small" id="vs-heading">PLAY A FRIEND</h2>
-        <p class="vs-msg" id="vs-msg">GETTING YOUR LINK...</p>
+        <p class="vs-msg" id="vs-msg">GETTING YOUR CODE...</p>
         <p class="vs-code" id="vs-code" hidden></p>
         <p class="vs-status" id="vs-status"></p>
+        <form class="vs-join" id="vs-join" autocomplete="off" hidden>
+          <label class="lb-q" for="vs-in">OR TYPE YOUR FRIEND'S CODE</label>
+          <div class="lb-row">
+            <input class="lb-input vs-input" id="vs-in" maxlength="4" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="CODE">
+            <button class="px-btn px-btn--small" type="submit">JOIN</button>
+          </div>
+          <p class="vs-join-msg" id="vs-join-msg" role="status"></p>
+        </form>
         <p class="vs-tip" id="vs-tip">DRAG TO MOVE. YOUR SWING IS AUTOMATIC. MISS THE BALL AND YOUR FRIEND WINS THE POINT.</p>
         <div class="actions">
-          <button class="px-btn" id="btn-vs-share" type="button" hidden>SEND LINK</button>
           <button class="px-btn px-btn--ghost" id="btn-vs-back" type="button">BACK</button>
         </div>
       </div>

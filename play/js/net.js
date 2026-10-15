@@ -51,8 +51,8 @@
     return link;
   }
 
-  // ---- host: get a code, wait for a friend to open the link
-  // cb.code(code) when the link is ready to send, cb.open(link) when the friend arrives, cb.error(kind).
+  // ---- host: get a code, wait for a friend to type it in
+  // cb.code(code) when the code is ready to show, cb.open(link) when the friend arrives, cb.error(kind).
   function host(cb) {
     let stopped = false, peer = null, bc = null;
     const handle = { cancel() { stopped = true; if (peer) peer.destroy(); if (bc) bc.close(); } };
@@ -97,7 +97,7 @@
     return handle;
   }
 
-  // ---- guest: open a friend's link
+  // ---- guest: join the friend whose code was typed in
   function join(code, cb) {
     let stopped = false, peer = null, bc = null, timer = 0;
     const fail = (kind) => {
