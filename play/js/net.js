@@ -9,8 +9,21 @@
   const PREFIX = 'cuptc-padelpong-';
   const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O or 1/I
   const LOCAL = /[?&]local\b/.test(location.search);
-  const JOIN_TIMEOUT = 20000;
-  const peerOpts = () => Object.assign({ debug: 0 }, window.PP_PEER_OPTS); // tests point this at a local PeerJS server
+  const JOIN_TIMEOUT = 15000;
+  // Relay servers for networks that block direct links (eduroam, some mobile networks), from /api/turn.
+  // null means none are set up, so PeerJS's own free relay is used.
+  let relays = null;
+  function getRelays() {
+    if (!relays) {
+      relays = fetch('/api/turn', { cache: 'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined })
+        .then((r) => (r.ok ? r.json() : {}))
+        .then((d) => (Array.isArray(d.iceServers) && d.iceServers.length ? d.iceServers : null))
+        .catch(() => { relays = null; return null; });
+    }
+    return relays;
+  }
+  const peerOpts = (ice) => Object.assign({ debug: 0 }, ice ? { config: { iceServers: ice } } : {}, window.PP_PEER_OPTS); // tests point this at a local PeerJS server
+  const ready = () => Promise.all([loadPeer(), getRelays()]).then((r) => r[1]);
 
   const newCode = () => Array.from({ length: 4 }, () => ALPHA[Math.floor(Math.random() * ALPHA.length)]).join('');
 
@@ -70,11 +83,11 @@
       return handle;
     }
 
-    loadPeer().then(() => {
+    ready().then((ice) => {
       const attempt = (tries) => {
         if (stopped) return;
         const c = newCode();
-        peer = new window.Peer(PREFIX + c, peerOpts());
+        peer = new window.Peer(PREFIX + c, peerOpts(ice));
         peer.on('open', () => { if (!stopped) cb.code(c); });
         peer.on('connection', (conn) => {
           if (stopped) { conn.close(); return; }
@@ -123,12 +136,16 @@
       return handle;
     }
 
-    loadPeer().then(() => {
+    ready().then((ice) => {
       if (stopped) return;
-      peer = new window.Peer(peerOpts());
+      peer = new window.Peer(peerOpts(ice));
       peer.on('open', () => {
         if (stopped) return;
         const conn = peer.connect(PREFIX + code, { reliable: true, serialization: 'json' });
+        // The friend's game was found but the phones can't reach each other: say so straight away.
+        const pc = conn.peerConnection;
+        if (pc) pc.addEventListener('iceconnectionstatechange', () => { if (pc.iceConnectionState === 'failed') fail('blocked'); });
+        conn.on('error', () => fail('blocked'));
         conn.on('open', () => {
           if (stopped) { conn.close(); return; }
           stopped = true;

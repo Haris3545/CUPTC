@@ -1002,7 +1002,8 @@
   };
   const VS_ERRORS = {
     notfound: "NO GAME WITH THAT CODE. CHECK IT ON YOUR FRIEND'S SCREEN AND TRY AGAIN.",
-    timeout: "COULDN'T REACH YOUR FRIEND. CHECK YOU'RE BOTH ONLINE AND TRY AGAIN.",
+    timeout: "COULDN'T LINK YOUR PHONES. SOME WIFI (LIKE EDUROAM) BLOCKS THIS: TRY BOTH ON MOBILE DATA.",
+    blocked: "COULDN'T LINK YOUR PHONES. SOME WIFI (LIKE EDUROAM) BLOCKS THIS: TRY BOTH ON MOBILE DATA.",
     offline: "COULDN'T CONNECT. CHECK YOUR INTERNET AND TRY AGAIN.",
     failed: "SOMETHING WENT WRONG. TRY AGAIN."
   };
@@ -1055,7 +1056,7 @@
 
   function vsJoin(code) {
     history.replaceState(null, '', location.pathname + location.search);
-    vsScreen({ msg: "JOINING YOUR FRIEND'S MATCH...", status: 'CONNECTING...', wait: true });
+    vsScreen({ msg: "JOINING YOUR FRIEND'S MATCH. THIS CAN TAKE UP TO 15 SECONDS.", status: 'CONNECTING...', wait: true });
     vs.pending = PP.Net.join(code.toUpperCase(), {
       open(link) { vsConnected(link, 'guest'); },
       // didn't work: back to showing a code of your own, with the problem under the code box
