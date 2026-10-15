@@ -15,6 +15,8 @@ export default async function handler(req, res) {
     // If these match, the members password signs people in as committee.
     passwordsDifferent: !!p.member && !!p.committee && p.member.replace(/\s+/g, '').toUpperCase() !== p.committee.replace(/\s+/g, '').toUpperCase(),
     storage: await storageCheck(),
+    // Relay for Padel Pong 1v1 on networks that block direct links between phones.
+    padelPongRelay: !!(env('CF_TURN_KEY_ID') && env('CF_TURN_API_TOKEN')),
     // Secret (sk_) and restricted (rk_) keys both say live or test in their prefix.
     stripe: key ? (/^(sk|rk)_live_/.test(key) ? 'live' : /^(sk|rk)_test_/.test(key) ? 'test' : 'unrecognised key') : false,
     // Names only (never values) of settings that look password-related, to spot a misspelt name.
