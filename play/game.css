@@ -390,6 +390,11 @@ body {
 
 .vs-tip[hidden] { display: none; }
 
+.vs-join { margin: 18px auto 0; max-width: 330px; }
+.vs-join[hidden] { display: none; }
+.vs-input { max-width: 130px; text-align: center; letter-spacing: 6px; }
+.vs-join-msg { margin: 10px 0 0; min-height: 8px; font-size: 8px; line-height: 1.8; color: var(--red); }
+
 /* ---------------- Leaderboard ---------------- */
 
 .vs-entry { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 18px; }
