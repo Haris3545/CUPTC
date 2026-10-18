@@ -5,7 +5,7 @@
 // the answers to the questions asked before paying. They're saved with the payment in Stripe.
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
-import { PASSWORDS, matches, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
+import { PASSWORDS, matches, isFullCode, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
 import { DEFAULT_MERCH } from './_lib/merch.js';
 
 // Letters (any language), numbers, spaces and . ' - &, up to 16 characters.
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       title = 'CUPTC social waiting list';
       name = 'Social padel waiting list place';
     } else if (b.kind === 'full') {
-      if (!matches(b.fullCode, PASSWORDS().full)) return send(res, 403, { error: 'full_code' });
+      if (!isFullCode(b.fullCode)) return send(res, 403, { error: 'full_code' });
       amount = membershipPrice('full');
       title = 'CUPTC Full membership';
       name = 'Full membership 2026–27';
