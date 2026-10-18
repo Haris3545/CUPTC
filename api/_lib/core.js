@@ -16,6 +16,8 @@ export const PASSWORDS = () => ({
   member: env('MEMBER_PASSWORD', 'MEMBERS_PASSWORD'),
   committee: env('COMMITTEE_PASSWORD'),
   full: env('FULL_MEMBER_CODE', 'FULL_CODE'),
+  // a second full membership code that also works
+  fullAlt: env('FULL_MEMBER_CODE_2') || 'FULLMEMBERSHIP',
   discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE'),
   // given to people on the social waiting list: their £5 comes off social membership
   waitlist: env('WAITLIST_CODE') || 'WAITINGLIST'
@@ -23,6 +25,7 @@ export const PASSWORDS = () => ({
 // Passwords and codes ignore capitals and spaces, so "cuptcmember2026" matches "CUPTCMEMBER2026".
 export const norm = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
 export const matches = (typed, want) => !!want && !!typed && same(norm(typed), norm(want));
+export const isFullCode = (typed) => { const p = PASSWORDS(); return matches(typed, p.full) || matches(typed, p.fullAlt); };
 
 // ------------------------------------------------------------------ prices (in pounds)
 export const SALE_END = new Date('2026-10-11T23:59:59+01:00');
