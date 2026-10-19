@@ -2,7 +2,7 @@
 // POST { item }: add or update an item. DELETE ?id=: remove one. Both need the committee sign-in.
 import crypto from 'node:crypto';
 import { isMember, isCommittee, readJSON, writeJSON, storageReady, send, body, isUploaded, removeImage, fromRequest } from './_lib/core.js';
-import { DEFAULT_MERCH } from './_lib/merch.js';
+import { DEFAULT_MERCH, withDefaults } from './_lib/merch.js';
 
 // Every uploaded photo an item uses (main and extras), so replaced ones can be tidied away.
 const uploads = (m) => [m.image].concat(m.images || []).filter(isUploaded);
@@ -11,11 +11,11 @@ const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 export default async function handler(req, res) {
   fromRequest(req);
   try {
-    const items = await readJSON('merch', DEFAULT_MERCH);
+    const items = withDefaults(await readJSON('merch', DEFAULT_MERCH));
     if (req.method === 'GET') {
       const member = isMember(req);
       const out = items.slice().sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((m) => (member ? m : { id: m.id, name: m.name, description: m.description, image: m.image, order: m.order, customisable: !!m.customisable, customLabel: m.customLabel || '', images: m.images || [], sizeChart: m.sizeChart || '' }));
+        .map((m) => (member ? m : { id: m.id, name: m.name, description: m.description, image: m.image, order: m.order, customisable: !!m.customisable, customLabel: m.customLabel || '', parts: m.parts || '', images: m.images || [], sizeChart: m.sizeChart || '' }));
       return send(res, 200, { items: out, member });
     }
     if (!isCommittee(req)) return send(res, 401, { error: 'committee_only' });
@@ -32,6 +32,7 @@ export default async function handler(req, res) {
         sizeChart: String(i.sizeChart || '').slice(0, 1200),
         customisable: !!i.customisable,
         customLabel: clean(i.customLabel, 40),
+        parts: clean(i.parts, 80),
         customPrice: Math.max(0, Math.round((i.customPrice === '' || i.customPrice == null ? 2 : Number(i.customPrice) || 0) * 100) / 100)
       };
       if (!item.name) return send(res, 400, { error: 'name_required' });
