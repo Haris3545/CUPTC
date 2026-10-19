@@ -20,11 +20,14 @@ export const PASSWORDS = () => ({
   fullAlt: env('FULL_MEMBER_CODE_2') || 'FULLMEMBERSHIP',
   discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE'),
   // given to people on the social waiting list: their £5 comes off social membership
-  waitlist: env('WAITLIST_CODE') || 'WAITINGLIST'
+  waitlist: env('WAITLIST_CODE') || 'WAITINGLIST',
+  // a second waiting-list code that works the same way
+  waitlistAlt: env('WAITLIST_CODE_2') || 'SOCIALWAITLIST'
 });
 // Passwords and codes ignore capitals and spaces, so "cuptcmember2026" matches "CUPTCMEMBER2026".
 export const norm = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
 export const matches = (typed, want) => !!want && !!typed && same(norm(typed), norm(want));
+export const isWaitlistCode = (typed) => { const p = PASSWORDS(); return matches(typed, p.waitlist) || matches(typed, p.waitlistAlt); };
 export const isFullCode = (typed) => { const p = PASSWORDS(); return matches(typed, p.full) || matches(typed, p.fullAlt); };
 
 // ------------------------------------------------------------------ prices (in pounds)
@@ -35,7 +38,7 @@ export function membershipPrice(kind, discountCode) {
   if (kind === 'full') return PRICES.full;
   const codes = PASSWORDS();
   if (matches(discountCode, codes.discount)) return PRICES.committee;
-  if (matches(discountCode, codes.waitlist)) return PRICES.waitlist;
+  if (isWaitlistCode(discountCode)) return PRICES.waitlist;
   return saleOn() ? PRICES.socialSale : PRICES.social;
 }
 
