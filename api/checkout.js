@@ -5,7 +5,7 @@
 // the answers to the questions asked before paying. They're saved with the payment in Stripe.
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
-import { PASSWORDS, matches, isFullCode, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
+import { PASSWORDS, matches, isFullCode, isWaitlistCode, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
 import { DEFAULT_MERCH, withDefaults, listOf } from './_lib/merch.js';
 
 // Letters (any language), numbers, spaces and . ' - &, up to 16 characters.
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     if (b.kind === 'social') {
       // Social membership is sold out to the public: it can be bought with the committee code (£20), or by
       // people from the waiting list with the waiting-list code (£45: their £5 comes off the £50).
-      const viaWaitlist = matches(b.code, PASSWORDS().waitlist);
+      const viaWaitlist = isWaitlistCode(b.code);
       if (!matches(b.code, PASSWORDS().discount) && !viaWaitlist) return send(res, 409, { error: 'social_sold_out' });
       amount = membershipPrice('social', b.code);
       title = 'CUPTC Social membership';
