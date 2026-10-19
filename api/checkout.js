@@ -6,7 +6,7 @@
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
 import { PASSWORDS, matches, isFullCode, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
-import { DEFAULT_MERCH } from './_lib/merch.js';
+import { DEFAULT_MERCH, withDefaults, listOf } from './_lib/merch.js';
 
 // Letters (any language), numbers, spaces and . ' - &, up to 16 characters.
 const NAME_OK = /^[\p{L}\p{N} .'&-]{1,16}$/u;
@@ -67,9 +67,19 @@ export default async function handler(req, res) {
       name = 'Full membership 2026–27';
     } else if (b.kind === 'merch') {
       if (!isMember(req)) return send(res, 401, { error: 'members_only' });
-      const item = (await readJSON('merch', DEFAULT_MERCH)).find((m) => m.id === b.itemId);
+      const item = withDefaults(await readJSON('merch', DEFAULT_MERCH)).find((m) => m.id === b.itemId);
       if (!item) return send(res, 404, { error: 'no_item' });
-      const size = String(b.size || '').slice(0, 20);
+      const sizes = listOf(item.sizes), parts = listOf(item.parts);
+      let size;
+      if (sizes.length && parts.length) {
+        // a size for each part, e.g. "Shirt: S, Shorts: L"
+        const picked = Array.isArray(b.partSizes) ? b.partSizes.map((x) => String(x || '').trim()) : [];
+        if (picked.length !== parts.length || picked.some((x) => !sizes.includes(x))) return send(res, 400, { error: 'size' });
+        size = parts.map((p, i) => p + ': ' + picked[i]).join(', ').slice(0, 200);
+      } else {
+        size = String(b.size || '').trim().slice(0, 20);
+        if (sizes.length && !sizes.includes(size)) return send(res, 400, { error: 'size' });
+      }
       amount = item.price;
       title = 'CUPTC shop';
       name = item.name + (size ? ' (' + size + ')' : '');

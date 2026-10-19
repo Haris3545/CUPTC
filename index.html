@@ -454,6 +454,7 @@
   .size-chart th { font-weight: 400; font-style: italic; color: var(--ink-3); }
   .pd-buy { display: grid; gap: 12px; }
   .pd-buy .pdeliv { text-align: left; }
+  .pd-sizes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 720px) {
     .pd { grid-template-columns: 1fr; gap: 18px; }
     .sheet.wide { width: 100%; }
@@ -941,6 +942,7 @@
             <div class="field"><label for="m-price">Price (£)</label><input class="input" id="m-price" type="number" min="0" step="0.01" required></div>
             <div class="field"><label for="m-delivery">Delivery time</label><input class="input" id="m-delivery" placeholder="e.g. 3 to 4 weeks" maxlength="60"></div>
             <div class="field"><label for="m-sizes">Sizes (comma separated)</label><input class="input" id="m-sizes" placeholder="XS, S, M, L, XL" maxlength="80"></div>
+            <div class="field"><label for="m-parts">Parts sized separately (optional)</label><input class="input" id="m-parts" placeholder="e.g. Shirt, Shorts" maxlength="80"></div>
             <div class="field"><label for="m-image">Image</label><div class="inline"><select class="input" id="m-image"></select><button class="btn line sm" type="button" id="m-upload">Upload photo</button></div><img id="m-preview" class="m-preview" alt="" hidden></div>
             <div class="field full"><label class="check"><input type="checkbox" id="m-custom"> <span>Offer customisation</span></label></div>
             <div class="field" id="m-custom-label-f" hidden><label for="m-custom-label">What buyers add</label><input class="input" id="m-custom-label" maxlength="40" placeholder="e.g. Name on the back, Initials on the sleeve"></div>
@@ -1595,6 +1597,7 @@
     return { ok: r.ok, status: r.status, data };
   }
   const ERR = {
+    size: 'Please pick a size from the list.',
     donation_amount: 'Enter an amount between £1 and £5,000.',
     social_sold_out: 'Social membership has sold out. Join the waiting list instead.',
     details_ec_name: 'Please enter the name of your emergency contact.',
@@ -2028,14 +2031,23 @@
     }
     if (m.delivery) { const d = document.createElement('p'); d.className = 'pdeliv'; d.textContent = 'Delivery: ' + m.delivery; buyBox.appendChild(d); }
     const sizes = String(m.sizes || '').split(',').map((x) => x.trim()).filter(Boolean);
-    let sel = null;
+    // One size, or (for items like the kit bundles) a size for each part, e.g. shirt S and shorts L
+    const parts = String(m.parts || '').split(',').map((x) => x.trim()).filter(Boolean);
+    const sels = [];
     if (sizes.length) {
-      const f = document.createElement('div');
-      f.className = 'field';
-      f.innerHTML = '<label for="pd-size">Size</label><select class="input" id="pd-size"></select>';
-      sel = $('select', f);
-      sizes.forEach((x) => { const o = document.createElement('option'); o.textContent = x; sel.appendChild(o); });
-      buyBox.appendChild(f);
+      const wrap = document.createElement('div');
+      wrap.className = parts.length ? 'pd-sizes' : '';
+      (parts.length ? parts : ['']).forEach((part, i) => {
+        const f = document.createElement('div');
+        f.className = 'field';
+        f.innerHTML = '<label for="pd-size-' + i + '"></label><select class="input" id="pd-size-' + i + '"></select>';
+        $('label', f).textContent = part ? part + ' size' : 'Size';
+        const sel = $('select', f);
+        sizes.forEach((x) => { const o = document.createElement('option'); o.textContent = x; sel.appendChild(o); });
+        sels.push(sel);
+        wrap.appendChild(f);
+      });
+      buyBox.appendChild(wrap);
     }
     // Optional customisation (the committee sets what it is, e.g. a name on the back), for items the committee has marked customisable
     let custom = null;
@@ -2062,7 +2074,8 @@
     buy.type = 'button';
     buy.textContent = 'Buy now';
     buy.addEventListener('click', () => {
-      const req = { kind: 'merch', itemId: m.id, size: sel ? sel.value : '' };
+      const req = { kind: 'merch', itemId: m.id, size: sels.length === 1 ? sels[0].value : '' };
+      if (parts.length && sels.length) req.partSizes = sels.map((x) => x.value);
       if (custom && custom.tick.checked) {
         const v = custom.nameIn.value.trim();
         if (!/^[\p{L}\p{N} .'&-]{1,16}$/u.test(v)) {
@@ -2165,6 +2178,7 @@
       price: Math.max(0, Number($('#m-price').value) || 0),
       delivery: $('#m-delivery').value.trim(),
       sizes: $('#m-sizes').value.trim(),
+      parts: $('#m-parts').value.trim(),
       image: imgSel.value,
       description: $('#m-desc').value.trim(),
       order: Number($('#m-order').value) || 0,
@@ -2270,6 +2284,7 @@
         $('#m-price').value = m.price || 0;
         $('#m-delivery').value = m.delivery || '';
         $('#m-sizes').value = m.sizes || '';
+        $('#m-parts').value = m.parts || '';
         useImage(m.image || '');
         $('#m-desc').value = m.description || '';
         $('#m-order').value = m.order || 0;
