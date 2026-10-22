@@ -1,12 +1,12 @@
 // GET /api/status: which settings this deployment can see. Shows yes/no only, never the values.
-import { PASSWORDS, env, storageCheck, fromRequest, send } from './_lib/core.js';
+import { PASSWORDS, env, storageCheck, fromRequest, send, host } from './_lib/core.js';
 
 export default async function handler(req, res) {
   fromRequest(req);
   const p = PASSWORDS();
   const key = env('STRIPE_SECRET_KEY');
   return send(res, 200, {
-    environment: process.env.VERCEL_ENV || 'local',
+    environment: process.env.VERCEL_ENV || host(),
     MEMBER_PASSWORD: !!p.member,
     COMMITTEE_PASSWORD: !!p.committee,
     FULL_MEMBER_CODE: !!p.full,

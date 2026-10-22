@@ -1,7 +1,5 @@
 // Shared helpers for the API functions. Files in api/_lib are not deployed as routes.
 import crypto from 'node:crypto';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 
 // ------------------------------------------------------------------ settings (set these in Vercel)
 // Values are trimmed and any quotes pasted around them are ignored.
@@ -65,11 +63,21 @@ export const isMember = (req) => ['member', 'committee'].includes(roleOf(req));
 export const isCommittee = (req) => roleOf(req) === 'committee';
 
 // ------------------------------------------------------------------ storage
-// On Vercel: Vercel Blob. Connecting a Blob store sets either BLOB_READ_WRITE_TOKEN (older stores)
-// or BLOB_STORE_ID, in which case the function signs in with Vercel's own per-request OIDC token.
-// Locally (scripts/dev.js): files in .data/.
-const LOCAL = path.join(process.cwd(), '.data');
-const useBlob = () => !!(env('BLOB_READ_WRITE_TOKEN') || env('BLOB_STORE_ID'));
+// Three places data can live, picked automatically:
+// - Cloudflare (cloudflare/worker.js): the STORE binding, an R2 bucket or a KV namespace.
+// - Vercel: Vercel Blob. Connecting a Blob store sets either BLOB_READ_WRITE_TOKEN (older stores)
+//   or BLOB_STORE_ID, in which case the function signs in with Vercel's own per-request OIDC token.
+// - Locally (scripts/dev.js): files in .data/.
+let platform = null; // set by the Cloudflare worker on each request: { store }
+export const usePlatform = (p) => { platform = p; };
+const cfStore = () => (platform && platform.store) || null;
+const isR2 = (st) => typeof st.head === 'function';
+export const host = () => (cfStore() ? 'cloudflare' : process.env.VERCEL_ENV ? 'vercel' : 'local');
+const useBlob = () => !cfStore() && !!(env('BLOB_READ_WRITE_TOKEN') || env('BLOB_STORE_ID'));
+const local = async () => {
+  const [fs, path] = await Promise.all([import('node:fs/promises'), import('node:path')]);
+  return { fs, path, dir: path.join(process.cwd(), '.data') };
+};
 let requestOidc = '';
 // Call at the start of a handler that uses storage, so the OIDC token from the request is available.
 export function fromRequest(req) {
@@ -77,9 +85,14 @@ export function fromRequest(req) {
   if (t) requestOidc = String(t);
 }
 const auth = () => (env('BLOB_READ_WRITE_TOKEN') ? {} : { oidcToken: requestOidc || undefined, storeId: env('BLOB_STORE_ID') || undefined });
-export const storageReady = () => useBlob() || env('LOCAL_STORAGE') === '1';
+export const storageReady = () => !!cfStore() || useBlob() || env('LOCAL_STORAGE') === '1';
 // A real round trip to storage, for the status page.
 export async function storageCheck() {
+  const st = cfStore();
+  if (st) {
+    try { await st.get('data/merch.json'); return 'ok (cloudflare ' + (isR2(st) ? 'r2' : 'kv') + ')'; }
+    catch (e) { return 'error: ' + String(e && e.message || e).slice(0, 160); }
+  }
   if (!useBlob()) return env('LOCAL_STORAGE') === '1' ? 'ok (local)' : 'not connected';
   try {
     const { list } = await import('@vercel/blob');
@@ -90,9 +103,35 @@ export async function storageCheck() {
   }
 }
 
-// JSON documents are written under a new name each time and the older copies removed,
+// Raw files in Cloudflare storage (JSON documents and uploaded photos).
+async function cfGet(key, as) {
+  const st = cfStore();
+  if (isR2(st)) {
+    const o = await st.get(key);
+    return o ? (as === 'json' ? o.json() : o) : null;
+  }
+  if (as === 'json') return st.get(key, 'json');
+  const { value, metadata } = await st.getWithMetadata(key, 'arrayBuffer');
+  return value ? { body: value, httpMetadata: { contentType: (metadata && metadata.type) || 'application/octet-stream' } } : null;
+}
+async function cfPut(key, value, type) {
+  const st = cfStore();
+  if (isR2(st)) await st.put(key, value, { httpMetadata: { contentType: type } });
+  else await st.put(key, value, { metadata: { type } });
+}
+// An uploaded photo for the worker to serve at /uploads/..., or null.
+export async function readUpload(key) {
+  if (!cfStore() || !/^uploads\/[\w.-]+$/.test(key)) return null;
+  return cfGet(key);
+}
+
+// On Vercel, JSON documents are written under a new name each time and the older copies removed,
 // so a read never gets a stale cached copy.
 export async function readJSON(name, fallback) {
+  if (cfStore()) {
+    const v = await cfGet('data/' + name + '.json', 'json');
+    return v == null ? fallback : v;
+  }
   if (useBlob()) {
     const { list } = await import('@vercel/blob');
     const { blobs } = await list({ prefix: 'data/' + name + '-', ...auth() });
@@ -102,9 +141,11 @@ export async function readJSON(name, fallback) {
     return r.ok ? r.json() : fallback;
   }
   if (env('LOCAL_STORAGE') !== '1') return fallback;
-  try { return JSON.parse(await fs.readFile(path.join(LOCAL, name + '.json'), 'utf8')); } catch { return fallback; }
+  const { fs, path, dir } = await local();
+  try { return JSON.parse(await fs.readFile(path.join(dir, name + '.json'), 'utf8')); } catch { return fallback; }
 }
 export async function writeJSON(name, data) {
+  if (cfStore()) return cfPut('data/' + name + '.json', JSON.stringify(data), 'application/json');
   if (useBlob()) {
     const { put, list, del } = await import('@vercel/blob');
     const { blobs: old } = await list({ prefix: 'data/' + name + '-', ...auth() });
@@ -112,27 +153,36 @@ export async function writeJSON(name, data) {
     if (old.length) await del(old.map((b) => b.url), auth());
     return;
   }
-  await fs.mkdir(LOCAL, { recursive: true });
-  await fs.writeFile(path.join(LOCAL, name + '.json'), JSON.stringify(data, null, 2));
+  const { fs, path, dir } = await local();
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(path.join(dir, name + '.json'), JSON.stringify(data, null, 2));
 }
 export async function putImage(name, buf) {
+  if (cfStore()) {
+    const key = 'uploads/' + name + '-' + Date.now().toString(36) + '-' + crypto.randomBytes(5).toString('hex') + '.jpg';
+    await cfPut(key, buf, 'image/jpeg');
+    return '/' + key;
+  }
   if (useBlob()) {
     const { put } = await import('@vercel/blob');
     const b = await put('uploads/' + name + '.jpg', buf, { access: 'public', contentType: 'image/jpeg', addRandomSuffix: true, ...auth() });
     return b.url;
   }
+  const { fs, path, dir } = await local();
   const file = name + '-' + Date.now() + '.jpg';
-  await fs.mkdir(path.join(LOCAL, 'uploads'), { recursive: true });
-  await fs.writeFile(path.join(LOCAL, 'uploads', file), buf);
+  await fs.mkdir(path.join(dir, 'uploads'), { recursive: true });
+  await fs.writeFile(path.join(dir, 'uploads', file), buf);
   return '/.data/uploads/' + file;
 }
-// Uploaded images live in Blob storage (or .data/uploads locally); everything else is a built-in image name.
-export const isUploaded = (v) => /^(https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\.com\/|\/\.data\/uploads\/)[\w./%-]+$/i.test(String(v || ''));
+// Uploaded images live in storage (Vercel Blob, Cloudflare's /uploads/, or .data/uploads locally);
+// everything else is a built-in image name.
+export const isUploaded = (v) => /^(https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\.com\/|\/uploads\/|\/\.data\/uploads\/)[\w./%-]+$/i.test(String(v || ''));
 export async function removeImage(url) {
   if (!url) return;
   try {
-    if (useBlob()) { const { del } = await import('@vercel/blob'); await del(url, auth()); }
-    else await fs.unlink(path.join(process.cwd(), url));
+    if (cfStore()) { if (String(url).startsWith('/uploads/')) await cfStore().delete(String(url).slice(1)); }
+    else if (useBlob()) { const { del } = await import('@vercel/blob'); await del(url, auth()); }
+    else { const { fs, path } = await local(); await fs.unlink(path.join(process.cwd(), url)); }
   } catch { /* already gone */ }
 }
 
