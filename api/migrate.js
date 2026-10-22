@@ -1,6 +1,7 @@
 // Moving the site's saved data from Vercel to Cloudflare. Both steps need ?key= matching ORDERS_KEY.
 // On the old (Vercel) site:   GET ?key=K&op=export        -> every saved document as JSON
-// On the new (Cloudflare) site: GET ?key=K&from=<old site> -> fetches that export, copies every uploaded
+// On the new (Cloudflare) site: GET ?key=K&from=<old site> (or &merch=<Blob file address>&committee=...
+//   when the old site is down) -> fetches that export, copies every uploaded
 //   photo into Cloudflare storage, points the documents at the copies and saves them. Safe to run again:
 //   run it once to try the new site, then again just before switching the domain over.
 import { env, same, readJSON, writeJSON, putImage, isUploaded, host, fromRequest, send } from './_lib/core.js';
@@ -35,12 +36,26 @@ export default async function handler(req, res) {
   }
 
   const from = String(q.get('from') || '').replace(/\/+$/, '');
-  if (!from) return send(res, 400, { error: 'add &from= with the old site address, e.g. https://cuptc.vercel.app' });
+  // Or straight from the files in Vercel Blob storage (Storage > Blob > Browser > data/), for when the
+  // old site itself is down: &merch=<file address>&committee=...&leaderboard=...&waitlist=...
+  const direct = DOCS.filter((n) => q.get(n));
+  if (!from && !direct.length) return send(res, 400, { error: 'add &from= with the old site address, e.g. https://cuptc.vercel.app, or &merch= etc. with Blob file addresses' });
   if (host() !== 'cloudflare') return send(res, 400, { error: 'run the copy on the new Cloudflare site, not here' });
   try {
-    const r = await fetch(from + '/api/migrate?op=export&key=' + encodeURIComponent(want), { cache: 'no-store' });
-    if (!r.ok) return send(res, 502, { error: 'old site said ' + r.status + ': ' + (await r.text()).slice(0, 200) });
-    const { docs } = await r.json();
+    let docs = {};
+    if (direct.length) {
+      for (const name of direct) {
+        const url = String(q.get(name)).trim();
+        if (!/^https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\.com\/[\w./%-]+\.json$/i.test(url)) return send(res, 400, { error: name + ': not a Vercel Blob .json address' });
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) return send(res, 502, { error: name + ': Vercel Blob said ' + r.status });
+        docs[name] = await r.json();
+      }
+    } else {
+      const r = await fetch(from + '/api/migrate?op=export&key=' + encodeURIComponent(want), { cache: 'no-store' });
+      if (!r.ok) return send(res, 502, { error: 'old site said ' + r.status + ': ' + (await r.text()).slice(0, 200) });
+      docs = (await r.json()).docs;
+    }
     const map = new Map(), failed = [];
     for (const url of photos(docs, new Set())) {
       try {
@@ -55,7 +70,19 @@ export default async function handler(req, res) {
     const copied = [];
     for (const name of DOCS) {
       if (docs[name] === undefined) continue;
-      await writeJSON(name, swap(docs[name], map));
+      let doc = swap(docs[name], map);
+      // keep scores set on the new site since the switch: the higher score wins for the same player
+      if (name === 'leaderboard' && Array.isArray(doc)) {
+        const now = await readJSON('leaderboard', []);
+        const key = (r) => String(r.name || '').replace(/\s+/g, '').toLowerCase();
+        const all = new Map(doc.map((r) => [key(r), r]));
+        for (const r of Array.isArray(now) ? now : []) {
+          const old = all.get(key(r));
+          if (!old || r.score > old.score) all.set(key(r), old ? { ...old, ...r, owner: r.owner || old.owner } : r);
+        }
+        doc = [...all.values()];
+      }
+      await writeJSON(name, doc);
       copied.push(name);
     }
     return send(res, 200, { ok: true, copied, photos: map.size, photosFailed: failed });
