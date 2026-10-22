@@ -13,5 +13,8 @@
   // Saved data (shop items, leaderboard, committee photos, waiting list) and uploaded photos
   "r2_buckets": [{ "binding": "STORE", "bucket_name": "cuptc-store" }],
   "alias": { "@vercel/blob": "./cloudflare/no-blob.js" },
+  // Settings are added in the dashboard (as Secrets), never here: this file is in the repository.
+  // keep_vars stops a deploy from removing any added there as plain text.
+  "keep_vars": true,
   "observability": { "enabled": true }
 }
