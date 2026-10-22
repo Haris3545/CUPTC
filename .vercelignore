@@ -1,0 +1,5 @@
+# Cloudflare-only files, not needed on Vercel
+cloudflare
+wrangler.jsonc
+_headers
+.assetsignore

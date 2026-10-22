@@ -1,0 +1,17 @@
+// Cloudflare Workers settings. The site's files are served as static assets; cloudflare/worker.js runs
+// the api/ functions. Passwords, the Stripe key etc. go in the Worker's Settings > Variables and Secrets.
+{
+  "name": "cuptc",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/uploads/*", "/_vercel/*"]
+  },
+  // Saved data (shop items, leaderboard, committee photos, waiting list) and uploaded photos
+  "r2_buckets": [{ "binding": "STORE", "bucket_name": "cuptc-store" }],
+  "alias": { "@vercel/blob": "./cloudflare/no-blob.js" },
+  "observability": { "enabled": true }
+}

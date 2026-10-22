@@ -1,0 +1,19 @@
+# Files Cloudflare must not serve (everything else in the repo is the website)
+.git
+.github
+.data
+.env*
+node_modules
+api
+cloudflare
+scripts
+wrangler.jsonc
+vercel.json
+package.json
+package-lock.json
+README.md
+.assetsignore
+.vercelignore
+.wrangler
+.dev.vars
+.gitignore

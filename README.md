@@ -29,6 +29,20 @@ The pages are plain HTML with no build step. A few small server functions in `ap
 
 Payments show up in the Stripe dashboard, including the size chosen for merch (in the payment's metadata) and the delivery address.
 
+## Move to Cloudflare
+
+The same code runs on Cloudflare Workers: `cloudflare/worker.js` serves the `api/` functions and the rest
+of the repo is served as static files (`wrangler.jsonc`, `.assetsignore`, `_headers`). Saved data and uploaded
+photos go in an R2 bucket called `cuptc-store` instead of Vercel Blob. Vercel keeps working until the domain moves.
+
+1. Cloudflare dashboard → **R2** → create a bucket named `cuptc-store` (R2 asks for a card, but the free allowance is far more than the club uses).
+2. **Workers & Pages → Create → Import a repository** → this repo, branch `main`. Leave the build command empty; deploy command `npx wrangler deploy`.
+3. The Worker's **Settings → Variables and Secrets**: add every setting from Vercel (same values, especially `AUTH_SECRET`, so sign-ins keep working). Redeploy.
+4. Open `https://<worker>.workers.dev/api/status`: `"environment": "cloudflare"`, `"storage": "ok (cloudflare r2)"`.
+5. Copy the data across: open `https://<worker>.workers.dev/api/migrate?key=ORDERS_KEY&from=https://<project>.vercel.app`. It copies the shop, photos, leaderboard, committee photos and waiting list. Run it again right before step 6 to pick up anything new.
+6. Move cuptc.com's DNS to Cloudflare, then the Worker's **Settings → Domains & Routes → Add custom domain**: `cuptc.com` and `www.cuptc.com`. To go back, point the domain at Vercel again.
+7. Optional: **Analytics & Logs → Web Analytics** for visitor stats (replaces Vercel Analytics).
+
 ## Switch Stripe from test to live
 
 1. In the Stripe dashboard, finish **Activate payments**: the club's details, a contact, and the bank account payouts go to.
