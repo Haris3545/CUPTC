@@ -18,7 +18,8 @@ export const PASSWORDS = () => ({
   fullAlt: env('FULL_MEMBER_CODE_2') || 'FULLMEMBERSHIP',
   discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE'),
   // given to people on the social waiting list: their £5 comes off social membership
-  waitlist: env('WAITLIST_CODE') || 'WAITINGLIST',
+  // optional: no built-in waiting-list code (WAITINGLIST was retired on 23 October 2026)
+  waitlist: env('WAITLIST_CODE'),
   // an optional second waiting-list code (SOCIALWAITLIST was retired on 23 October 2026)
   waitlistAlt: env('WAITLIST_CODE_2')
 });
