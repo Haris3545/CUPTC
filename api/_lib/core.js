@@ -19,8 +19,8 @@ export const PASSWORDS = () => ({
   discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE'),
   // given to people on the social waiting list: their £5 comes off social membership
   waitlist: env('WAITLIST_CODE') || 'WAITINGLIST',
-  // a second waiting-list code that works the same way
-  waitlistAlt: env('WAITLIST_CODE_2') || 'SOCIALWAITLIST'
+  // an optional second waiting-list code (SOCIALWAITLIST was retired on 23 October 2026)
+  waitlistAlt: env('WAITLIST_CODE_2')
 });
 // Passwords and codes ignore capitals and spaces, so "cuptcmember2026" matches "CUPTCMEMBER2026".
 export const norm = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
