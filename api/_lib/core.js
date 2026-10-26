@@ -17,10 +17,10 @@ export const PASSWORDS = () => ({
   // a second full membership code that also works
   fullAlt: env('FULL_MEMBER_CODE_2') || 'FULLMEMBERSHIP',
   discount: env('COMMITTEE_DISCOUNT_CODE', 'DISCOUNT_CODE'),
-  // given to people on the social waiting list: their £5 comes off social membership
-  // optional: no built-in waiting-list code (WAITINGLIST was retired on 23 October 2026)
-  waitlist: env('WAITLIST_CODE'),
-  // an optional second waiting-list code (SOCIALWAITLIST was retired on 23 October 2026)
+  // given to people on the social waiting list: their £5 comes off social membership (£45), and it lets
+  // them buy it while it's sold out. (WAITINGLIST was retired on 23 October 2026.)
+  waitlist: env('WAITLIST_CODE') || 'SOCIALWAITLIST',
+  // an optional second waiting-list code
   waitlistAlt: env('WAITLIST_CODE_2')
 });
 // Passwords and codes ignore capitals and spaces, so "cuptcmember2026" matches "CUPTCMEMBER2026".

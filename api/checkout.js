@@ -1,7 +1,7 @@
 // POST { kind: 'social' | 'full' | 'merch', code?, fullCode?, itemId?, size?, custom? }
 // custom: the buyer's customisation (what it is, e.g. a name on the back, is set per item), for items the committee has marked customisable.
 // Donations: { kind: 'donation', amount (pounds), monthly?, name?, message? }
-// Memberships also need details: { ecName, ecPhone, medical?, policies: true (the Code of Conduct), photos: bool, privacy: true },
+// Memberships also need details: { ecName, ecPhone, medical?, policies: true (the Code of Conduct), photos: true (photography consent), privacy: true },
 // the answers to the questions asked before paying. They're saved with the payment in Stripe.
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
@@ -21,6 +21,7 @@ function memberDetails(d) {
   if (!ecName) return { error: 'details_ec_name' };
   if (!PHONE_OK.test(ecPhone) || ecPhone.replace(/\D/g, '').length < 7) return { error: 'details_ec_phone' };
   if (d.policies !== true) return { error: 'details_policies' };
+  if (d.photos !== true) return { error: 'details_photos' };
   if (d.privacy !== true) return { error: 'details_privacy' };
   return {
     meta: {
@@ -28,7 +29,7 @@ function memberDetails(d) {
       emergency_contact_phone: ecPhone,
       medical_conditions: medical || 'None given',
       code_of_conduct: 'Agreed (2026-27 version)',
-      photography_consent: d.photos === true ? 'Yes' : 'No',
+      photography_consent: 'Yes',
       privacy_notice: 'Agreed (' + PRIVACY_VERSION + ' version)',
       agreed_at: new Date().toISOString()
     }
