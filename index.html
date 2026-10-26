@@ -1604,6 +1604,7 @@
     details_ec_name: 'Please enter the name of your emergency contact.',
     details_ec_phone: 'Please enter a valid phone number for your emergency contact.',
     details_policies: 'Please agree to the Code of Conduct to join.',
+    details_photos: 'Please give photography consent to join.',
     details_privacy: 'Please agree to the Privacy Notice to join.',
     custom_name: 'Your customisation can only use up to 16 letters, numbers, spaces or . \' - &',
     offline: 'Couldn’t reach the club’s server. Check your connection and try again.',
@@ -1663,7 +1664,7 @@
     '<div class="field"><label for="j-ec-phone">Emergency contact phone number</label><input class="input" id="j-ec-phone" type="tel" maxlength="20" autocomplete="off" placeholder="e.g. 07700 900123" required></div>' +
     '<div class="field"><label for="j-medical">Do you have any relevant medical conditions, such as allergies or asthma, or anything else that might affect your ability to play?</label><textarea class="input" id="j-medical" maxlength="450" rows="1" placeholder="Leave blank if none"></textarea></div>' +
     '<label class="check join-check"><input type="checkbox" id="j-policies"> <span>I have read and agree to abide by the club’s <a class="link" href="/#code-of-conduct" target="_blank" rel="noopener">Code of Conduct</a>.</span></label>' +
-    '<label class="check join-check"><input type="checkbox" id="j-photos"> <span>I consent to being photographed or filmed at club events, and to the club using these photos and videos. <i>Optional</i></span></label>' +
+    '<label class="check join-check"><input type="checkbox" id="j-photos"> <span>I consent to being photographed or filmed at club events, and to the club using these photos and videos.</span></label>' +
     '<label class="check join-check"><input type="checkbox" id="j-privacy"> <span>I have read and agree to the club’s <a class="link" href="/#privacy" target="_blank" rel="noopener">Privacy Notice</a>.</span></label>' +
     '<p class="msg err" id="j-msg" role="status"></p>' +
     '<button class="apple" type="submit">Continue to payment</button>' +
@@ -1699,6 +1700,7 @@
       const problem = !details.ecName ? ['details_ec_name', '#j-ec-name']
         : !/^\+?[0-9 ()-]{7,20}$/.test(details.ecPhone) || details.ecPhone.replace(/\D/g, '').length < 7 ? ['details_ec_phone', '#j-ec-phone']
         : !details.policies ? ['details_policies', '#j-policies']
+        : !details.photos ? ['details_photos', '#j-photos']
         : !details.privacy ? ['details_privacy', '#j-privacy'] : null;
       if (problem) { msg.textContent = ERR[problem[0]]; $(problem[1], f).focus(); return; }
       msg.textContent = '';
