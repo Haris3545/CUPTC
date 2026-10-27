@@ -564,7 +564,33 @@
 
   /* ---- Members Area: the three section tiles */
   .page-head.mhead { padding-bottom: clamp(28px, 4vh, 40px); }
-  .gate-wrap { margin-top: 36px; }
+  /* ---- the Members Area sign-in */
+  #members-page { position: relative; }
+  .mgate { position: relative; min-height: calc(100svh - var(--bar)); display: grid; place-items: center; padding: 56px var(--gutter); overflow: hidden; isolation: isolate; }
+  .mgate-bg { position: absolute; inset: 0; z-index: -1; }
+  .mgate-bg img { position: absolute; inset: -60px; width: calc(100% + 120px); height: calc(100% + 120px); object-fit: cover; filter: blur(26px) saturate(.85); transform: scale(1.04); }
+  .mgate-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(238, 244, 241, .78), rgba(238, 244, 241, .9) 60%, rgba(255, 255, 255, .96)); }
+  .mgate-card { position: relative; width: min(470px, 100%); display: grid; gap: 14px; justify-items: center; text-align: center; padding: clamp(30px, 5vw, 46px) clamp(22px, 5vw, 40px) clamp(26px, 4vw, 36px); border-radius: 28px;
+    background: rgba(255, 255, 255, .66); -webkit-backdrop-filter: blur(20px) saturate(1.2); backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow: 0 40px 90px -40px rgba(19, 38, 31, .5), 0 12px 30px -18px rgba(19, 38, 31, .3), inset 0 0 0 1px rgba(255, 255, 255, .8); animation: gateIn .9s var(--out) both; }
+  .mgate-crest { width: 92px; height: auto; margin-bottom: 4px; }
+  .mgate-kicker { margin: 0; font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: var(--green-dark); }
+  .mgate-title { margin: 0; font-weight: 400; font-size: clamp(38px, 6vw, 56px); line-height: 1; letter-spacing: -.01em; }
+  .mgate-lede { margin: 0 0 6px; color: var(--ink-2); font-size: 17px; max-width: 30em; }
+  .mgate .gate { width: 100%; }
+  .mgate .gate .small { text-align: center; }
+  @keyframes gateIn { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+  /* signing in: the sign-in dissolves into blur while the Members Area comes into focus underneath */
+  .mgate.unlocking { position: absolute; top: 0; left: 0; right: 0; z-index: 5; pointer-events: none; animation: gateAway 1.15s cubic-bezier(.4, 0, .2, 1) .15s forwards; }
+  .mgate.unlocking .mgate-card { animation: cardAway .7s cubic-bezier(.4, 0, .2, 1) forwards; }
+  @keyframes cardAway { to { opacity: 0; transform: scale(1.05); filter: blur(10px); } }
+  @keyframes gateAway { to { opacity: 0; filter: blur(24px); } }
+  .mcontent.arriving { animation: contentIn 1.3s var(--out) .3s both; }
+  @keyframes contentIn { from { opacity: 0; filter: blur(16px); transform: scale(.99); } }
+  .mgate.returning .mgate-card { animation: gateIn .8s var(--out) both; }
+  @media (prefers-reduced-motion: reduce) {
+    .mgate.unlocking, .mgate.unlocking .mgate-card, .mcontent.arriving, .mgate-card { animation-duration: .01s; animation-delay: 0s; }
+  }
   .mtabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 0; margin-bottom: clamp(96px, 16vh, 170px); }
   #members-page.has-view .mtabs { margin-bottom: clamp(8px, 2vw, 20px); }
   .mtab { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr auto; column-gap: 16px; row-gap: 4px; align-items: start; text-align: left; padding: 24px 24px 22px; border: 0; border-radius: 20px; background: var(--green-soft); color: var(--ink); font: inherit; cursor: pointer; box-shadow: inset 0 0 0 1px transparent; transition: background-color .4s var(--out), box-shadow .4s var(--out), transform .6s var(--out); }
@@ -1117,19 +1143,29 @@
 
   <!-- ---------------------------------------------------------- MEMBERS AREA -->
   <div class="page" data-page="members" id="members-page">
+    <!-- Until someone signs in, the Members Area is only this: a sign-in over a blurred club photo -->
+    <section class="mgate" id="mgate" aria-labelledby="mgate-h">
+      <div class="mgate-bg" aria-hidden="true"><img src="img/p5.jpg" alt=""></div>
+      <div class="mgate-card">
+        <img class="mgate-crest" src="img/emblem.png" alt="" width="460" height="294">
+        <p class="mgate-kicker">CUPTC members</p>
+        <h2 class="mgate-title" id="mgate-h">Members Area.</h2>
+        <p class="mgate-lede">The shop, club life and the social side of the club. Sign in with the password you got when you joined.</p>
+        <form class="gate" id="gate" autocomplete="off">
+          <label class="lbl" for="member-pw">Members password</label>
+          <div class="inline"><input class="input" id="member-pw" type="password" placeholder="Password" autocomplete="current-password"><button class="btn sm" type="submit">Sign in</button></div>
+          <p class="msg" id="gate-msg" role="status"></p>
+          <p class="small">Not a member yet? <a class="link" href="#membership">See membership</a></p>
+        </form>
+      </div>
+    </section>
+
+    <div class="mcontent" id="mcontent" hidden>
     <section class="page-head mhead">
       <div class="narrow center">
         <h2 class="display rv">Members Area.</h2>
         <hr class="rule rv" style="--d:.06s">
-        <p class="lede rv" id="members-lede" style="--d:.1s">Club kit and merch, for members only. Sign in with the password you got when you joined.</p>
-      </div>
-      <div class="narrow rv gate-wrap" id="gate-wrap" style="--d:.18s">
-        <form class="gate" id="gate" autocomplete="off">
-          <label class="lbl" for="member-pw">Members password</label>
-          <div class="inline"><input class="input" id="member-pw" type="password" placeholder="Password"><button class="btn sm" type="submit">Sign in</button></div>
-          <p class="msg" id="gate-msg" role="status"></p>
-          <p class="small">Not a member yet? <a class="link" href="#membership">See membership</a></p>
-        </form>
+        <p class="lede rv" id="members-lede" style="--d:.1s">The shop, club life and the social side of CUPTC.</p>
       </div>
     </section>
 
@@ -1225,6 +1261,8 @@
         </div>
       </div>
     </div>
+
+    </div><!-- /mcontent -->
 
     <section class="sec" id="committee" hidden>
       <div class="narrow center">
@@ -2213,13 +2251,13 @@
   });
 
   // ---------------------------------------------------------------- sign in
-  function signIn(role, token) {
+  function signIn(role, token, unlock) {
     state.token = token;
     state.member = true;
     state.admin = role === 'committee';
     store.set('cuptc-token', token);
     store.set('cuptc-role', role);
-    renderMembers();
+    renderMembers(unlock);
     loadShop();
   }
   function signOut(reload = true) {
@@ -2231,7 +2269,7 @@
   async function login(input, msg, e) {
     e.preventDefault();
     const res = await api('login', { body: { password: input.value.trim() } });
-    if (res.ok) { msg.textContent = ''; input.value = ''; input.type = 'password'; const eye = input.parentNode.querySelector('.eye'); if (eye) eye.setAttribute('aria-pressed', 'false'); signIn(res.data.role, res.data.token); return; }
+    if (res.ok) { msg.textContent = ''; input.value = ''; input.type = 'password'; const eye = input.parentNode.querySelector('.eye'); if (eye) eye.setAttribute('aria-pressed', 'false'); signIn(res.data.role, res.data.token, true); return; }
     msg.className = 'msg err';
     msg.textContent = res.status === 401 ? "That password isn't right." : errText(res, 'Couldn’t sign in (error ' + res.status + '). Try again.');
   }
@@ -2239,9 +2277,30 @@
   $('#admin-gate').addEventListener('submit', (e) => login($('#admin-pw'), $('#admin-msg'), e));
   $('#sign-out').addEventListener('click', () => signOut());
 
-  function renderMembers() {
-    $('#gate').hidden = state.member;
-    $('#gate-wrap').hidden = state.member;
+  // The Members Area shows only its sign-in until someone is signed in. unlock: play the dissolve.
+  let unlockTimer = 0;
+  function showMembersArea(unlock) {
+    const gate = $('#mgate'), content = $('#mcontent');
+    clearTimeout(unlockTimer);
+    gate.classList.remove('unlocking', 'returning');
+    content.classList.remove('arriving');
+    if (!state.member) {
+      const was = gate.hidden;
+      gate.hidden = false;
+      content.hidden = true;
+      if (was) gate.classList.add('returning');
+      return;
+    }
+    content.hidden = false;
+    if (unlock && !gate.hidden && $('.page.active') === $('#members-page')) {
+      window.scrollTo({ top: 0 });
+      gate.classList.add('unlocking');
+      content.classList.add('arriving');
+      unlockTimer = setTimeout(() => { gate.hidden = true; gate.classList.remove('unlocking'); content.classList.remove('arriving'); }, reduce ? 50 : 1400);
+    } else gate.hidden = true;
+  }
+  function renderMembers(unlock) {
+    showMembersArea(unlock);
     $('#member-bar').hidden = !state.member;
     $('#admin').hidden = !state.admin;
     $('#admin-gate').hidden = state.admin;
@@ -2249,7 +2308,6 @@
     $('#member-bar-text').innerHTML = 'Signed in as <b></b>';
     $('#member-bar-text b').textContent = state.admin ? 'committee' : 'a member';
     root.classList.toggle('signed-in', state.member);
-    $('#members-lede').textContent = state.member ? 'The shop, club life and the social side of CUPTC.' : 'The shop, club life and the social side of CUPTC, for members. Sign in with the password you got when you joined.';
     loadClub();
     root.classList.toggle('is-committee', state.admin);
     renderShop();
@@ -3288,6 +3346,7 @@
     });
   }
   // A saved sign-in is only kept if the server still accepts it.
+  showMembersArea();   // straight to the right state for someone already signed in (checked with the server just below)
   (async () => {
     if (!state.token) return loadShop();
     const res = await api('me');
