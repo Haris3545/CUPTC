@@ -43,23 +43,6 @@ photos go in an R2 bucket called `cuptc-store` instead of Vercel Blob. Vercel ke
 6. Move cuptc.com's DNS to Cloudflare, then the Worker's **Settings → Domains & Routes → Add custom domain**: `cuptc.com` and `www.cuptc.com`. To go back, point the domain at Vercel again.
 7. Optional: **Analytics & Logs → Web Analytics** for visitor stats (replaces Vercel Analytics).
 
-## Apple Wallet membership cards
-
-The "Add to Apple Wallet" button on the membership card works once the club has an Apple Developer account
-(the Apple Developer Program, which Apple charges for yearly). Until then it explains that Wallet is coming soon.
-
-1. In the Apple Developer site: **Certificates, Identifiers & Profiles → Identifiers → +**, choose **Pass Type IDs**,
-   and register e.g. `pass.com.cuptc.membership`.
-2. Open that Pass Type ID and **Create Certificate**. Make the certificate request on a Mac (Keychain Access →
-   Certificate Assistant → Request a Certificate from a Certificate Authority, saved to disk), upload it, and download the certificate.
-3. Double-click the certificate to add it to Keychain, then export it (with its private key) as a `.p12` file, and convert:
-   `openssl pkcs12 -in pass.p12 -clcerts -nokeys -out cert.pem` and `openssl pkcs12 -in pass.p12 -nocerts -nodes -out key.pem`
-   (add `-legacy` if openssl complains).
-4. Download Apple's **WWDR G4** intermediate certificate and convert it: `openssl x509 -inform der -in AppleWWDRCAG4.cer -out wwdr.pem`.
-5. In the Cloudflare Worker's **Settings → Variables and Secrets**, add as Secrets: `APPLE_PASS_TYPE_ID`, `APPLE_TEAM_ID`
-   (shown at the top right of the developer site), and the contents of the three files as `APPLE_PASS_CERT`, `APPLE_PASS_KEY`
-   and `APPLE_WWDR_CERT`. `/api/status` shows `"appleWallet": true` when they're all set.
-
 ## Switch Stripe from test to live
 
 1. In the Stripe dashboard, finish **Activate payments**: the club's details, a contact, and the bank account payouts go to.

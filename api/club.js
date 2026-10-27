@@ -11,12 +11,14 @@ import crypto from 'node:crypto';
 import { isMember, isCommittee, readJSON, writeJSON, storageReady, send, body, env, signFor, same, fromRequest } from './_lib/core.js';
 
 // The membership year a card is for, and when cards for it stop being valid.
-export const YEAR = '2026-27';
-export const CARD_ENDS = Date.parse('2027-10-01T00:00:00+01:00');
-export const TYPES = { social: 'Social member', full: 'Full member', committee: 'Committee' };
+const YEAR = '2026-27';
+const CARD_ENDS = Date.parse('2027-10-01T00:00:00+01:00');
+const TYPES = { social: 'Social member', full: 'Full member', committee: 'Committee' };
 const STATES = ['on', 'cancelled', 'changed'];
 const LEVELS = ['Beginner', 'Improver', 'Intermediate', 'Advanced'];
 const KEY_OK = /^[A-Za-z0-9]{16,64}$/;
+// The club chat, until the committee sets a different link in the Members Area
+const DEFAULT_WHATSAPP = 'https://chat.whatsapp.com/FzQV7UvQXzF2zSedYrV7Uc';
 
 const tidy = (v, n) => String(v == null ? '' : v).trim().replace(/\s+/g, ' ').slice(0, n);
 const text = (v, n) => String(v == null ? '' : v).replace(/\r\n?/g, '\n').trim().slice(0, n);
@@ -27,7 +29,7 @@ function makeCard(name, type) {
   const payload = Buffer.from(JSON.stringify({ n: name, t: type, y: YEAR, i: crypto.randomBytes(3).toString('hex').toUpperCase() })).toString('base64url');
   return payload + '.' + signFor('card', payload).slice(0, 22);
 }
-export function readCard(card) {
+function readCard(card) {
   const m = /^([A-Za-z0-9_-]{8,400})\.([A-Za-z0-9_-]{22})$/.exec(String(card || ''));
   if (!m || !same(m[2], signFor('card', m[1]).slice(0, 22))) return null;
   try {
@@ -65,7 +67,7 @@ export default async function handler(req, res) {
       const [c, dir] = await Promise.all([club(), readJSON('directory', [])]);
       const out = {
         session: c.session || null,
-        whatsapp: c.whatsapp || '',
+        whatsapp: c.whatsapp || DEFAULT_WHATSAPP,
         directory: dir.map(({ owner, ...d }) => d).sort((a, b) => a.name.localeCompare(b.name))
       };
       if (committee) out.feedback = (await readJSON('feedback', [])).slice().reverse();

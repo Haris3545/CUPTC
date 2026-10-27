@@ -18,8 +18,6 @@ export default async function handler(req, res) {
     // Relay for Padel Pong 1v1 on networks that block direct links between phones.
     // Private merch order sheets at /api/orders?key=...
     ORDERS_KEY: env('ORDERS_KEY').length >= 16 ? true : env('ORDERS_KEY') ? 'too short (needs 16+ characters)' : false,
-    // Apple Wallet passes for membership cards (see api/pass.js)
-    appleWallet: ['APPLE_PASS_TYPE_ID', 'APPLE_TEAM_ID', 'APPLE_PASS_CERT', 'APPLE_PASS_KEY', 'APPLE_WWDR_CERT'].every((k) => env(k)),
     padelPongRelay: !!(env('CF_TURN_KEY_ID') && env('CF_TURN_API_TOKEN')),
     // Secret (sk_) and restricted (rk_) keys both say live or test in their prefix.
     stripe: key ? (/^(sk|rk)_live_/.test(key) ? 'live' : /^(sk|rk)_test_/.test(key) ? 'test' : 'unrecognised key') : false,
