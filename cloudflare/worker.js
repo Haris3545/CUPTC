@@ -15,12 +15,11 @@ import merchImage from '../api/merch-image.js';
 import merch from '../api/merch.js';
 import migrate from '../api/migrate.js';
 import orders from '../api/orders.js';
-import pass from '../api/pass.js';
 import status from '../api/status.js';
 import turn from '../api/turn.js';
 import waitlist from '../api/waitlist.js';
 
-const API = { checkout, club, code, committee, confirm, leaderboard, login, me, 'merch-image': merchImage, merch, migrate, orders, pass, status, turn, waitlist };
+const API = { checkout, club, code, committee, confirm, leaderboard, login, me, 'merch-image': merchImage, merch, migrate, orders, status, turn, waitlist };
 
 async function runHandler(handler, request, url) {
   const headers = {};

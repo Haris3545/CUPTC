@@ -588,9 +588,6 @@
   .card-side { display: grid; gap: 16px; align-content: center; }
   .card-side .muted { margin: 0; }
   .card-stage { perspective: 1100px; }
-  .wallet-btn { justify-self: start; display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px 12px 16px; border: 0; border-radius: 12px; background: #000; color: #fff; font: 500 16px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; cursor: pointer; }
-  .wallet-btn svg { width: 30px; height: 22px; }
-  .wallet-btn small { display: block; font-size: 11px; font-weight: 400; opacity: .8; margin-bottom: 3px; }
   #card-form .input { max-width: 420px; }
   .panel .actions { gap: 10px; }
   .soon-panel { opacity: .85; }
@@ -2917,16 +2914,6 @@
     } else start();
   }
 
-  const WALLET_ICON = '<svg viewBox="0 0 30 22" aria-hidden="true"><rect x="1" y="1" width="28" height="20" rx="4" fill="#fff"/><path d="M1 7h28" stroke="#f05138" stroke-width="3"/><path d="M1 10.5h28" stroke="#f7b500" stroke-width="3"/><path d="M1 14h28" stroke="#33c759" stroke-width="3"/><rect x="1" y="15" width="28" height="6" rx="0" fill="#fff"/><rect x=".5" y=".5" width="29" height="21" rx="4.5" fill="none" stroke="#000"/></svg>';
-  async function addToWallet(token, btn) {
-    btn.disabled = true;
-    const res = await api('pass?check=1&card=' + encodeURIComponent(token));
-    btn.disabled = false;
-    if (res.ok) { location.href = '/api/pass?card=' + encodeURIComponent(token); return; }
-    const sh = sheet('Apple Wallet');
-    sh.main.innerHTML = '<div style="display:grid;gap:12px"><p style="margin:0">Adding your card to Apple Wallet is coming soon.</p>' +
-      '<p class="muted" style="margin:0">Until then, your card is saved on this phone. For one-tap access at the courts, open cuptc.com in Safari, tap Share, then <b>Add to Home Screen</b>, and open Club life.</p></div>';
-  }
   function cardMarkup(ghost) {
     return '<div class="card-stage"><div class="mcard' + (ghost ? ' ghost' : '') + '" role="img"><div class="mcard-brand"><img src="img/emblem.png" alt=""><span>CUPTC</span></div><p class="mcard-name"></p>' +
       '<div class="mcard-meta"><b></b><span></span><span></span></div><div class="mcard-qr" aria-hidden="true">' + (ghost ? '<img src="img/emblem.png" alt="">' : '') + '</div></div></div>';
@@ -2939,7 +2926,6 @@
     if (info) {
       box.innerHTML = '<div class="card-layout">' + cardMarkup(false) + '<div class="card-side">' +
         '<p class="muted">Show this at the courts. Scanning the code checks it with the club.</p>' +
-        '<button class="wallet-btn" type="button">' + WALLET_ICON + '<span><small>Add to</small>Apple Wallet</span></button>' +
         '<div class="card-actions"><button type="button" data-a="check">Check it works</button><button type="button" data-a="remove">Remove from this device</button></div></div></div>';
       const label = CARD_TYPES[info.t] || 'Member', year = String(info.y || '').replace('-', '–');
       $('.mcard', box).setAttribute('aria-label', 'CUPTC membership card: ' + info.n + ', ' + label + ', ' + year);
@@ -2956,7 +2942,6 @@
         $('.mcard-qr', box).innerHTML = qr.createSvgTag({ scalable: true, margin: 0 });
       }).catch(() => { $('.mcard-qr', box).textContent = ''; });
       attachTilt($('.mcard', box));
-      $('.wallet-btn', box).addEventListener('click', (e) => addToWallet(token, e.currentTarget));
       $('[data-a=check]', box).addEventListener('click', () => showCheck(token));
       $('[data-a=remove]', box).addEventListener('click', () => { if (confirm('Remove the card from this device? You can get it again with your email.')) { keep.del('cuptc-card'); renderCard(); } });
       return;
