@@ -513,8 +513,8 @@
   .shop-sec.feature {
     color: #f4f1ea; padding: clamp(72px, 12vh, 128px) 0 250px;
     background:
-      radial-gradient(120% 55% at 50% 0%, rgba(53, 102, 83, .55) 0%, rgba(18, 36, 29, 0) 70%),
-      linear-gradient(180deg, #13261f 0%, #0f1e18 calc(100% - 290px), #21423a calc(100% - 205px), #5f8f7b calc(100% - 125px), #cfe0d8 calc(100% - 50px), var(--paper) 100%);
+      radial-gradient(120% 55% at 50% 0%, rgba(53, 102, 83, .4) 0%, rgba(18, 36, 29, 0) 70%),
+      linear-gradient(180deg, #13261f 0%, #11221b calc(100% - 330px), #1e3a30 calc(100% - 250px), #3f6457 calc(100% - 175px), #9fbcb0 calc(100% - 95px), #e6eeea calc(100% - 35px), var(--paper) 100%);
   }
   .shop-sec.feature + .shop-sec { padding-top: 0; }
   .feature .shop-head { text-align: center; justify-items: center; margin-bottom: clamp(36px, 5vw, 64px); }
@@ -557,7 +557,10 @@
   .m-sections { display: flex; flex-wrap: wrap; gap: 10px 22px; }
 
   /* ---- Members Area: the three section tiles */
-  .mtabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: clamp(28px, 5vw, 56px); margin-bottom: clamp(8px, 2vw, 20px); }
+  .page-head.mhead { padding-bottom: clamp(28px, 4vh, 40px); }
+  .gate-wrap { margin-top: 36px; }
+  .mtabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 0; margin-bottom: clamp(96px, 16vh, 170px); }
+  #members-page.has-view .mtabs { margin-bottom: clamp(8px, 2vw, 20px); }
   .mtab { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr auto; column-gap: 16px; row-gap: 4px; align-items: start; text-align: left; padding: 24px 24px 22px; border: 0; border-radius: 20px; background: var(--green-soft); color: var(--ink); font: inherit; cursor: pointer; box-shadow: inset 0 0 0 1px transparent; transition: background-color .4s var(--out), box-shadow .4s var(--out), transform .6s var(--out); }
   .mtab svg { grid-row: 1 / 4; width: 44px; height: 44px; fill: none; stroke: var(--green-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .mtab b { font-weight: 400; font-size: 26px; line-height: 1.15; }
@@ -576,7 +579,19 @@
   .panel h3 { margin: 0; font-weight: 400; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.15; }
   .panel .muted { margin: 0; font-size: 16px; }
   .panel-wide { grid-column: 1 / -1; }
-  .panel-card { grid-row: span 2; }
+  /* Club life: the card across the top, then the rest fitted together (panels stretch, so no gaps) */
+  .club-grid.life { grid-template-columns: 1fr 1fr; grid-template-areas: "card card" "sess court" "rem court" "fb fb"; align-items: stretch; }
+  .life .panel-card { grid-area: card; } .life .p-sess { grid-area: sess; } .life .p-court { grid-area: court; } .life .p-rem { grid-area: rem; } .life .p-fb { grid-area: fb; }
+  .club-grid.soc { grid-template-columns: 1fr; }
+  .panel-wa { grid-template-columns: 1fr auto; align-items: center; gap: 12px 32px; }
+  .card-layout { display: grid; grid-template-columns: minmax(0, 540px) 1fr; gap: clamp(24px, 4vw, 56px); align-items: center; }
+  .card-side { display: grid; gap: 16px; align-content: center; }
+  .card-side .muted { margin: 0; }
+  .card-stage { perspective: 1100px; }
+  .wallet-btn { justify-self: start; display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px 12px 16px; border: 0; border-radius: 12px; background: #000; color: #fff; font: 500 16px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; cursor: pointer; }
+  .wallet-btn svg { width: 30px; height: 22px; }
+  .wallet-btn small { display: block; font-size: 11px; font-weight: 400; opacity: .8; margin-bottom: 3px; }
+  #card-form .input { max-width: 420px; }
   .panel .actions { gap: 10px; }
   .soon-panel { opacity: .85; }
   .soon-panel .ptag { left: auto; right: 18px; top: 18px; }
@@ -614,7 +629,7 @@
   .dir-person em { font-size: 15px; color: var(--ink-3); }
   .dir-person.me { box-shadow: inset 0 0 0 1.5px var(--green); }
   /* the membership card */
-  .mcard { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1.586; border-radius: 20px; overflow: hidden; color: #f4f1ea; padding: clamp(16px, 4.5%, 24px); display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; column-gap: 14px;
+  .mcard { position: relative; width: 100%; aspect-ratio: 1.586; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d; transition: transform .6s var(--out); will-change: transform; border-radius: 20px; overflow: hidden; color: #f4f1ea; padding: clamp(16px, 4.5%, 24px); display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; column-gap: 14px;
     background: radial-gradient(90% 120% at 100% 0%, rgba(133, 180, 160, .35), transparent 55%), linear-gradient(135deg, #22453a 0%, #13261f 52%, #0d1a15 100%);
     box-shadow: 0 30px 60px -28px rgba(13, 26, 21, .65), 0 10px 22px -12px rgba(13, 26, 21, .4), inset 0 0 0 1px rgba(255, 255, 255, .1); }
   .mcard::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .14; background:
@@ -630,6 +645,12 @@
   .mcard-qr { grid-column: 2; grid-row: 1 / 4; align-self: center; width: clamp(96px, 30vw, 138px); aspect-ratio: 1; padding: 8px; border-radius: 12px; background: #f4f1ea; position: relative; z-index: 1; }
   .mcard-qr svg { width: 100%; height: 100%; display: block; }
   .mcard.old { filter: grayscale(.8); }
+  .mcard.tilting { transition: transform .12s linear; }
+  .mcard-glare { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: var(--glare, 0); transition: opacity .6s var(--out); mix-blend-mode: soft-light;
+    background: radial-gradient(60% 75% at var(--gx, 50%) var(--gy, 30%), rgba(255, 255, 255, .85), rgba(255, 255, 255, .15) 40%, transparent 70%); }
+  .mcard.ghost { filter: saturate(.6); opacity: .55; }
+  .mcard.ghost .mcard-qr { display: grid; place-items: center; }
+  .mcard.ghost .mcard-qr img { width: 60%; opacity: .5; }
   .mcard + .muted { margin-top: 6px; }
   .card-actions { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 15px; }
   .card-actions button { border: 0; background: none; padding: 4px 0; cursor: pointer; text-decoration: underline; color: var(--ink-2); font: inherit; }
@@ -771,8 +792,12 @@
     .mtab svg { width: 36px; height: 36px; }
     .mtab b { font-size: 22px; }
     .mtab span { font-size: 15px; }
-    .club-grid { grid-template-columns: 1fr; }
-    .panel-card { grid-row: auto; }
+    .club-grid, .club-grid.life { grid-template-columns: 1fr; grid-template-areas: "card" "sess" "court" "rem" "fb"; }
+    .panel-card { padding: 18px 14px 22px; }
+    .panel-card h3 { padding: 0 6px; }
+    .card-layout { grid-template-columns: 1fr; }
+    .card-side { padding: 0 6px; }
+    .panel-wa { grid-template-columns: 1fr; }
     .fb-form, #dir-form { grid-template-columns: 1fr; }
     .dir-list { grid-template-columns: 1fr; }
     .product h3 { font-size: 19px; }
@@ -1088,14 +1113,14 @@
   </div>
 
   <!-- ---------------------------------------------------------- MEMBERS AREA -->
-  <div class="page" data-page="members">
-    <section class="page-head">
+  <div class="page" data-page="members" id="members-page">
+    <section class="page-head mhead">
       <div class="narrow center">
         <h2 class="display rv">Members Area.</h2>
         <hr class="rule rv" style="--d:.06s">
         <p class="lede rv" id="members-lede" style="--d:.1s">Club kit and merch, for members only. Sign in with the password you got when you joined.</p>
       </div>
-      <div class="narrow rv" style="--d:.18s;margin-top:40px">
+      <div class="narrow rv gate-wrap" id="gate-wrap" style="--d:.18s">
         <form class="gate" id="gate" autocomplete="off">
           <label class="lbl" for="member-pw">Members password</label>
           <div class="inline"><input class="input" id="member-pw" type="password" placeholder="Password"><button class="btn sm" type="submit">Sign in</button></div>
@@ -1127,28 +1152,28 @@
     <div class="mview" id="view-club" data-view="club" hidden>
       <div class="wrap club">
         <header class="shop-head"><p class="shop-kicker">Members Area</p><h2 class="shop-title">Club life.</h2></header>
-        <div class="club-grid">
+        <div class="club-grid life">
           <section class="panel panel-card" aria-labelledby="card-h">
             <h3 id="card-h">Membership card</h3>
             <div id="card-box"></div>
           </section>
-          <section class="panel" aria-labelledby="sess-h">
+          <section class="panel p-sess" aria-labelledby="sess-h">
             <h3 id="sess-h">Today&rsquo;s session</h3>
             <div id="session-box" class="members-only"></div>
           </section>
-          <section class="panel" aria-labelledby="court-h">
+          <section class="panel p-court" aria-labelledby="court-h">
             <h3 id="court-h">Courts</h3>
             <p class="addr">Philippa Fawcett Drive<br>Cambridge CB3 0AS</p>
             <div class="map"><iframe title="Map of the courts at Philippa Fawcett Drive, Cambridge" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Philippa+Fawcett+Drive,+Cambridge+CB3+0AS&amp;output=embed"></iframe></div>
             <div class="actions"><a class="btn line sm" href="https://www.google.com/maps/search/?api=1&amp;query=Philippa+Fawcett+Drive%2C+Cambridge+CB3+0AS" target="_blank" rel="noopener">Google Maps</a><a class="btn line sm" href="https://maps.apple.com/?q=Philippa+Fawcett+Drive,+Cambridge+CB3+0AS" target="_blank" rel="noopener">Apple Maps</a></div>
           </section>
-          <section class="panel soon-panel" aria-labelledby="rem-h">
+          <section class="panel soon-panel p-rem" aria-labelledby="rem-h">
             <span class="ptag soon">Coming soon</span>
             <h3 id="rem-h">Email reminders</h3>
             <p class="muted">Opt in to a reminder the day before each session, and a note if it&rsquo;s cancelled.</p>
             <label class="check" aria-disabled="true"><input type="checkbox" disabled> <span>Email me session reminders</span></label>
           </section>
-          <section class="panel panel-wide" aria-labelledby="fb-h">
+          <section class="panel panel-wide p-fb" aria-labelledby="fb-h">
             <h3 id="fb-h">Feedback and welfare</h3>
             <p class="muted">Tell the committee what&rsquo;s working and what isn&rsquo;t, or raise a welfare concern. Only the committee sees these. Leave your name off to stay anonymous.</p>
             <form id="fb-form" class="fb-form members-only" novalidate>
@@ -1171,10 +1196,10 @@
     <div class="mview" id="view-social" data-view="social" hidden>
       <div class="wrap club">
         <header class="shop-head"><p class="shop-kicker">Members Area</p><h2 class="shop-title">Social.</h2></header>
-        <div class="club-grid">
+        <div class="club-grid soc">
           <section class="panel panel-wa" aria-labelledby="wa-h">
-            <h3 id="wa-h">The club WhatsApp</h3>
-            <p class="muted">Session updates, finding a fourth, and everything in between.</p>
+            <div><h3 id="wa-h">The club WhatsApp</h3>
+            <p class="muted">Session updates, finding a fourth, and everything in between.</p></div>
             <div id="wa-box" class="members-only"></div>
           </section>
           <section class="panel" aria-labelledby="me-h">
@@ -2210,6 +2235,7 @@
 
   function renderMembers() {
     $('#gate').hidden = state.member;
+    $('#gate-wrap').hidden = state.member;
     $('#member-bar').hidden = !state.member;
     $('#admin').hidden = !state.admin;
     $('#admin-gate').hidden = state.admin;
@@ -2761,6 +2787,7 @@
       $('i', t).textContent = on ? 'Open below ↓' : 'Open →';
     });
     $$('.mview').forEach((el) => { el.hidden = el.dataset.view !== v; });
+    $('#members-page').classList.toggle('has-view', !!v);
     renderClub();
   }
   $$('.mtab').forEach((t) => t.addEventListener('click', () => {
@@ -2834,16 +2861,86 @@
     sc.onerror = () => { qrReady = null; no(new Error('qr')); };
     document.head.appendChild(sc);
   }));
+  // The card leans towards the pointer on a computer, and with the phone's tilt on a phone, catching the light.
+  let tiltOff = null;
+  function attachTilt(card) {
+    if (tiltOff) tiltOff();
+    tiltOff = null;
+    if (reduce) return;
+    const glare = document.createElement('div');
+    glare.className = 'mcard-glare';
+    card.appendChild(glare);
+    const MAX = 9;
+    const set = (x, y, on) => {   // x, y from -1 to 1
+      card.style.setProperty('--ry', (x * MAX).toFixed(2) + 'deg');
+      card.style.setProperty('--rx', (-y * MAX * 0.8).toFixed(2) + 'deg');
+      card.style.setProperty('--gx', (50 + x * 45).toFixed(1) + '%');
+      card.style.setProperty('--gy', (40 + y * 45).toFixed(1) + '%');
+      card.style.setProperty('--glare', on ? '1' : '0');
+    };
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const stage = card.parentNode;
+      const move = (e) => {
+        const r = card.getBoundingClientRect();
+        card.classList.add('tilting');
+        set(Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)), Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1)), true);
+      };
+      const leave = () => { card.classList.remove('tilting'); set(0, 0, false); };
+      stage.addEventListener('pointermove', move);
+      stage.addEventListener('pointerleave', leave);
+      tiltOff = () => { stage.removeEventListener('pointermove', move); stage.removeEventListener('pointerleave', leave); };
+      return;
+    }
+    // phones: follow how the phone is held, relative to how it was held at the start
+    if (typeof DeviceOrientationEvent === 'undefined') return;
+    let base = null, raf = 0, last = null;
+    const onTilt = (e) => {
+      if (e.beta == null || e.gamma == null) return;
+      if (!base) base = { b: e.beta, g: e.gamma };
+      last = e;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (!card.isConnected) { off(); return; }
+        const x = Math.max(-1, Math.min(1, (last.gamma - base.g) / 25));
+        const y = Math.max(-1, Math.min(1, (last.beta - base.b) / 25));
+        card.classList.add('tilting');
+        set(x, y, Math.abs(x) + Math.abs(y) > 0.08);
+      });
+    };
+    const off = () => window.removeEventListener('deviceorientation', onTilt);
+    const start = () => { base = null; window.addEventListener('deviceorientation', onTilt); };
+    tiltOff = off;
+    // iPhones ask permission first, which has to come from a tap
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      card.addEventListener('click', () => { DeviceOrientationEvent.requestPermission().then((r) => { if (r === 'granted') start(); }).catch(() => {}); }, { once: true });
+    } else start();
+  }
+
+  const WALLET_ICON = '<svg viewBox="0 0 30 22" aria-hidden="true"><rect x="1" y="1" width="28" height="20" rx="4" fill="#fff"/><path d="M1 7h28" stroke="#f05138" stroke-width="3"/><path d="M1 10.5h28" stroke="#f7b500" stroke-width="3"/><path d="M1 14h28" stroke="#33c759" stroke-width="3"/><rect x="1" y="15" width="28" height="6" rx="0" fill="#fff"/><rect x=".5" y=".5" width="29" height="21" rx="4.5" fill="none" stroke="#000"/></svg>';
+  async function addToWallet(token, btn) {
+    btn.disabled = true;
+    const res = await api('pass?check=1&card=' + encodeURIComponent(token));
+    btn.disabled = false;
+    if (res.ok) { location.href = '/api/pass?card=' + encodeURIComponent(token); return; }
+    const sh = sheet('Apple Wallet');
+    sh.main.innerHTML = '<div style="display:grid;gap:12px"><p style="margin:0">Adding your card to Apple Wallet is coming soon.</p>' +
+      '<p class="muted" style="margin:0">Until then, your card is saved on this phone. For one-tap access at the courts, open cuptc.com in Safari, tap Share, then <b>Add to Home Screen</b>, and open Club life.</p></div>';
+  }
+  function cardMarkup(ghost) {
+    return '<div class="card-stage"><div class="mcard' + (ghost ? ' ghost' : '') + '" role="img"><div class="mcard-brand"><img src="img/emblem.png" alt=""><span>CUPTC</span></div><p class="mcard-name"></p>' +
+      '<div class="mcard-meta"><b></b><span></span><span></span></div><div class="mcard-qr" aria-hidden="true">' + (ghost ? '<img src="img/emblem.png" alt="">' : '') + '</div></div></div>';
+  }
   function renderCard() {
     const box = $('#card-box');
     if (!box) return;
     const token = keep.get('cuptc-card');
     const info = token ? b64url(token.split('.')[0]) : null;
     if (info) {
-      box.innerHTML = '<div class="mcard" role="img"><div class="mcard-brand"><img src="img/emblem.png" alt=""><span>CUPTC</span></div><p class="mcard-name"></p>' +
-        '<div class="mcard-meta"><b></b><span></span><span></span></div><div class="mcard-qr" aria-hidden="true"></div></div>' +
+      box.innerHTML = '<div class="card-layout">' + cardMarkup(false) + '<div class="card-side">' +
         '<p class="muted">Show this at the courts. Scanning the code checks it with the club.</p>' +
-        '<div class="card-actions"><button type="button" data-a="check">Check it works</button><button type="button" data-a="remove">Remove from this device</button></div>';
+        '<button class="wallet-btn" type="button">' + WALLET_ICON + '<span><small>Add to</small>Apple Wallet</span></button>' +
+        '<div class="card-actions"><button type="button" data-a="check">Check it works</button><button type="button" data-a="remove">Remove from this device</button></div></div></div>';
       const label = CARD_TYPES[info.t] || 'Member', year = String(info.y || '').replace('-', '–');
       $('.mcard', box).setAttribute('aria-label', 'CUPTC membership card: ' + info.n + ', ' + label + ', ' + year);
       $('.mcard-name', box).textContent = info.n;
@@ -2858,13 +2955,21 @@
         qr.make();
         $('.mcard-qr', box).innerHTML = qr.createSvgTag({ scalable: true, margin: 0 });
       }).catch(() => { $('.mcard-qr', box).textContent = ''; });
+      attachTilt($('.mcard', box));
+      $('.wallet-btn', box).addEventListener('click', (e) => addToWallet(token, e.currentTarget));
       $('[data-a=check]', box).addEventListener('click', () => showCheck(token));
       $('[data-a=remove]', box).addEventListener('click', () => { if (confirm('Remove the card from this device? You can get it again with your email.')) { keep.del('cuptc-card'); renderCard(); } });
       return;
     }
-    if (!state.member) { box.innerHTML = '<p class="lockline"><a class="link" href="#members">Sign in</a> to get your membership card.</p>'; return; }
-    box.innerHTML = '<p class="muted">Your card lives on this phone. Enter the email you used when you paid for membership.</p>' +
-      '<form id="card-form" novalidate><input class="input" id="card-email" type="email" autocomplete="email" placeholder="you@cam.ac.uk" aria-label="The email you paid with"><button class="btn sm" type="submit">Get my card</button><p class="msg" role="status"></p></form>';
+    // no card yet: a faded preview, and how to get one
+    box.innerHTML = '<div class="card-layout">' + cardMarkup(true) + '<div class="card-side"></div></div>';
+    $('.mcard-name', box).textContent = 'Your name';
+    $('.mcard-meta b', box).textContent = 'Member';
+    $('.mcard-meta span', box).textContent = 'Member 2026–27';
+    const side = $('.card-side', box);
+    if (!state.member) { side.innerHTML = '<p class="lockline"><a class="link" href="#members">Sign in</a> to get your membership card.</p>'; return; }
+    side.innerHTML = '<p class="muted">Your card lives on this phone. Enter the email you used when you paid for membership.</p>' +
+      '<form id="card-form" novalidate><input class="input" id="card-email" type="email" autocomplete="email" placeholder="you@cam.ac.uk" aria-label="The email you paid with"><div class="actions"><button class="btn sm" type="submit">Get my card</button></div><p class="msg" role="status"></p></form>';
     const f = $('#card-form', box);
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
