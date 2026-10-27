@@ -458,6 +458,11 @@
   .pd-buy { display: grid; gap: 12px; }
   .pd-buy .pdeliv { text-align: left; }
   .pd-sizes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fit-pick { display: grid; gap: 8px; }
+  .fit-pick .lbl { font-size: 15px; font-style: italic; color: var(--ink-3); }
+  .fit-seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; border-radius: 99px; background: var(--green-soft); justify-self: start; }
+  .fit-seg button { border: 0; border-radius: 99px; padding: 10px 20px; font: inherit; font-size: 16px; background: none; color: var(--ink-2); cursor: pointer; transition: background-color .3s, color .3s; }
+  .fit-seg button[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 2px 8px -3px rgba(0, 0, 0, .25); }
   @media (max-width: 720px) {
     .pd { grid-template-columns: 1fr; gap: 18px; }
     .sheet.wide { width: 100%; }
@@ -1242,6 +1247,8 @@
             <div class="field"><label for="m-delivery">Delivery time</label><input class="input" id="m-delivery" placeholder="e.g. 3 to 4 weeks" maxlength="60"></div>
             <div class="field"><label for="m-sizes">Sizes (comma separated)</label><input class="input" id="m-sizes" placeholder="XS, S, M, L, XL" maxlength="80"></div>
             <div class="field"><label for="m-parts">Parts sized separately (optional)</label><input class="input" id="m-parts" placeholder="e.g. Shirt, Shorts" maxlength="80"></div>
+            <div class="field"><label>Sizing</label><div class="m-sections"><label class="check"><input type="checkbox" id="m-fit-mens"> <span>Men&rsquo;s sizing</span></label><label class="check"><input type="checkbox" id="m-fit-womens"> <span>Women&rsquo;s sizing</span></label></div><span class="note" style="text-align:left">Tick both and buyers choose men&rsquo;s or women&rsquo;s before their size.</span></div>
+            <div class="field" id="m-parts-w-f" hidden><label for="m-parts-w">Women&rsquo;s parts, if different</label><input class="input" id="m-parts-w" placeholder="e.g. Shirt, Skort" maxlength="80"></div>
             <div class="field"><label for="m-image">Image</label><div class="inline"><select class="input" id="m-image"></select><button class="btn line sm" type="button" id="m-upload">Upload photo</button></div><img id="m-preview" class="m-preview" alt="" hidden></div>
             <div class="field full"><label class="check"><input type="checkbox" id="m-custom"> <span>Offer customisation</span></label></div>
             <div class="field" id="m-custom-label-f" hidden><label for="m-custom-label">What buyers add</label><input class="input" id="m-custom-label" maxlength="40" placeholder="e.g. Name on the back, Initials on the sleeve"></div>
@@ -1948,6 +1955,7 @@
     return { ok: r.ok, status: r.status, data };
   }
   const ERR = {
+    fit: 'Choose men’s or women’s fit first.',
     card_email: 'Enter the email address you paid with.',
     card_not_found: 'We couldn’t find a paid membership with that email. Use the email you paid with, or ask the committee to make you a card.',
     card_name: 'Add their name.',
@@ -2520,24 +2528,59 @@
     }
     if (m.delivery) { const d = document.createElement('p'); d.className = 'pdeliv'; d.textContent = 'Delivery: ' + m.delivery; buyBox.appendChild(d); }
     const sizes = String(m.sizes || '').split(',').map((x) => x.trim()).filter(Boolean);
-    // One size, or (for items like the kit bundles) a size for each part, e.g. shirt S and shorts L
-    const parts = String(m.parts || '').split(',').map((x) => x.trim()).filter(Boolean);
+    // Men's or women's fit (when the committee has ticked them), then one size, or (for items like the
+    // kit bundles) a size for each part, e.g. shirt S and shorts L. Women's parts can differ (a skort).
+    const listOf = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
+    const fits = (m.fits || []).filter((f) => FIT_LABEL[f]);
+    let fit = fits.length === 1 ? fits[0] : '';
+    let parts = [];
     const sels = [];
-    if (sizes.length) {
-      const wrap = document.createElement('div');
-      wrap.className = parts.length ? 'pd-sizes' : '';
+    if (fits.length) {
+      const fw = document.createElement('div');
+      fw.className = 'fit-pick';
+      fw.innerHTML = '<span class="lbl">Fit</span><div class="fit-seg" role="radiogroup" aria-label="Fit"></div>';
+      fits.forEach((f) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('role', 'radio');
+        b.setAttribute('aria-checked', String(f === fit));
+        b.textContent = FIT_LABEL[f];
+        b.addEventListener('click', () => {
+          fit = f;
+          $$('button', fw).forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+          fitMsg.textContent = '';
+          drawSizes();
+        });
+        $('.fit-seg', fw).appendChild(b);
+      });
+      buyBox.appendChild(fw);
+    }
+    const fitMsg = document.createElement('p');
+    fitMsg.className = 'msg err';
+    fitMsg.setAttribute('role', 'status');
+    if (fits.length > 1) buyBox.appendChild(fitMsg);
+    const sizeBox = document.createElement('div');
+    buyBox.appendChild(sizeBox);
+    function drawSizes() {
+      const keep = sels.map((x) => x.value);
+      parts = listOf(fit === 'womens' && listOf(m.partsWomen).length ? m.partsWomen : m.parts);
+      sels.length = 0;
+      sizeBox.innerHTML = '';
+      if (!sizes.length) return;
+      sizeBox.className = parts.length ? 'pd-sizes' : '';
       (parts.length ? parts : ['']).forEach((part, i) => {
         const f = document.createElement('div');
         f.className = 'field';
         f.innerHTML = '<label for="pd-size-' + i + '"></label><select class="input" id="pd-size-' + i + '"></select>';
-        $('label', f).textContent = part ? part + ' size' : 'Size';
+        $('label', f).textContent = (part ? part + ' size' : 'Size') + (fit && fits.length === 1 ? ' (' + FIT_LABEL[fit].toLowerCase() + ')' : '');
         const sel = $('select', f);
         sizes.forEach((x) => { const o = document.createElement('option'); o.textContent = x; sel.appendChild(o); });
+        if (keep[i] && sizes.includes(keep[i])) sel.value = keep[i];
         sels.push(sel);
-        wrap.appendChild(f);
+        sizeBox.appendChild(f);
       });
-      buyBox.appendChild(wrap);
     }
+    drawSizes();
     // Optional customisation (the committee sets what it is, e.g. a name on the back), for items the committee has marked customisable
     let custom = null;
     if (m.customisable) {
@@ -2563,7 +2606,9 @@
     buy.type = 'button';
     buy.textContent = 'Buy now';
     buy.addEventListener('click', () => {
-      const req = { kind: 'merch', itemId: m.id, size: sels.length === 1 ? sels[0].value : '' };
+      if (fits.length > 1 && !fit) { fitMsg.textContent = 'Choose men’s or women’s fit first.'; return; }
+      const req = { kind: 'merch', itemId: m.id, size: sels.length === 1 && !parts.length ? sels[0].value : '' };
+      if (fit) req.fit = fit;
       if (parts.length && sels.length) req.partSizes = sels.map((x) => x.value);
       if (custom && custom.tick.checked) {
         const v = custom.nameIn.value.trim();
@@ -2670,12 +2715,14 @@
     useImage('');
     $('#merch-form').reset();
     $('#m-custom-price-f').hidden = $('#m-custom-label-f').hidden = true;
+    $('#m-parts-w-f').hidden = true;
     $('#m-id').value = '';
     $('#m-order').value = String(((state.merch || []).length + 1) * 10);
     $('#m-save').textContent = 'Add item';
     $('#m-cancel').hidden = true;
   }
   $('#m-cancel').addEventListener('click', resetForm);
+  $('#m-fit-womens').addEventListener('change', () => { $('#m-parts-w-f').hidden = !$('#m-fit-womens').checked; });
 
   $('#merch-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2687,6 +2734,8 @@
       delivery: $('#m-delivery').value.trim(),
       sizes: $('#m-sizes').value.trim(),
       parts: $('#m-parts').value.trim(),
+      partsWomen: $('#m-parts-w').value.trim(),
+      fits: ['mens', 'womens'].filter((f) => $('#m-fit-' + f).checked),
       image: imgSel.value,
       description: $('#m-desc').value.trim(),
       order: Number($('#m-order').value) || 0,
@@ -2795,6 +2844,7 @@
   }));
 
   // ---------------------------------------------------------------- Club life and Social
+  const FIT_LABEL = { mens: 'Men’s', womens: 'Women’s' };
   const CARD_TYPES = { social: 'Social member', full: 'Full member', committee: 'Committee' };
   const SESSION_LABEL = { on: 'On as planned', changed: 'Changed', cancelled: 'Cancelled' };
   async function loadClub() {
@@ -3202,6 +3252,10 @@
         $('#m-delivery').value = m.delivery || '';
         $('#m-sizes').value = m.sizes || '';
         $('#m-parts').value = m.parts || '';
+        $('#m-parts-w').value = m.partsWomen || '';
+        $('#m-fit-mens').checked = (m.fits || []).includes('mens');
+        $('#m-fit-womens').checked = (m.fits || []).includes('womens');
+        $('#m-parts-w-f').hidden = !$('#m-fit-womens').checked;
         useImage(m.image || '');
         $('#m-desc').value = m.description || '';
         $('#m-order').value = m.order || 0;

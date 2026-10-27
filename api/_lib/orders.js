@@ -1,5 +1,5 @@
 // Merch orders as spreadsheet rows, built from Stripe Checkout sessions (see api/orders.js).
-import { listOf } from './merch.js';
+import { listOf, FITS, partsFor } from './merch.js';
 
 // Before 14 October 2026 the only customisation on offer was a name on the back.
 const LABEL_CHANGE = Date.parse('2026-10-14T00:00:00Z');
@@ -31,6 +31,7 @@ export function toOrder(s) {
     phone: c.phone || '',
     item: m.item || '',
     size: m.size || '',
+    fit: FITS[m.fit] || '',
     custom,
     customLabel: custom ? m.custom_label || (s.created * 1000 < LABEL_CHANGE ? 'Name on the back' : 'Customisation') : '',
     address: address(s),
@@ -72,9 +73,12 @@ const bySize = (sizeOrder) => (a, b) => {
 
 // The rows for one item's sheet: every order, then totals to send to the supplier.
 export function itemSheet(item, orders) {
-  const parts = listOf(item.parts), sizeOrder = listOf(item.sizes);
+  const sizeOrder = listOf(item.sizes);
+  // every part across both fits, e.g. Shirt, Shorts (men's) and Skort (women's)
+  const parts = [...new Set(listOf(item.parts).concat(listOf(item.partsWomen)))];
+  const hasFit = orders.some((o) => o.fit) || (Array.isArray(item.fits) && item.fits.length > 0);
   const hasCustom = item.customisable || orders.some((o) => o.custom);
-  const head = ['Order date', 'Receipt no.', 'Name', 'Email', 'Phone']
+  const head = ['Order date', 'Receipt no.', 'Name', 'Email', 'Phone'].concat(hasFit ? ['Fit'] : [])
     .concat(parts.length ? ['Contents'].concat(parts.map((p) => p + ' size')) : ['Size'])
     .concat(hasCustom ? ['Customisation', 'Customisation text'] : [])
     .concat(['Delivery address', 'Paid (£)', 'Status', 'Stripe payment']);
@@ -82,15 +86,24 @@ export function itemSheet(item, orders) {
   const live = [];
   for (const o of orders) {
     const ps = parts.length ? partSizes(o.size, parts) : null;
-    rows.push([o.date, o.receipt, o.name, o.email, o.phone]
-      .concat(ps ? ['Full ' + item.name + ' (' + parts.join(' + ') + ')' + (ps.whole ? ', one size for all' : '')].concat(ps.sizes) : [o.size])
+    const mine = ps ? partsFor(item, o.fit === FITS.womens ? 'womens' : 'mens') : [];
+    rows.push([o.date, o.receipt, o.name, o.email, o.phone].concat(hasFit ? [o.fit] : [])
+      .concat(ps ? [(/^full\b/i.test(item.name) ? '' : 'Full ') + item.name + ' (' + (mine.length ? mine : parts).join(' + ') + ')' + (ps.whole ? ', one size for all' : '')].concat(ps.sizes) : [o.size])
       .concat(hasCustom ? [o.custom ? o.customLabel : '', o.custom] : [])
       .concat([o.address, o.paid, o.status, o.ref]));
     if (o.status !== 'Refunded') live.push({ o, ps });
   }
   // Totals for the supplier (refunded orders left out)
   rows.push([], ['TOTALS FOR SUPPLIER', '', live.length + ' order' + (live.length === 1 ? '' : 's') + ' (refunds left out)']);
-  const groups = parts.length ? parts.map((p, i) => [p, live.map((x) => x.ps.sizes[i])]) : [['', live.map((x) => x.o.size)]];
+  // sizes per part, and per fit when there are men's and women's orders
+  const fitsSeen = hasFit ? [...new Set(live.map((x) => x.o.fit))] : [''];
+  const groups = [];
+  for (const f of fitsSeen) {
+    const these = live.filter((x) => !hasFit || x.o.fit === f);
+    if (parts.length) parts.forEach((p, i) => { const s = these.map((x) => x.ps.sizes[i]).filter(Boolean); if (s.length) groups.push([(f ? f + ' ' : '') + p, s]); });
+    else groups.push([f, these.map((x) => x.o.size)]);
+  }
+  if (!groups.length) groups.push(['', []]);
   for (const [label, sizes] of groups) {
     rows.push([label ? label + ' size' : 'Size', 'How many']);
     [...tally(sizes)].sort(bySize(sizeOrder)).forEach(([s, n]) => rows.push([s, n]));
@@ -100,7 +113,7 @@ export function itemSheet(item, orders) {
   const customs = live.filter((x) => x.o.custom);
   if (customs.length) {
     rows.push(['CUSTOMISATIONS', 'Size', 'Text']);
-    customs.forEach(({ o, ps }) => rows.push([o.customLabel, ps ? parts.map((p, i) => p + ' ' + ps.sizes[i]).join(', ') : o.size, o.custom]));
+    customs.forEach(({ o, ps }) => rows.push([o.customLabel, [o.fit, ps ? parts.map((p, i) => (ps.sizes[i] ? p + ' ' + ps.sizes[i] : '')).filter(Boolean).join(', ') : o.size].filter(Boolean).join(' · '), o.custom]));
   }
   return rows;
 }
@@ -108,7 +121,7 @@ export function itemSheet(item, orders) {
 // Every order on one sheet.
 export function allSheet(items, orders) {
   const name = (id) => (items.find((i) => i.id === id) || {}).name || id;
-  const rows = [['Order date', 'Receipt no.', 'Item', 'Size(s)', 'Customisation', 'Customisation text', 'Name', 'Email', 'Phone', 'Delivery address', 'Paid (£)', 'Status', 'Stripe payment']];
-  orders.forEach((o) => rows.push([o.date, o.receipt, name(o.item), o.size, o.custom ? o.customLabel : '', o.custom, o.name, o.email, o.phone, o.address, o.paid, o.status, o.ref]));
+  const rows = [['Order date', 'Receipt no.', 'Item', 'Fit', 'Size(s)', 'Customisation', 'Customisation text', 'Name', 'Email', 'Phone', 'Delivery address', 'Paid (£)', 'Status', 'Stripe payment']];
+  orders.forEach((o) => rows.push([o.date, o.receipt, name(o.item), o.fit, o.size, o.custom ? o.customLabel : '', o.custom, o.name, o.email, o.phone, o.address, o.paid, o.status, o.ref]));
   return rows;
 }

@@ -6,7 +6,7 @@
 // With STRIPE_SECRET_KEY set: creates a Stripe Checkout session (card, Apple Pay, Google Pay) -> { url }.
 // With DEMO_PAYMENTS=on instead: returns the lines for the simulated sheet -> { demo: true, title, lines }.
 import { PASSWORDS, matches, isFullCode, isWaitlistCode, env, membershipPrice, isMember, readJSON, send, body, origin, fromRequest } from './_lib/core.js';
-import { DEFAULT_MERCH, withDefaults, listOf } from './_lib/merch.js';
+import { DEFAULT_MERCH, withDefaults, listOf, FITS, partsFor } from './_lib/merch.js';
 
 // Letters (any language), numbers, spaces and . ' - &, up to 16 characters.
 const NAME_OK = /^[\p{L}\p{N} .'&-]{1,16}$/u;
@@ -71,7 +71,11 @@ export default async function handler(req, res) {
       const item = withDefaults(await readJSON('merch', DEFAULT_MERCH)).find((m) => m.id === b.itemId);
       if (!item) return send(res, 404, { error: 'no_item' });
       if (item.comingSoon) return send(res, 409, { error: 'coming_soon' });
-      const sizes = listOf(item.sizes), parts = listOf(item.parts);
+      // Men's or women's, when the committee has ticked those for this item
+      const fits = Array.isArray(item.fits) ? item.fits.filter((f) => FITS[f]) : [];
+      const fit = fits.length === 1 ? fits[0] : fits.includes(b.fit) ? b.fit : '';
+      if (fits.length && !fit) return send(res, 400, { error: 'fit' });
+      const sizes = listOf(item.sizes), parts = partsFor(item, fit);
       let size;
       if (sizes.length && parts.length) {
         // a size for each part, e.g. "Shirt: S, Shorts: L"
@@ -84,8 +88,9 @@ export default async function handler(req, res) {
       }
       amount = item.price;
       title = 'CUPTC shop';
-      name = item.name + (size ? ' (' + size + ')' : '');
+      name = item.name + (fit || size ? ' (' + [FITS[fit], size].filter(Boolean).join(' · ') + ')' : '');
       meta = { kind: 'merch', item: item.id, size, delivery: item.delivery || '' };
+      if (fit) meta.fit = fit;
       if (b.custom != null && String(b.custom).trim() !== '') {
         const custom = String(b.custom).trim().replace(/\s+/g, ' ');
         if (!item.customisable) return send(res, 400, { error: 'not_customisable' });

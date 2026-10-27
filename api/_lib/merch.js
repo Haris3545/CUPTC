@@ -85,3 +85,7 @@ export function sectionsOf(shop) {
 }
 export const shopIsCurrent = (shop) => versionOf(shop) >= SHOP_VERSION;
 export const listOf = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
+// Fits an item can be ordered in (the committee ticks Men's and/or Women's sizing); none ticked = one fit.
+export const FITS = { mens: "Men's", womens: "Women's" };
+// The parts sized separately for a fit: women's can differ (e.g. a skort instead of shorts).
+export const partsFor = (item, fit) => listOf(fit === 'womens' && listOf(item.partsWomen).length ? item.partsWomen : item.parts);
