@@ -49,6 +49,8 @@ export function same(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(String(b));
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
+// Signatures for other things (e.g. membership cards), kept apart from sign-in tokens by the purpose.
+export const signFor = (purpose, s) => sign(purpose + ':' + s);
 export function makeToken(role, days = 30) {
   const body = role + '.' + (Date.now() + days * 864e5);
   return body + '.' + sign(body);

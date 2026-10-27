@@ -555,6 +555,96 @@
   .feature .shop-panel .ptag { background: var(--ink); }
   .feature .shop-panel .ptag.soon { background: #fff; box-shadow: 0 0 0 1px var(--line); }
   .m-sections { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+
+  /* ---- Members Area: the three section tiles */
+  .mtabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: clamp(28px, 5vw, 56px); margin-bottom: clamp(8px, 2vw, 20px); }
+  .mtab { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr auto; column-gap: 16px; row-gap: 4px; align-items: start; text-align: left; padding: 24px 24px 22px; border: 0; border-radius: 20px; background: var(--green-soft); color: var(--ink); font: inherit; cursor: pointer; box-shadow: inset 0 0 0 1px transparent; transition: background-color .4s var(--out), box-shadow .4s var(--out), transform .6s var(--out); }
+  .mtab svg { grid-row: 1 / 4; width: 44px; height: 44px; fill: none; stroke: var(--green-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .mtab b { font-weight: 400; font-size: 26px; line-height: 1.15; }
+  .mtab span { font-size: 16px; line-height: 1.45; color: var(--ink-2); }
+  .mtab i { margin-top: 8px; font-size: 15px; color: var(--green-dark); }
+  .mtab:hover { background: #e4eee9; transform: translateY(-2px); }
+  .mtab[aria-expanded="true"] { background: #13261f; color: #f4f1ea; }
+  .mtab[aria-expanded="true"] svg { stroke: var(--green); }
+  .mtab[aria-expanded="true"] span { color: rgba(244, 241, 234, .72); }
+  .mtab[aria-expanded="true"] i { color: var(--green); }
+  .mview { animation: mviewIn .7s var(--out) both; scroll-margin-top: calc(var(--bar) + var(--sbar, 0px) + 12px); }
+  @keyframes mviewIn { from { opacity: 0; transform: translateY(14px); } }
+  .club { padding-top: clamp(40px, 6vh, 72px); padding-bottom: clamp(56px, 9vh, 96px); }
+  .club-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; align-items: start; }
+  .panel { position: relative; display: grid; gap: 12px; align-content: start; padding: clamp(22px, 2.6vw, 32px); border-radius: 20px; background: #f6f8f7; box-shadow: inset 0 0 0 1px var(--line); }
+  .panel h3 { margin: 0; font-weight: 400; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.15; }
+  .panel .muted { margin: 0; font-size: 16px; }
+  .panel-wide { grid-column: 1 / -1; }
+  .panel-card { grid-row: span 2; }
+  .panel .actions { gap: 10px; }
+  .soon-panel { opacity: .85; }
+  .soon-panel .ptag { left: auto; right: 18px; top: 18px; }
+  .soon-panel .check { opacity: .55; cursor: not-allowed; }
+  .addr { margin: 0; font-size: 20px; line-height: 1.4; }
+  .map { aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: var(--green-soft); }
+  .map iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .lockline { margin: 0; color: var(--ink-3); font-style: italic; font-size: 16px; }
+  .lockline a { color: var(--ink); }
+  /* today's session */
+  .sess { display: grid; gap: 6px; }
+  .sess-state { display: inline-flex; align-items: center; gap: 10px; font-size: 22px; }
+  .sess-state::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px rgba(133, 180, 160, .25); }
+  .sess.cancelled .sess-state::before { background: var(--red); box-shadow: 0 0 0 5px rgba(223, 35, 38, .18); }
+  .sess.changed .sess-state::before { background: #e2a72e; box-shadow: 0 0 0 5px rgba(226, 167, 46, .22); }
+  .sess-note { margin: 0; font-size: 17px; }
+  .sess-when { margin: 0; font-size: 14px; color: var(--ink-3); font-style: italic; }
+  /* feedback form */
+  .fb-form, #dir-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+  .fb-form .full, #dir-form .full { grid-column: 1 / -1; }
+  .fb-kind { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px 26px; }
+  .welfare-note { grid-column: 1 / -1; margin: 0; padding: 12px 16px; border-radius: 12px; background: #fff4e5; color: #6b4a12; font-size: 15px; }
+  /* WhatsApp */
+  .wa-btn { display: inline-flex; align-items: center; gap: 12px; justify-self: start; padding: 16px 26px; border-radius: 99px; background: #1f8f4e; color: #fff; text-decoration: none; font-size: 18px; transition: background-color .3s; }
+  .wa-btn:hover { background: #18773f; }
+  .wa-btn svg { width: 22px; height: 22px; fill: currentColor; }
+  /* directory */
+  .dir-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
+  .dir-search { max-width: 320px; height: 44px; font-size: 16px; }
+  .dir-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dir-person { display: grid; gap: 2px; padding: 16px 18px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+  .dir-person b { font-weight: 400; font-size: 19px; }
+  .dir-person span { font-size: 15px; color: var(--ink-2); }
+  .dir-person .lvl { justify-self: start; margin: 4px 0 2px; font-size: 13px; padding: 2px 10px; border-radius: 99px; background: var(--green-soft); color: var(--green-dark); }
+  .dir-person em { font-size: 15px; color: var(--ink-3); }
+  .dir-person.me { box-shadow: inset 0 0 0 1.5px var(--green); }
+  /* the membership card */
+  .mcard { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1.586; border-radius: 20px; overflow: hidden; color: #f4f1ea; padding: clamp(16px, 4.5%, 24px); display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; column-gap: 14px;
+    background: radial-gradient(90% 120% at 100% 0%, rgba(133, 180, 160, .35), transparent 55%), linear-gradient(135deg, #22453a 0%, #13261f 52%, #0d1a15 100%);
+    box-shadow: 0 30px 60px -28px rgba(13, 26, 21, .65), 0 10px 22px -12px rgba(13, 26, 21, .4), inset 0 0 0 1px rgba(255, 255, 255, .1); }
+  .mcard::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .14; background:
+      linear-gradient(90deg, transparent calc(50% - .5px), #fff calc(50% - .5px), #fff calc(50% + .5px), transparent calc(50% + .5px)),
+      linear-gradient(0deg, transparent calc(30% - .5px), #fff calc(30% - .5px), #fff calc(30% + .5px), transparent calc(30% + .5px)),
+      linear-gradient(0deg, transparent calc(70% - .5px), #fff calc(70% - .5px), #fff calc(70% + .5px), transparent calc(70% + .5px)); }
+  .mcard::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .12) 45%, transparent 60%); }
+  .mcard-brand { display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .2em; text-transform: uppercase; }
+  .mcard-brand img { height: 30px; width: auto; }
+  .mcard-name { align-self: end; margin: 0; font-size: clamp(22px, 5.4vw, 30px); line-height: 1.1; color: #fff; }
+  .mcard-meta { grid-column: 1; display: grid; gap: 2px; font-size: 13px; color: rgba(244, 241, 234, .75); letter-spacing: .04em; }
+  .mcard-meta b { font-weight: 400; font-size: 15px; color: var(--green); letter-spacing: .06em; text-transform: uppercase; }
+  .mcard-qr { grid-column: 2; grid-row: 1 / 4; align-self: center; width: clamp(96px, 30vw, 138px); aspect-ratio: 1; padding: 8px; border-radius: 12px; background: #f4f1ea; position: relative; z-index: 1; }
+  .mcard-qr svg { width: 100%; height: 100%; display: block; }
+  .mcard.old { filter: grayscale(.8); }
+  .mcard + .muted { margin-top: 6px; }
+  .card-actions { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 15px; }
+  .card-actions button { border: 0; background: none; padding: 4px 0; cursor: pointer; text-decoration: underline; color: var(--ink-2); font: inherit; }
+  #card-form { display: grid; gap: 10px; }
+  .check-res { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 10px 0 6px; }
+  .check-res .done.bad { background: var(--red); }
+  /* committee: club tools */
+  .club-admin-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .club-admin-row .input { flex: 1 1 200px; height: 44px; font-size: 16px; }
+  .fb-item { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; font-size: 16px; }
+  .fb-item header { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 14px; color: var(--ink-3); }
+  .fb-item header b { font-weight: 400; color: var(--ink); text-transform: capitalize; }
+  .fb-item header b.welfare { color: #b3261e; }
+  .fb-item p { margin: 0; white-space: pre-wrap; }
+  .fb-item button { justify-self: start; border: 0; border-radius: 99px; padding: 5px 12px; cursor: pointer; font-size: 13px; background: var(--green-soft); color: #b3261e; }
   .sec-row { display: grid; grid-template-columns: 1.1fr 1.6fr auto auto auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
   .sec-row .input { height: 42px; font-size: 16px; }
   .sec-row .check { font-size: 15px; white-space: nowrap; }
@@ -676,6 +766,15 @@
     .shop-panel .shop { grid-template-columns: 1fr 1fr; gap: 28px 14px; }
     .shop-panel-in { margin-top: 26px; border-radius: 18px; }
     .sec-row { grid-template-columns: 1fr 1fr; }
+    .mtabs { grid-template-columns: 1fr; gap: 10px; }
+    .mtab { padding: 18px 18px 16px; grid-template-rows: auto auto auto; }
+    .mtab svg { width: 36px; height: 36px; }
+    .mtab b { font-size: 22px; }
+    .mtab span { font-size: 15px; }
+    .club-grid { grid-template-columns: 1fr; }
+    .panel-card { grid-row: auto; }
+    .fb-form, #dir-form { grid-template-columns: 1fr; }
+    .dir-list { grid-template-columns: 1fr; }
     .product h3 { font-size: 19px; }
     .pmeta { flex-direction: column; align-items: start; gap: 2px; }
     .pdeliv { text-align: left; }
@@ -685,7 +784,7 @@
     .foot-bottom { flex-direction: column-reverse; align-items: start; }
   }
   @media (max-width: 380px) { .shop { grid-template-columns: 1fr; } .shop-panel .shop { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 721px) and (max-width: 1000px) { .feature .shop:not([data-n="1"]) { --cols: 2; } .shop-panel .shop { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 721px) and (max-width: 1000px) { .dir-list { grid-template-columns: 1fr 1fr; } .mtab { grid-template-columns: 1fr; } .mtab svg { grid-row: auto; margin-bottom: 6px; } .feature .shop:not([data-n="1"]) { --cols: 2; } .shop-panel .shop { grid-template-columns: repeat(3, 1fr); } }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition-duration: .01s !important; transition-delay: 0s !important; }
@@ -1006,7 +1105,98 @@
       </div>
     </section>
 
-    <div class="shop-root rv" id="shop" aria-live="polite"></div>
+    <nav class="mtabs wrap rv" style="--d:.22s" aria-label="Members Area sections">
+      <button class="mtab" type="button" data-view="shop" aria-controls="view-shop" aria-expanded="false">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 16h20l3 26H11z"/><path d="M19 16v-3a5 5 0 0 1 10 0v3"/></svg>
+        <b>Shop</b><span>The Matchday Collection, Social Padel kit and more.</span><i>Open &rarr;</i>
+      </button>
+      <button class="mtab" type="button" data-view="club" aria-controls="view-club" aria-expanded="false">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="12" width="34" height="24" rx="4"/><path d="M13 20h12M13 26h8"/><rect x="29" y="19" width="7" height="7" rx="1"/></svg>
+        <b>Club life</b><span>Your membership card, today&rsquo;s session, court info and getting in touch.</span><i>Open &rarr;</i>
+      </button>
+      <button class="mtab" type="button" data-view="social" aria-controls="view-social" aria-expanded="false">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="18" r="6"/><circle cx="32" cy="20" r="5"/><path d="M7 38c1-7 5-11 11-11s10 4 11 11M28 30c2-2 4-3 6-3 5 0 8 4 8 10"/></svg>
+        <b>Social</b><span>The WhatsApp chat and the members&rsquo; directory.</span><i>Open &rarr;</i>
+      </button>
+    </nav>
+
+    <div class="mview" id="view-shop" data-view="shop" hidden>
+      <div class="shop-root" id="shop" aria-live="polite"></div>
+    </div>
+
+    <div class="mview" id="view-club" data-view="club" hidden>
+      <div class="wrap club">
+        <header class="shop-head"><p class="shop-kicker">Members Area</p><h2 class="shop-title">Club life.</h2></header>
+        <div class="club-grid">
+          <section class="panel panel-card" aria-labelledby="card-h">
+            <h3 id="card-h">Membership card</h3>
+            <div id="card-box"></div>
+          </section>
+          <section class="panel" aria-labelledby="sess-h">
+            <h3 id="sess-h">Today&rsquo;s session</h3>
+            <div id="session-box" class="members-only"></div>
+          </section>
+          <section class="panel" aria-labelledby="court-h">
+            <h3 id="court-h">Courts</h3>
+            <p class="addr">Philippa Fawcett Drive<br>Cambridge CB3 0AS</p>
+            <div class="map"><iframe title="Map of the courts at Philippa Fawcett Drive, Cambridge" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Philippa+Fawcett+Drive,+Cambridge+CB3+0AS&amp;output=embed"></iframe></div>
+            <div class="actions"><a class="btn line sm" href="https://www.google.com/maps/search/?api=1&amp;query=Philippa+Fawcett+Drive%2C+Cambridge+CB3+0AS" target="_blank" rel="noopener">Google Maps</a><a class="btn line sm" href="https://maps.apple.com/?q=Philippa+Fawcett+Drive,+Cambridge+CB3+0AS" target="_blank" rel="noopener">Apple Maps</a></div>
+          </section>
+          <section class="panel soon-panel" aria-labelledby="rem-h">
+            <span class="ptag soon">Coming soon</span>
+            <h3 id="rem-h">Email reminders</h3>
+            <p class="muted">Opt in to a reminder the day before each session, and a note if it&rsquo;s cancelled.</p>
+            <label class="check" aria-disabled="true"><input type="checkbox" disabled> <span>Email me session reminders</span></label>
+          </section>
+          <section class="panel panel-wide" aria-labelledby="fb-h">
+            <h3 id="fb-h">Feedback and welfare</h3>
+            <p class="muted">Tell the committee what&rsquo;s working and what isn&rsquo;t, or raise a welfare concern. Only the committee sees these. Leave your name off to stay anonymous.</p>
+            <form id="fb-form" class="fb-form members-only" novalidate>
+              <div class="fb-kind" role="radiogroup" aria-label="What is this about?">
+                <label class="check"><input type="radio" name="fb-kind" value="feedback" checked> <span>Feedback or an idea</span></label>
+                <label class="check"><input type="radio" name="fb-kind" value="welfare"> <span>A welfare concern</span></label>
+              </div>
+              <p class="welfare-note" id="fb-welfare" hidden>If you or someone else is in danger, call 999. For support any time, the University&rsquo;s Student Support pages list who to contact, and you can also speak to your college welfare team.</p>
+              <div class="field full"><label for="fb-msg">Message</label><textarea class="input" id="fb-msg" maxlength="3000" rows="4"></textarea></div>
+              <div class="field"><label for="fb-name">Your name (optional)</label><input class="input" id="fb-name" maxlength="80" autocomplete="name"></div>
+              <div class="field"><label for="fb-contact">How to reach you (optional)</label><input class="input" id="fb-contact" maxlength="120" placeholder="Email or phone, if you'd like a reply"></div>
+              <div class="full actions"><button class="btn sm" type="submit">Send to the committee</button></div>
+              <p class="msg full" id="fb-msg-out" role="status"></p>
+            </form>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div class="mview" id="view-social" data-view="social" hidden>
+      <div class="wrap club">
+        <header class="shop-head"><p class="shop-kicker">Members Area</p><h2 class="shop-title">Social.</h2></header>
+        <div class="club-grid">
+          <section class="panel panel-wa" aria-labelledby="wa-h">
+            <h3 id="wa-h">The club WhatsApp</h3>
+            <p class="muted">Session updates, finding a fourth, and everything in between.</p>
+            <div id="wa-box" class="members-only"></div>
+          </section>
+          <section class="panel" aria-labelledby="me-h">
+            <h3 id="me-h">You in the directory</h3>
+            <p class="muted">Opt in so other members can find people to play with. Only signed-in members can see the directory, and you can remove yourself at any time.</p>
+            <form id="dir-form" class="members-only" novalidate>
+              <div class="field"><label for="dir-name">Name</label><input class="input" id="dir-name" maxlength="60" autocomplete="name" required></div>
+              <div class="field"><label for="dir-college">College</label><input class="input" id="dir-college" maxlength="60"></div>
+              <div class="field"><label for="dir-level">Level</label><select class="input" id="dir-level"><option value="">Rather not say</option><option>Beginner</option><option>Improver</option><option>Intermediate</option><option>Advanced</option></select></div>
+              <div class="field"><label for="dir-contact">How to reach you</label><input class="input" id="dir-contact" maxlength="80" placeholder="e.g. Instagram @handle"></div>
+              <div class="field full"><label for="dir-note">A line about you (optional)</label><input class="input" id="dir-note" maxlength="160" placeholder="e.g. Free most weekday evenings, looking for a doubles partner"></div>
+              <div class="full actions"><button class="btn sm" type="submit" id="dir-save">Add me to the directory</button><button class="btn line sm" type="button" id="dir-remove" hidden>Remove me</button></div>
+              <p class="msg full" id="dir-msg" role="status"></p>
+            </form>
+          </section>
+          <section class="panel panel-wide" aria-labelledby="dir-h">
+            <div class="dir-top"><h3 id="dir-h">Members&rsquo; directory</h3><input class="input dir-search" id="dir-search" type="search" placeholder="Search names, colleges, levels" aria-label="Search the directory"></div>
+            <div id="dir-list" class="dir-list members-only"></div>
+          </section>
+        </div>
+      </div>
+    </div>
 
     <section class="sec" id="committee" hidden>
       <div class="narrow center">
@@ -1047,6 +1237,27 @@
             <p class="msg full" id="m-msg" role="status"></p>
           </form>
           <div id="admin-list"></div>
+          <div class="lb-admin" id="club-admin">
+            <h3 class="h3">Today&rsquo;s session.</h3>
+            <p class="muted">Shown to members in Club life. Set it when something changes; clear it to go back to &ldquo;as normal&rdquo;.</p>
+            <div class="club-admin-row">
+              <select class="input" id="ca-state"><option value="">No update (as normal)</option><option value="on">On as planned</option><option value="changed">Changed (time or courts)</option><option value="cancelled">Cancelled</option></select>
+              <input class="input" id="ca-note" maxlength="300" placeholder="Note, e.g. Courts 3 and 4, 7 to 9pm">
+              <button class="btn sm" type="button" id="ca-save">Update</button>
+            </div>
+            <p class="msg" id="ca-msg" role="status"></p>
+            <h3 class="h3">WhatsApp link.</h3>
+            <div class="club-admin-row"><input class="input" id="ca-wa" maxlength="200" placeholder="https://chat.whatsapp.com/..."><button class="btn sm" type="button" id="ca-wa-save">Save</button></div>
+            <p class="msg" id="ca-wa-msg" role="status"></p>
+            <h3 class="h3">Make a membership card.</h3>
+            <p class="muted">For someone who joined without paying on the website. Send them the link it gives you; opening it adds the card to their phone.</p>
+            <div class="club-admin-row"><input class="input" id="ca-card-name" maxlength="60" placeholder="Their full name"><select class="input" id="ca-card-type"><option value="social">Social member</option><option value="full">Full member</option><option value="committee">Committee</option></select><button class="btn sm" type="button" id="ca-card-make">Make card</button></div>
+            <p class="msg" id="ca-card-msg" role="status"></p>
+            <h3 class="h3">Feedback and welfare.</h3>
+            <div id="ca-feedback"></div>
+            <h3 class="h3">Directory.</h3>
+            <div id="ca-dir"></div>
+          </div>
           <div class="lb-admin" id="sec-admin">
             <h3 class="h3">Shop sections.</h3>
             <p class="muted">The order here is the order in the shop. A large showcase section gets the dark, full-width treatment at the top. Removing a section doesn&rsquo;t remove its items: untick or re-tick them in the item editor.</p>
@@ -1433,7 +1644,14 @@
     set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* private mode */ } },
     del(k) { try { sessionStorage.removeItem(k); } catch (e) { /* ignore */ } }
   };
-  const state = { token: store.get('cuptc-token') || '', member: !!store.get('cuptc-token'), admin: store.get('cuptc-role') === 'committee', discount: '', fullCode: '', merch: null };
+  // kept on this device between visits (the membership card, the directory key)
+  const keep = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+  };
+  let clubReady = false; // the Club life / Social code below has loaded
+  const state = { club: null, view: null, token: store.get('cuptc-token') || '', member: !!store.get('cuptc-token'), admin: store.get('cuptc-role') === 'committee', discount: '', fullCode: '', merch: null };
 
   // ---------------------------------------------------------------- reveals
   const io = new IntersectionObserver((entries) => {
@@ -1495,7 +1713,9 @@
   // States: the start screen (no hash) or one of three pages. The curtain, header and pages all
   // animate from CSS classes on <html>, so rapid clicks never leave anything half-way.
   const PAGES = ['home', 'membership', 'members', 'privacy', 'constitution', 'code-of-conduct'];
-  const ALIAS = { committee: 'members', memberships: 'membership', 'data-protection': 'privacy', conduct: 'code-of-conduct', 'code-of-conduct-2026-27': 'code-of-conduct', support: 'home', donate: 'home' };
+  // Members Area sections: #shop, #club-life and #social open the Members Area on that section
+  const VIEW_HASH = { '#shop': 'shop', '#club-life': 'club', '#social': 'social' };
+  const ALIAS = { shop: 'members', 'club-life': 'members', social: 'members', committee: 'members', memberships: 'membership', 'data-protection': 'privacy', conduct: 'code-of-conduct', 'code-of-conduct-2026-27': 'code-of-conduct', support: 'home', donate: 'home' };
   const pageFromHash = () => { const h = location.hash.slice(1); const p = ALIAS[h] || h; return PAGES.indexOf(p) >= 0 ? p : null; };
   let current = null, swapTimer = 0, enterTimer = 0, quietEnter = false, committeeAsked = false;
 
@@ -1509,9 +1729,18 @@
   }
 
   function route(first) {
-    const page = pageFromHash();
+    let page = pageFromHash();
     // the committee sign-in only shows when asked for (the footer link) or once signed in as committee
     if (location.hash === '#committee') { committeeAsked = true; $('#committee').hidden = false; }
+    // a scanned membership card (#check=...) or a card the committee sent someone (#card=...)
+    const ck = /^#(check|card)=([A-Za-z0-9_.-]{20,500})$/.exec(location.hash);
+    if (ck) {
+      history.replaceState(null, '', ck[1] === 'card' ? '#club-life' : '#members');
+      if (ck[1] === 'card') keep.set('cuptc-card', ck[2]);
+      else setTimeout(() => showCheck(ck[2]), first ? 500 : 50);
+      page = pageFromHash();
+    }
+    if (VIEW_HASH[location.hash]) setView(VIEW_HASH[location.hash]);
     setMenu(false);
     clearTimeout(swapTimer);
     $('#pages').classList.remove('swap');
@@ -1567,7 +1796,8 @@
     if (el) setTimeout(() => el.scrollIntoView({ behavior: reduce || first ? 'auto' : 'smooth', block: 'start' }), first ? 60 : root.classList.contains('entering') ? 1050 : 380);
   }
   // Links like #support open a page and scroll to a section on it.
-  const anchor = () => (/^#(support|donate)$/.test(location.hash) ? $('#support') : location.hash === '#committee' ? $('#committee') : null);
+  const anchor = () => (/^#(support|donate)$/.test(location.hash) ? $('#support') : location.hash === '#committee' ? $('#committee')
+    : VIEW_HASH[location.hash] ? $('#view-' + VIEW_HASH[location.hash]) : null);
   window.addEventListener('hashchange', () => route(false));
 
   let reverseEntry = null;   // set by the phone entry animation below
@@ -1695,6 +1925,12 @@
     return { ok: r.ok, status: r.status, data };
   }
   const ERR = {
+    card_email: 'Enter the email address you paid with.',
+    card_not_found: 'We couldn’t find a paid membership with that email. Use the email you paid with, or ask the committee to make you a card.',
+    card_name: 'Add their name.',
+    feedback_empty: 'Write a message first.',
+    dir_name: 'Add your name.',
+    whatsapp_url: 'That doesn’t look like a WhatsApp group invite link (https://chat.whatsapp.com/...).',
     coming_soon: 'That item isn’t available to order yet.',
     size: 'Please pick a size from the list.',
     donation_amount: 'Enter an amount between £1 and £5,000.',
@@ -1981,7 +2217,8 @@
     $('#member-bar-text').innerHTML = 'Signed in as <b></b>';
     $('#member-bar-text b').textContent = state.admin ? 'committee' : 'a member';
     root.classList.toggle('signed-in', state.member);
-    $('#members-lede').textContent = state.member ? 'Club kit and merch, just for members.' : 'Club kit and merch, for members only. Sign in with the password you got when you joined.';
+    $('#members-lede').textContent = state.member ? 'The shop, club life and the social side of CUPTC.' : 'The shop, club life and the social side of CUPTC, for members. Sign in with the password you got when you joined.';
+    loadClub();
     root.classList.toggle('is-committee', state.admin);
     renderShop();
     renderAdminList();
@@ -2513,6 +2750,286 @@
     boardMsg(BOARD_ERR[res.data.error] || errText(res, 'Couldn’t save that change (error ' + res.status + ').'), true);
     if (res.data.error === 'not_found') loadBoardAdmin();
   }
+
+
+  // ---------------------------------------------------------------- Members Area sections
+  function setView(v) {
+    state.view = v;
+    $$('.mtab').forEach((t) => {
+      const on = t.dataset.view === v;
+      t.setAttribute('aria-expanded', String(on));
+      $('i', t).textContent = on ? 'Open below ↓' : 'Open →';
+    });
+    $$('.mview').forEach((el) => { el.hidden = el.dataset.view !== v; });
+    renderClub();
+  }
+  $$('.mtab').forEach((t) => t.addEventListener('click', () => {
+    const h = { shop: '#shop', club: '#club-life', social: '#social' }[t.dataset.view];
+    if (location.hash === h) { const el = $('#view-' + t.dataset.view); if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
+    else location.hash = h;
+  }));
+
+  // ---------------------------------------------------------------- Club life and Social
+  const CARD_TYPES = { social: 'Social member', full: 'Full member', committee: 'Committee' };
+  const SESSION_LABEL = { on: 'On as planned', changed: 'Changed', cancelled: 'Cancelled' };
+  async function loadClub() {
+    if (!state.member) { state.club = null; renderClub(); return; }
+    const res = await api('club');
+    state.club = res.ok ? res.data : { error: errText(res, 'This can’t load right now.') };
+    renderClub();
+    renderClubAdmin();
+  }
+  const when = (iso) => {
+    const d = new Date(iso);
+    const today = new Date().toDateString() === d.toDateString();
+    return (today ? 'today' : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + ' at ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  };
+  function lockFor(el) {
+    let l = el.nextElementSibling;
+    if (!l || !l.classList.contains('lockline')) {
+      l = document.createElement('p');
+      l.className = 'lockline';
+      l.innerHTML = '<a class="link" href="#members">Sign in</a> with the members password to see this.';
+      $('a', l).addEventListener('click', (e) => { e.preventDefault(); const g = $('#gate'); if (g) { g.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); setTimeout(() => $('#member-pw').focus({ preventScroll: true }), 400); } });
+      el.after(l);
+    }
+    el.hidden = !state.member;
+    l.hidden = state.member;
+  }
+  function renderClub() {
+    if (!clubReady) return;
+    $$('.members-only').forEach(lockFor);
+    renderCard();
+    if (!state.member) return;
+    const c = state.club || {};
+    // today's session
+    const sb = $('#session-box');
+    if (!state.club) sb.innerHTML = '<p class="lockline">Loading…</p>';
+    else if (c.error) { sb.innerHTML = '<p class="lockline"></p>'; $('p', sb).textContent = c.error; }
+    else if (!c.session) sb.innerHTML = '<div class="sess"><span class="sess-state">No update from the committee</span><p class="sess-note">Sessions run as normal. Any changes will show here.</p></div>';
+    else {
+      sb.innerHTML = '<div class="sess"><span class="sess-state"></span><p class="sess-note"></p><p class="sess-when"></p></div>';
+      $('.sess', sb).classList.add(c.session.state);
+      $('.sess-state', sb).textContent = SESSION_LABEL[c.session.state] || 'Update';
+      $('.sess-note', sb).textContent = c.session.note || '';
+      $('.sess-when', sb).textContent = 'Updated ' + when(c.session.at);
+    }
+    // WhatsApp
+    const wa = $('#wa-box');
+    if (c.whatsapp) {
+      wa.innerHTML = '<a class="wa-btn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3z"/></svg><span>Join the WhatsApp chat</span></a>';
+      $('a', wa).href = c.whatsapp;
+    } else wa.innerHTML = '<p class="lockline">The link is coming soon.</p>';
+    renderDirectory();
+  }
+
+  // ---- membership card
+  const b64url = (t) => { try { return JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) { return null; } };
+  let qrReady = null;
+  const loadQR = () => (qrReady = qrReady || new Promise((ok, no) => {
+    if (window.qrcode) return ok();
+    const sc = document.createElement('script');
+    sc.src = '/assets/js/qrcode.js';
+    sc.onload = ok;
+    sc.onerror = () => { qrReady = null; no(new Error('qr')); };
+    document.head.appendChild(sc);
+  }));
+  function renderCard() {
+    const box = $('#card-box');
+    if (!box) return;
+    const token = keep.get('cuptc-card');
+    const info = token ? b64url(token.split('.')[0]) : null;
+    if (info) {
+      box.innerHTML = '<div class="mcard" role="img"><div class="mcard-brand"><img src="img/emblem.png" alt=""><span>CUPTC</span></div><p class="mcard-name"></p>' +
+        '<div class="mcard-meta"><b></b><span></span><span></span></div><div class="mcard-qr" aria-hidden="true"></div></div>' +
+        '<p class="muted">Show this at the courts. Scanning the code checks it with the club.</p>' +
+        '<div class="card-actions"><button type="button" data-a="check">Check it works</button><button type="button" data-a="remove">Remove from this device</button></div>';
+      const label = CARD_TYPES[info.t] || 'Member', year = String(info.y || '').replace('-', '–');
+      $('.mcard', box).setAttribute('aria-label', 'CUPTC membership card: ' + info.n + ', ' + label + ', ' + year);
+      $('.mcard-name', box).textContent = info.n;
+      const [lab, yr, no] = $$('.mcard-meta > *', box);
+      lab.textContent = label;
+      yr.textContent = 'Member ' + year;
+      no.textContent = 'No. ' + (info.i || '');
+      const url = location.origin + '/#check=' + token;
+      loadQR().then(() => {
+        const qr = window.qrcode(0, 'M');
+        qr.addData(url);
+        qr.make();
+        $('.mcard-qr', box).innerHTML = qr.createSvgTag({ scalable: true, margin: 0 });
+      }).catch(() => { $('.mcard-qr', box).textContent = ''; });
+      $('[data-a=check]', box).addEventListener('click', () => showCheck(token));
+      $('[data-a=remove]', box).addEventListener('click', () => { if (confirm('Remove the card from this device? You can get it again with your email.')) { keep.del('cuptc-card'); renderCard(); } });
+      return;
+    }
+    if (!state.member) { box.innerHTML = '<p class="lockline"><a class="link" href="#members">Sign in</a> to get your membership card.</p>'; return; }
+    box.innerHTML = '<p class="muted">Your card lives on this phone. Enter the email you used when you paid for membership.</p>' +
+      '<form id="card-form" novalidate><input class="input" id="card-email" type="email" autocomplete="email" placeholder="you@cam.ac.uk" aria-label="The email you paid with"><button class="btn sm" type="submit">Get my card</button><p class="msg" role="status"></p></form>';
+    const f = $('#card-form', box);
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = $('.msg', f), btn = $('button', f);
+      btn.disabled = true;
+      msg.className = 'msg';
+      msg.textContent = 'Finding your membership…';
+      const res = await api('club', { body: { op: 'card', email: $('#card-email', f).value.trim() } });
+      btn.disabled = false;
+      if (res.ok && res.data.card) { keep.set('cuptc-card', res.data.card); renderCard(); return; }
+      msg.className = 'msg err';
+      msg.textContent = errText(res, 'Couldn’t get your card. Try again in a moment.');
+    });
+  }
+  async function showCheck(token) {
+    const sh = sheet('Membership card');
+    sh.main.innerHTML = '<div class="check-res"><p class="muted">Checking with the club…</p></div>';
+    const res = await api('club?check=' + encodeURIComponent(token));
+    const d = res.ok ? res.data : {};
+    const box = $('.check-res', sh.main);
+    if (d.valid) {
+      box.innerHTML = '<div class="done">&#10003;</div><b style="font-size:24px;font-weight:400">Valid member</b><span class="n" style="font-size:22px"></span><span class="muted t"></span>';
+      $('.n', box).textContent = d.name;
+      $('.t', box).textContent = d.label + ' · ' + String(d.year).replace('-', '–') + ' · No. ' + d.id;
+    } else {
+      box.innerHTML = '<div class="done bad">&#10007;</div><b style="font-size:24px;font-weight:400"></b><span class="muted"></span>';
+      $('b', box).textContent = d.name ? 'Card has expired' : res.ok ? 'Not a valid card' : 'Couldn’t check right now';
+      $('.muted', box).textContent = d.name ? d.name + ', ' + d.label + ' ' + String(d.year).replace('-', '–') + '.' : res.ok ? 'This isn’t a CUPTC membership card.' : 'Try again in a moment.';
+    }
+  }
+
+  // ---- feedback and welfare
+  $$('input[name=fb-kind]').forEach((x) => x.addEventListener('change', () => { $('#fb-welfare').hidden = $('input[name=fb-kind]:checked').value !== 'welfare'; }));
+  $('#fb-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const out = $('#fb-msg-out'), btn = $('#fb-form button[type=submit]');
+    const message = $('#fb-msg').value.trim();
+    if (message.length < 3) { out.className = 'msg full err'; out.textContent = 'Write a message first.'; return; }
+    btn.disabled = true;
+    const res = await api('club', { body: { op: 'feedback', kind: $('input[name=fb-kind]:checked').value, message, name: $('#fb-name').value.trim(), contact: $('#fb-contact').value.trim() } });
+    btn.disabled = false;
+    out.className = 'msg full ' + (res.ok ? 'ok' : 'err');
+    out.textContent = res.ok ? 'Thank you. It’s been sent to the committee.' : errText(res, 'Couldn’t send that. Try again in a moment.');
+    if (res.ok) { $('#fb-msg').value = ''; $('#fb-name').value = ''; $('#fb-contact').value = ''; }
+  });
+
+  // ---- members' directory
+  function dirKey() {
+    let k = keep.get('cuptc-dir-key');
+    if (!k || !/^[A-Za-z0-9]{16,64}$/.test(k)) {
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      k = Array.from(a, (x) => x.toString(16).padStart(2, '0')).join('');
+      keep.set('cuptc-dir-key', k);
+    }
+    return k;
+  }
+  function renderDirectory() {
+    const list = $('#dir-list');
+    const all = (state.club && state.club.directory) || [];
+    const myId = keep.get('cuptc-dir-id');
+    const me = all.find((d) => d.id === myId);
+    if (me && !$('#dir-form').dataset.filled) {
+      $('#dir-name').value = me.name || ''; $('#dir-college').value = me.college || ''; $('#dir-level').value = me.level || '';
+      $('#dir-contact').value = me.contact || ''; $('#dir-note').value = me.note || '';
+      $('#dir-form').dataset.filled = '1';
+    }
+    $('#dir-save').textContent = me ? 'Save changes' : 'Add me to the directory';
+    $('#dir-remove').hidden = !me;
+    const q = $('#dir-search').value.trim().toLowerCase();
+    const shown = all.filter((d) => !q || [d.name, d.college, d.level, d.note].join(' ').toLowerCase().includes(q));
+    list.innerHTML = '';
+    if (!all.length) { list.innerHTML = '<p class="lockline">Nobody has joined the directory yet. Be the first.</p>'; return; }
+    if (!shown.length) { list.innerHTML = '<p class="lockline">No one matches that search.</p>'; return; }
+    shown.forEach((d) => {
+      const el = document.createElement('article');
+      el.className = 'dir-person' + (d.id === myId ? ' me' : '');
+      el.innerHTML = '<b></b><span class="col"></span>' + (d.level ? '<span class="lvl"></span>' : '') + (d.contact ? '<span class="ct"></span>' : '') + (d.note ? '<em></em>' : '');
+      $('b', el).textContent = d.name + (d.id === myId ? ' (you)' : '');
+      $('.col', el).textContent = d.college || '';
+      if (d.level) $('.lvl', el).textContent = d.level;
+      if (d.contact) $('.ct', el).textContent = d.contact;
+      if (d.note) $('em', el).textContent = d.note;
+      list.appendChild(el);
+    });
+  }
+  $('#dir-search').addEventListener('input', renderDirectory);
+  $('#dir-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('#dir-msg');
+    const entry = { name: $('#dir-name').value.trim(), college: $('#dir-college').value.trim(), level: $('#dir-level').value, contact: $('#dir-contact').value.trim(), note: $('#dir-note').value.trim() };
+    if (!entry.name) { msg.className = 'msg full err'; msg.textContent = 'Add your name.'; return; }
+    const res = await api('club', { body: { op: 'dir-save', key: dirKey(), ...entry } });
+    msg.className = 'msg full ' + (res.ok ? 'ok' : 'err');
+    msg.textContent = res.ok ? 'Saved. You’re in the directory.' : errText(res, 'Couldn’t save. Try again in a moment.');
+    if (res.ok) { keep.set('cuptc-dir-id', res.data.id); loadClub(); }
+  });
+  $('#dir-remove').addEventListener('click', async () => {
+    if (!confirm('Remove yourself from the directory?')) return;
+    const res = await api('club', { body: { op: 'dir-remove', key: dirKey() } });
+    const msg = $('#dir-msg');
+    msg.className = 'msg full ' + (res.ok ? 'ok' : 'err');
+    msg.textContent = res.ok ? 'Removed.' : errText(res, 'Couldn’t remove you. Try again in a moment.');
+    if (res.ok) { keep.del('cuptc-dir-id'); $('#dir-form').reset(); delete $('#dir-form').dataset.filled; loadClub(); }
+  });
+
+  // ---- committee: session status, WhatsApp link, cards, feedback inbox, directory
+  function renderClubAdmin() {
+    if (!clubReady || !state.admin || !state.club || state.club.error) return;
+    const c = state.club;
+    if (document.activeElement !== $('#ca-note')) { $('#ca-state').value = c.session ? c.session.state : ''; $('#ca-note').value = c.session ? c.session.note || '' : ''; }
+    if (document.activeElement !== $('#ca-wa')) $('#ca-wa').value = c.whatsapp || '';
+    const fb = $('#ca-feedback');
+    fb.innerHTML = '';
+    if (!(c.feedback || []).length) fb.innerHTML = '<p class="muted">Nothing yet.</p>';
+    (c.feedback || []).forEach((f) => {
+      const el = document.createElement('article');
+      el.className = 'fb-item';
+      el.innerHTML = '<header><b></b><span class="w"></span><span class="who"></span></header><p></p><button type="button">Remove</button>';
+      $('b', el).textContent = f.kind === 'welfare' ? 'Welfare' : 'Feedback';
+      $('b', el).classList.toggle('welfare', f.kind === 'welfare');
+      $('.w', el).textContent = when(f.at);
+      $('.who', el).textContent = [f.name || 'Anonymous', f.contact].filter(Boolean).join(' · ');
+      $('p', el).textContent = f.message;
+      $('button', el).addEventListener('click', async () => { if (confirm('Remove this message?')) { const res = await api('club', { body: { op: 'feedback-remove', id: f.id } }); if (res.ok) loadClub(); } });
+      fb.appendChild(el);
+    });
+    const dl = $('#ca-dir');
+    dl.innerHTML = '';
+    if (!(c.directory || []).length) dl.innerHTML = '<p class="muted">Nobody yet.</p>';
+    (c.directory || []).forEach((d) => {
+      const row = document.createElement('div');
+      row.className = 'admin-row';
+      row.style.gridTemplateColumns = '1fr auto';
+      row.innerHTML = '<span></span><button type="button" class="del">Remove</button>';
+      $('span', row).textContent = d.name + (d.college ? ' · ' + d.college : '');
+      $('button', row).addEventListener('click', async () => { if (confirm('Remove ' + d.name + ' from the directory?')) { const res = await api('club', { body: { op: 'dir-remove', id: d.id } }); if (res.ok) loadClub(); } });
+      dl.appendChild(row);
+    });
+  }
+  const adminSay = (id, ok, text) => { const m = $(id); m.className = 'msg' + (ok ? '' : ' err'); m.textContent = text; };
+  $('#ca-save').addEventListener('click', async () => {
+    const res = await api('club', { body: { op: 'session', state: $('#ca-state').value, note: $('#ca-note').value.trim() } });
+    adminSay('#ca-msg', res.ok, res.ok ? 'Updated. Members see it now.' : errText(res, 'Couldn’t update. Try again.'));
+    if (res.ok) loadClub();
+  });
+  $('#ca-wa-save').addEventListener('click', async () => {
+    const res = await api('club', { body: { op: 'whatsapp', url: $('#ca-wa').value.trim() } });
+    adminSay('#ca-wa-msg', res.ok, res.ok ? 'Saved.' : errText(res, 'Couldn’t save. Try again.'));
+    if (res.ok) loadClub();
+  });
+  $('#ca-card-make').addEventListener('click', async () => {
+    const res = await api('club', { body: { op: 'card-make', name: $('#ca-card-name').value.trim(), type: $('#ca-card-type').value } });
+    const m = $('#ca-card-msg');
+    if (!res.ok) { adminSay('#ca-card-msg', false, errText(res, 'Couldn’t make the card.')); return; }
+    const link = location.origin + '/#card=' + res.data.card;
+    m.className = 'msg';
+    m.innerHTML = 'Send them this link: <input class="input" readonly style="height:40px;font-size:14px;margin-top:6px"> <button class="copy" type="button">Copy</button>';
+    $('input', m).value = link;
+    $('input', m).addEventListener('focus', (e) => e.target.select());
+    $('button', m).addEventListener('click', () => { if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => { $('button', m).textContent = 'Copied'; }); });
+  });
+  clubReady = true;
+  renderClub();
+  if (state.view) setView(state.view);
 
   // ---- committee: shop sections (names, blurbs, order, which one is the large showcase)
   let secDraft = null, secDirty = false;
