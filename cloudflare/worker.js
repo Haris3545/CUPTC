@@ -4,6 +4,7 @@
 // into the Node-style req/res they expect.
 import { usePlatform, readUpload } from '../api/_lib/core.js';
 import checkout from '../api/checkout.js';
+import club from '../api/club.js';
 import code from '../api/code.js';
 import committee from '../api/committee.js';
 import confirm from '../api/confirm.js';
@@ -18,7 +19,7 @@ import status from '../api/status.js';
 import turn from '../api/turn.js';
 import waitlist from '../api/waitlist.js';
 
-const API = { checkout, code, committee, confirm, leaderboard, login, me, 'merch-image': merchImage, merch, migrate, orders, status, turn, waitlist };
+const API = { checkout, club, code, committee, confirm, leaderboard, login, me, 'merch-image': merchImage, merch, migrate, orders, status, turn, waitlist };
 
 async function runHandler(handler, request, url) {
   const headers = {};
