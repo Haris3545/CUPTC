@@ -8,14 +8,23 @@ export const DEFAULT_MERCH = [
 // Shop sections, in order. featured: the large, dark showcase at the top. The committee can rename,
 // reorder, add and remove them (saved as the 'shop' document).
 export const DEFAULT_SECTIONS = [
-  { id: 'flagship', name: 'Flagship Stash', blurb: 'The official CUPTC kit and Saxon fleeces.', featured: true },
-  { id: 'social', name: 'Social Padel', blurb: 'Illustrated shirts and the hat, for social padel.', featured: false }
+  { id: 'flagship', name: 'Matchday Collection', blurb: 'The Saxon fleece, the full CUPTC kit and Canterbury trousers.', featured: true },
+  { id: 'social', name: 'Social Padel', blurb: 'Illustrated shirts, hats and everything else for social padel.', featured: false }
 ];
-// Shown until the committee's first change to the shop, then kept like any other item.
+// Shown until the committee's next change to the shop, then kept like any other item (so they can be
+// edited or removed). v: the shop version that added them; a shop saved before that version gets them.
+// match: an existing item with a name like this already covers it, so the placeholder isn't added.
+const soon = (v, id, name, description, order, section, match) => ({ v, match, item: { id, name, description, price: 0, delivery: '', sizes: '', image: '', order, sections: [section], group: '', comingSoon: true } });
 const PLACEHOLDERS = [
-  { id: 'canterbury-trousers', name: 'Canterbury trousers', description: 'Club trousers from Canterbury. Coming soon.', price: 0, delivery: '', sizes: '', image: '', order: 60,
-    sections: ['flagship'], group: 'Full kit', comingSoon: true }
+  soon(1, 'canterbury-trousers', 'Canterbury trousers', 'Club trousers from Canterbury. Coming soon.', 60, 'flagship', /trouser/i),
+  soon(2, 'water-bottle', 'Water bottle', 'A CUPTC water bottle. Coming soon.', 80, 'social', /bottle/i),
+  soon(2, 'boonie', 'Boonie hat', 'A CUPTC boonie hat. Coming soon.', 81, 'social', /boonie/i),
+  soon(2, 'club-tie', 'Club tie', 'The CUPTC tie. Coming soon.', 82, 'social', /\btie\b/i),
+  soon(2, 'stickers', 'Sticker pack', 'CUPTC stickers. Coming soon.', 83, 'social', /sticker/i),
+  soon(2, 'sports-bag', 'Sports bag', 'A CUPTC sports bag. Coming soon.', 84, 'social', /\bbag\b/i)
 ];
+export const SHOP_VERSION = 2;
+const versionOf = (shop) => (shop ? shop.v || (shop.seeded ? 1 : 0) : 0);
 
 // Where an item goes when the committee hasn't chosen yet, guessed from its name.
 function guessSections(m) {
@@ -28,7 +37,7 @@ function guessGroup(m, sections) {
   if (!sections.includes('flagship')) return '';
   const n = String(m.name || '');
   if (/fleece|saxon/i.test(n)) return 'Saxon fleeces';
-  if (/bundle|shirt|short|skort|trouser|canterbury/i.test(n)) return 'Full kit';
+  if (/bundle|shirt|short|skort/i.test(n)) return 'Full kit';
   return '';
 }
 
@@ -53,13 +62,26 @@ export function withDefaults(items, shop) {
     }
     return x;
   });
-  if (shop !== undefined && !(shop && shop.seeded)) {
+  if (shop !== undefined) {
+    const v = versionOf(shop);
+    if (v < 2) {
+      // version 2: the Canterbury trousers have their own card rather than sitting in the Full kit
+      out = out.map((m) => (m.id === 'canterbury-trousers' && m.group === 'Full kit' ? { ...m, group: '' } : m));
+    }
     for (const p of PLACEHOLDERS) {
-      const have = out.some((m) => m.id === p.id || (/trouser/i.test(p.name) && /trouser/i.test(m.name || '')));
-      if (!have) out = out.concat({ ...p });
+      if (p.v <= v) continue;
+      if (!out.some((m) => m.id === p.item.id || p.match.test(m.name || ''))) out = out.concat({ ...p.item, sections: p.item.sections.slice() });
     }
   }
   return out;
 }
-export const sectionsOf = (shop) => (shop && Array.isArray(shop.sections) ? shop.sections : DEFAULT_SECTIONS);
+export function sectionsOf(shop) {
+  const secs = shop && Array.isArray(shop.sections) ? shop.sections : DEFAULT_SECTIONS;
+  if (versionOf(shop) >= 2) return secs;
+  // version 2 renamed the showcase (only if it still had its original name and description)
+  return secs.map((x) => (x.id === 'flagship' && x.name === 'Flagship Stash'
+    ? { ...x, name: DEFAULT_SECTIONS[0].name, blurb: x.blurb === 'The official CUPTC kit and Saxon fleeces.' ? DEFAULT_SECTIONS[0].blurb : x.blurb }
+    : x.id === 'social' && x.blurb === 'Illustrated shirts and the hat, for social padel.' ? { ...x, blurb: DEFAULT_SECTIONS[1].blurb } : x));
+}
+export const shopIsCurrent = (shop) => versionOf(shop) >= SHOP_VERSION;
 export const listOf = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);

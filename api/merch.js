@@ -3,7 +3,7 @@
 // DELETE ?id=: remove an item. Changes need the committee sign-in.
 import crypto from 'node:crypto';
 import { isMember, isCommittee, readJSON, writeJSON, storageReady, send, body, isUploaded, removeImage, fromRequest } from './_lib/core.js';
-import { DEFAULT_MERCH, withDefaults, sectionsOf } from './_lib/merch.js';
+import { DEFAULT_MERCH, withDefaults, sectionsOf, shopIsCurrent, SHOP_VERSION } from './_lib/merch.js';
 
 // Every uploaded photo an item uses (main and extras), so replaced ones can be tidied away.
 const uploads = (m) => [m.image].concat(m.images || []).filter(isUploaded);
@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     }
     if (!isCommittee(req)) return send(res, 401, { error: 'committee_only' });
     if (!storageReady()) return send(res, 503, { error: 'storage_not_configured' });
-    // The first change to the shop keeps the guessed sections and placeholders as real settings.
-    if (!(shop && shop.seeded)) {
+    // The first change after an upgrade keeps the guessed sections, renames and placeholders as real settings.
+    if (!shopIsCurrent(shop)) {
       await writeJSON('merch', items);
-      await writeJSON('shop', { sections, seeded: true });
+      await writeJSON('shop', { sections, seeded: true, v: SHOP_VERSION });
     }
     if (req.method === 'POST' && Array.isArray(body(req).sections)) {
       const seen = new Set();
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         return { id, name: clean(x && x.name, 40), blurb: clean(x && x.blurb, 160), featured: !!(x && x.featured) };
       }).filter((x) => x.name);
       if (!next.length) return send(res, 400, { error: 'sections_required' });
-      await writeJSON('shop', { sections: next, seeded: true });
+      await writeJSON('shop', { sections: next, seeded: true, v: SHOP_VERSION });
       return send(res, 200, { sections: next });
     }
     if (req.method === 'POST') {
