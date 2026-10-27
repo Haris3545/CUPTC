@@ -511,10 +511,11 @@
   /* The showcase section: dark, full width, large cards */
   /* dark green at the top that eases through the club greens into the white page below, so there's no hard edge */
   .shop-sec.feature {
-    color: #f4f1ea; padding: clamp(72px, 12vh, 128px) 0 250px;
+    color: #f4f1ea; padding: 230px 0 280px;
     background:
-      radial-gradient(120% 55% at 50% 0%, rgba(53, 102, 83, .4) 0%, rgba(18, 36, 29, 0) 70%),
-      linear-gradient(180deg, #13261f 0%, #11221b calc(100% - 330px), #1e3a30 calc(100% - 250px), #3f6457 calc(100% - 175px), #9fbcb0 calc(100% - 95px), #e6eeea calc(100% - 35px), var(--paper) 100%);
+      radial-gradient(70% 38% at 50% 34%, rgba(133, 180, 160, .22) 0%, rgba(133, 180, 160, 0) 100%),
+      linear-gradient(180deg, var(--paper) 0, #f4f8f6 22px, #dfeae5 55px, #bdd2c8 92px, #92b1a3 130px, #6b9182 168px, #4d7466 204px, #3a6152 236px, #31574a 266px,
+        #2e5245 calc(100% - 360px), #33584b calc(100% - 300px), #46695c calc(100% - 245px), #658a7b calc(100% - 190px), #8faea0 calc(100% - 140px), #b9cfc5 calc(100% - 95px), #dce8e2 calc(100% - 55px), #f3f7f5 calc(100% - 22px), var(--paper) 100%);
   }
   .shop-sec.feature + .shop-sec { padding-top: 0; }
   .feature .shop-head { text-align: center; justify-items: center; margin-bottom: clamp(36px, 5vw, 64px); }
@@ -567,7 +568,7 @@
   .mtab span { font-size: 16px; line-height: 1.45; color: var(--ink-2); }
   .mtab i { margin-top: 8px; font-size: 15px; color: var(--green-dark); }
   .mtab:hover { background: #e4eee9; transform: translateY(-2px); }
-  .mtab[aria-expanded="true"] { background: #13261f; color: #f4f1ea; }
+  .mtab[aria-expanded="true"] { background: #2e5245; color: #f4f1ea; }
   .mtab[aria-expanded="true"] svg { stroke: var(--green); }
   .mtab[aria-expanded="true"] span { color: rgba(244, 241, 234, .72); }
   .mtab[aria-expanded="true"] i { color: var(--green); }
@@ -2316,7 +2317,7 @@
   };
   function cardImage(m, alt) {
     const pimg = document.createElement('div');
-    const key = m && m.image;
+    const key = m ? photosOf(m)[0] : '';   // the same first photo the enlarged view starts on
     pimg.className = 'pimg' + (/^(p\d|https:|\/)/.test(key || '') ? ' cover' : '');
     if (key) {
       const img = document.createElement('img');
@@ -2430,7 +2431,7 @@
       grid.dataset.n = String(cards.length);
       cards.forEach((c) => {
         if (c.item) { grid.appendChild(itemCard(c.item)); return; }
-        const cover = c.items.find((m) => m.image) || c.items[0];
+        const cover = c.items.find((m) => photosOf(m).length) || c.items[0];
         const from = fromPrice(c.items);
         const soon = c.items.filter((m) => m.comingSoon).length;
         const card = makeCard({
