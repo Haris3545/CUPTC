@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const member = isMember(req);
       const out = items.slice().sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((m) => (member ? m : { id: m.id, name: m.name, description: m.description, image: m.image, order: m.order, customisable: !!m.customisable, customLabel: m.customLabel || '', parts: m.parts || '', images: m.images || [], sizeChart: m.sizeChart || '', sections: m.sections || [], group: m.group || '', comingSoon: !!m.comingSoon }));
+        .map((m) => (member ? m : { id: m.id, name: m.name, description: m.description, image: m.image, order: m.order, customisable: !!m.customisable, customLabel: m.customLabel || '', parts: m.parts || '', partsWomen: m.partsWomen || '', fits: m.fits || [], images: m.images || [], sizeChart: m.sizeChart || '', sections: m.sections || [], group: m.group || '', comingSoon: !!m.comingSoon }));
       return send(res, 200, { items: out, member, sections });
     }
     if (!isCommittee(req)) return send(res, 401, { error: 'committee_only' });
@@ -54,6 +54,8 @@ export default async function handler(req, res) {
         customisable: !!i.customisable,
         customLabel: clean(i.customLabel, 40),
         parts: clean(i.parts, 80),
+        partsWomen: clean(i.partsWomen, 80),
+        fits: ['mens', 'womens'].filter((f) => Array.isArray(i.fits) && i.fits.includes(f)),
         customPrice: Math.max(0, Math.round((i.customPrice === '' || i.customPrice == null ? 2 : Number(i.customPrice) || 0) * 100) / 100),
         sections: (Array.isArray(i.sections) ? i.sections : []).map((v) => slug(v)).filter((v) => v && sections.some((x) => x.id === v)).slice(0, 12),
         group: clean(i.group, 40),
