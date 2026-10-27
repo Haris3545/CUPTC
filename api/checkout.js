@@ -70,6 +70,7 @@ export default async function handler(req, res) {
       if (!isMember(req)) return send(res, 401, { error: 'members_only' });
       const item = withDefaults(await readJSON('merch', DEFAULT_MERCH)).find((m) => m.id === b.itemId);
       if (!item) return send(res, 404, { error: 'no_item' });
+      if (item.comingSoon) return send(res, 409, { error: 'coming_soon' });
       const sizes = listOf(item.sizes), parts = listOf(item.parts);
       let size;
       if (sizes.length && parts.length) {
