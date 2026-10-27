@@ -6,7 +6,7 @@
 //   run it once to try the new site, then again just before switching the domain over.
 import { env, same, readJSON, writeJSON, putImage, isUploaded, host, fromRequest, send } from './_lib/core.js';
 
-const DOCS = ['merch', 'leaderboard', 'committee', 'waitlist'];
+const DOCS = ['merch', 'shop', 'leaderboard', 'committee', 'waitlist'];
 
 // Every uploaded photo address in a document (Vercel Blob addresses only)
 function photos(doc, out) {

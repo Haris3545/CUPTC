@@ -479,6 +479,78 @@
   .product .apple { height: 46px; font-size: 16px; }
   .empty { grid-column: 1 / -1; text-align: center; color: var(--ink-2); padding: 40px 0; }
 
+  /* ---- Shop sections */
+  .shop-root > .empty { padding: 20px var(--gutter) 60px; }
+  .shop-sec { padding: clamp(56px, 9vh, 96px) 0; }
+  .shop-sec + .shop-sec:not(.feature) { padding-top: clamp(24px, 4vh, 48px); }
+  .shop-head { display: grid; gap: 10px; margin-bottom: clamp(28px, 4vw, 44px); }
+  .shop-kicker { margin: 0; font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: var(--green-dark); }
+  .shop-title { margin: 0; font-weight: 400; font-size: clamp(34px, 4vw, 54px); line-height: 1.05; letter-spacing: -.01em; }
+  .shop-blurb { margin: 0; color: var(--ink-2); font-size: 18px; max-width: 40em; }
+  .ptag { position: absolute; left: 12px; top: 12px; z-index: 1; border-radius: 99px; padding: 4px 12px 5px; font-size: 13px; letter-spacing: .04em; background: var(--ink); color: #fff; }
+  .ptag.soon { background: #fff; color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+  .ph-soon { width: 100%; height: 100%; display: grid; place-items: center; align-content: center; gap: 14px; background: linear-gradient(160deg, #f3f6f4, #e3ebe6); color: var(--green-dark); }
+  .ph-soon img { width: 42% !important; height: auto !important; opacity: .55; }
+  .pd-main .ph-soon { position: absolute; inset: 0; }
+  .pd-main .ph-soon img { position: static; opacity: .55; }
+  .ph-soon span { font-style: italic; font-size: 17px; }
+  .product[aria-expanded="true"] h3 { text-decoration: underline; text-decoration-color: var(--green); text-underline-offset: 6px; }
+  /* A collection opens into a panel under the grid */
+  .shop-panel { overflow: hidden; height: 0; }
+  .shop-panel-in { margin-top: 36px; padding: clamp(22px, 3vw, 36px); border-radius: 22px; background: var(--green-soft); }
+  .shop-panel-top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 22px; }
+  .shop-panel-top h3 { margin: 0; font-weight: 400; font-size: clamp(24px, 2.4vw, 32px); }
+  .shop-panel-close { border: 0; background: none; cursor: pointer; font: inherit; font-size: 16px; color: var(--ink-2); text-decoration: underline; padding: 4px 0; }
+  .shop-panel .shop { grid-template-columns: repeat(4, 1fr); gap: 32px 20px; }
+  .shop-panel .pimg { background: #fff; border-radius: 14px; }
+  .shop-panel .product h3 { font-size: 19px; }
+
+  /* The showcase section: dark, full width, large cards */
+  .shop-sec.feature { background: radial-gradient(120% 90% at 50% 0%, #1d3a30 0%, #12241d 55%, #0d1a15 100%); color: #f4f1ea; padding: clamp(72px, 12vh, 128px) 0 clamp(72px, 11vh, 120px); }
+  .feature .shop-head { text-align: center; justify-items: center; margin-bottom: clamp(36px, 5vw, 64px); }
+  .feature .shop-kicker { color: var(--green); }
+  .feature .shop-title { font-size: clamp(46px, 6.4vw, 92px); letter-spacing: -.02em; }
+  .feature .shop-title em { font-style: italic; }
+  .feature .shop-blurb { color: rgba(244, 241, 234, .72); text-align: center; }
+  .feature .shop-rule { width: 64px; height: 1px; border: 0; background: rgba(244, 241, 234, .35); margin: 6px 0 0; }
+  .feature .shop { gap: clamp(20px, 2.4vw, 32px); grid-template-columns: repeat(var(--cols, 3), 1fr); }
+  .feature .shop[data-n="1"] { --cols: 1; max-width: 620px; margin: 0 auto; }
+  .feature .shop[data-n="2"] { --cols: 2; max-width: 1040px; margin: 0 auto; }
+  .feature .shop[data-n="1"] ~ .shop-panel { max-width: 860px; margin: 0 auto; }
+  .feature .shop[data-n="2"] ~ .shop-panel { max-width: 1040px; margin: 0 auto; }
+  .feature .product { gap: 0; border-radius: 22px; overflow: hidden; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); transition: background-color .5s var(--out), box-shadow .5s var(--out), transform .7s var(--out); }
+  .feature .product:hover { background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); transform: translateY(-3px); }
+  .feature .pimg { margin: 0; background: #f2f4f1; border-radius: 0; }
+  .feature .product:hover .pimg img { transform: scale(1.035); }
+  .feature .pbody { display: grid; gap: 6px; padding: 20px 22px 22px; }
+  .feature .product h3 { font-size: clamp(24px, 2vw, 30px); color: #fff; }
+  .feature .pmeta { color: rgba(244, 241, 234, .7); }
+  .feature .pprice { font-size: 19px; color: #f4f1ea; }
+  .feature .lock { color: rgba(244, 241, 234, .55); }
+  .feature .pview { color: var(--green); font-style: normal; letter-spacing: .02em; }
+  .feature .pview::after { content: " \2192"; display: inline-block; transition: transform .5s var(--out); }
+  .feature .product:hover .pview::after { transform: translateX(4px); }
+  .feature .ptag { background: rgba(13, 26, 21, .82); color: #f4f1ea; backdrop-filter: blur(6px); }
+  .feature .ptag.soon { background: #f4f1ea; color: var(--ink); box-shadow: none; }
+  .feature .shop-panel-in { background: #f4f1ea; color: var(--ink); }
+  .feature .shop-panel .product { border-radius: 0; background: none; box-shadow: none; transform: none; gap: 8px; }
+  .feature .shop-panel .pbody { padding: 0; gap: 4px; }
+  .feature .shop-panel .product h3 { color: var(--ink); font-size: 19px; }
+  .feature .shop-panel .pmeta { color: var(--ink-2); }
+  .feature .shop-panel .pprice { color: var(--ink); }
+  .feature .shop-panel .lock { color: var(--ink-3); }
+  .feature .shop-panel .pview { color: var(--green-dark); font-style: italic; }
+  .feature .shop-panel .pview::after { content: none; }
+  .feature .shop-panel .pimg { border-radius: 14px; background: #fff; }
+  .feature .shop-panel .ptag { background: var(--ink); }
+  .feature .shop-panel .ptag.soon { background: #fff; box-shadow: 0 0 0 1px var(--line); }
+  .m-sections { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+  .sec-row { display: grid; grid-template-columns: 1.1fr 1.6fr auto auto auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .sec-row .input { height: 42px; font-size: 16px; }
+  .sec-row .check { font-size: 15px; white-space: nowrap; }
+  .sec-row button { border: 0; border-radius: 99px; padding: 6px 12px; cursor: pointer; font-size: 14px; background: var(--green-soft); }
+  .sec-row .del { color: #b3261e; }
+
   .admin { display: grid; gap: 20px; }
   .admin form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; }
   .admin .full { grid-column: 1 / -1; }
@@ -590,6 +662,10 @@
     .countdown div { min-width: 66px; }
     .countdown strong { font-size: 32px; }
     .shop { gap: 36px 16px; }
+    .feature .shop, .feature .shop[data-n="2"] { --cols: 1; max-width: 560px; margin: 0 auto; }
+    .shop-panel .shop { grid-template-columns: 1fr 1fr; gap: 28px 14px; }
+    .shop-panel-in { margin-top: 26px; border-radius: 18px; }
+    .sec-row { grid-template-columns: 1fr 1fr; }
     .product h3 { font-size: 19px; }
     .pmeta { flex-direction: column; align-items: start; gap: 2px; }
     .pdeliv { text-align: left; }
@@ -598,7 +674,8 @@
     .foot-logo img { height: 56px; }
     .foot-bottom { flex-direction: column-reverse; align-items: start; }
   }
-  @media (max-width: 380px) { .shop { grid-template-columns: 1fr; } }
+  @media (max-width: 380px) { .shop { grid-template-columns: 1fr; } .shop-panel .shop { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 721px) and (max-width: 1000px) { .feature .shop:not([data-n="1"]) { --cols: 2; } .shop-panel .shop { grid-template-columns: repeat(3, 1fr); } }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition-duration: .01s !important; transition-delay: 0s !important; }
@@ -919,9 +996,7 @@
       </div>
     </section>
 
-    <section class="wrap">
-      <div class="shop rv" id="shop" aria-live="polite"></div>
-    </section>
+    <div class="shop-root rv" id="shop" aria-live="polite"></div>
 
     <section class="sec">
       <div class="narrow center">
@@ -949,6 +1024,9 @@
             <div class="field" id="m-custom-label-f" hidden><label for="m-custom-label">What buyers add</label><input class="input" id="m-custom-label" maxlength="40" placeholder="e.g. Name on the back, Initials on the sleeve"></div>
             <div class="field" id="m-custom-price-f" hidden><label for="m-custom-price">Customisation price (£)</label><input class="input" id="m-custom-price" type="number" min="0" step="0.5" value="2"></div>
             <div class="field"><label for="m-order">Position in shop</label><input class="input" id="m-order" type="number" step="1" value="10"></div>
+            <div class="field full"><label>Shop sections</label><div class="m-sections" id="m-sections"></div><span class="note" style="text-align:left">Tick every section the item should appear in. Manage the sections themselves below the item list.</span></div>
+            <div class="field"><label for="m-group">Collection (optional)</label><input class="input" id="m-group" maxlength="40" list="m-groups" placeholder="e.g. Full kit"><datalist id="m-groups"></datalist><span class="note" style="text-align:left">Items with the same collection share one card that opens to show them all.</span></div>
+            <div class="field"><label>&nbsp;</label><label class="check"><input type="checkbox" id="m-soon"> <span>Coming soon: shown in the shop, can&rsquo;t be bought yet</span></label></div>
             <div class="field full"><label>More photos</label><div class="m-extra" id="m-extra"></div><div><button class="btn line sm" type="button" id="m-add-photo">Add photo</button></div></div>
             <div class="field full"><label for="m-chart">Size chart</label><textarea class="input" id="m-chart" maxlength="1200" placeholder="Size | Chest (cm) | Length (cm)&#10;S | 96 | 70&#10;M | 102 | 72"></textarea><span class="note" style="text-align:left">One row per line. Separate columns with | or commas. The first row is the heading.</span></div>
             <div class="field full"><label for="m-desc">Description</label><textarea class="input" id="m-desc" maxlength="400"></textarea></div>
@@ -959,6 +1037,13 @@
             <p class="msg full" id="m-msg" role="status"></p>
           </form>
           <div id="admin-list"></div>
+          <div class="lb-admin" id="sec-admin">
+            <h3 class="h3">Shop sections.</h3>
+            <p class="muted">The order here is the order in the shop. A large showcase section gets the dark, full-width treatment at the top. Removing a section doesn&rsquo;t remove its items: untick or re-tick them in the item editor.</p>
+            <div id="sec-list"></div>
+            <div class="actions"><button class="btn line sm" type="button" id="sec-add">Add section</button><button class="btn sm" type="button" id="sec-save">Save sections</button></div>
+            <p class="msg" id="sec-msg" role="status"></p>
+          </div>
           <div class="lb-admin">
             <h3 class="h3">Social waiting list.</h3>
             <p class="muted">The Membership page shows the group filling up now: it appears once 13 have joined, and starts again from 0 each time 22 is reached. Places paid for on the website are counted automatically from Stripe. If people have genuinely joined some other way (for example in person), add them here so the count shown on the Membership page includes them.</p>
@@ -1598,6 +1683,7 @@
     return { ok: r.ok, status: r.status, data };
   }
   const ERR = {
+    coming_soon: 'That item isn’t available to order yet.',
     size: 'Please pick a size from the list.',
     donation_amount: 'Enter an amount between £1 and £5,000.',
     social_sold_out: 'Social membership has sold out. Join the waiting list instead.',
@@ -1906,7 +1992,9 @@
     state.shopError = res.ok ? '' : errText(res, 'The shop can’t load right now.');
     state.merch = res.ok ? res.data.items : [];
     state.pricesShown = res.ok && res.data.member;
+    state.sections = res.ok && Array.isArray(res.data.sections) ? res.data.sections : [];
     renderShop();
+    renderSectionAdmin();
     renderAdminList();
   }
   const money = (v) => '£' + Number(v || 0).toFixed(2).replace(/\.00$/, '');
@@ -1925,6 +2013,88 @@
     return t;
   }
 
+  // The shop is a list of sections (set by the committee). Each section shows its items as cards; items
+  // that share a collection (e.g. "Full kit") show as one card that opens a panel with every piece.
+  const OTHER = { id: '_other', name: 'More from the club', blurb: '', featured: false };
+  function shopSections() {
+    const secs = (state.sections || []).slice();
+    const known = new Set(secs.map((x) => x.id));
+    const out = secs.map((sec) => ({ sec, items: state.merch.filter((m) => (m.sections || []).includes(sec.id)) }));
+    const rest = state.merch.filter((m) => !(m.sections || []).some((id) => known.has(id)));
+    if (rest.length) out.push({ sec: OTHER, items: rest });
+    return out.filter((x) => x.items.length);
+  }
+  // Cards for one section: single items, and one card per collection (in the order of its first piece)
+  function cardsOf(items) {
+    const cards = [], groups = new Map();
+    items.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((m) => {
+      const g = (m.group || '').trim();
+      if (!g) return cards.push({ item: m });
+      const key = g.toLowerCase();
+      if (!groups.has(key)) { const c = { group: g, items: [] }; groups.set(key, c); cards.push(c); }
+      groups.get(key).items.push(m);
+    });
+    // a collection of one is just that item
+    return cards.map((c) => (c.items && c.items.length === 1 ? { item: c.items[0] } : c));
+  }
+  const fromPrice = (items) => {
+    const p = items.filter((m) => !m.comingSoon).map((m) => Number(m.price || 0)).filter((v) => v > 0);
+    return p.length ? Math.min(...p) : null;
+  };
+  function cardImage(m, alt) {
+    const pimg = document.createElement('div');
+    const key = m && m.image;
+    pimg.className = 'pimg' + (/^(p\d|https:|\/)/.test(key || '') ? ' cover' : '');
+    if (key) {
+      const img = document.createElement('img');
+      img.src = imgSrc(key);
+      img.alt = alt;
+      img.loading = 'lazy';
+      pimg.appendChild(img);
+    } else if (m && m.comingSoon) {
+      pimg.innerHTML = '<div class="ph-soon"><img src="img/emblem.png" alt=""><span>Coming soon</span></div>';
+    }
+    return pimg;
+  }
+  function makeCard({ title, image, imageAlt, tag, tagSoon, priceText, priced, view, label, onOpen, expandable }) {
+    const card = document.createElement('article');
+    card.className = 'product';
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', label);
+    if (expandable) card.setAttribute('aria-expanded', 'false');
+    const pimg = cardImage(image, imageAlt);
+    if (tag) { const t = document.createElement('span'); t.className = 'ptag' + (tagSoon ? ' soon' : ''); t.textContent = tag; pimg.appendChild(t); }
+    const body = document.createElement('div');
+    body.className = 'pbody';
+    const h = document.createElement('h3');
+    h.textContent = title;
+    const meta = document.createElement('div');
+    meta.className = 'pmeta';
+    const pr = document.createElement('span');
+    pr.className = priced ? 'pprice' : 'lock';
+    pr.textContent = priceText;
+    const v = document.createElement('span');
+    v.className = 'pview';
+    v.textContent = view;
+    meta.append(pr, v);
+    body.append(h, meta);
+    card.append(pimg, body);
+    card.addEventListener('click', onOpen);
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } });
+    return card;
+  }
+  function itemCard(m) {
+    const priced = state.member && state.pricesShown;
+    const n = photosOf(m).length;
+    return makeCard({
+      title: m.name || 'Untitled item', image: m, imageAlt: m.name || 'Merch item',
+      tag: m.comingSoon ? 'Coming soon' : n > 1 ? n + ' photos' : '', tagSoon: !!m.comingSoon,
+      priceText: m.comingSoon ? 'Coming soon' : priced ? money(m.price) : 'Members only', priced: priced && !m.comingSoon,
+      view: m.comingSoon ? 'Details' : m.customisable ? 'Customisable · View' : 'View',
+      label: 'View ' + (m.name || 'item'), onOpen: () => openProduct(m)
+    });
+  }
   function renderShop() {
     const shop = $('#shop');
     shop.innerHTML = '';
@@ -1933,39 +2103,75 @@
     if (state.shopError) return empty(state.shopError);
     if (!state.merch.length) return empty('No merch yet. Check back soon.');
     const priced = state.member && state.pricesShown;
-    state.merch.forEach((m) => {
-      const card = document.createElement('article');
-      card.className = 'product';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', 'View ' + (m.name || 'item'));
-      const pimg = document.createElement('div');
-      pimg.className = 'pimg' + (/^(p\d|https:|\/)/.test(m.image || '') ? ' cover' : '');
-      if (m.image) {
-        const img = document.createElement('img');
-        img.src = imgSrc(m.image);
-        img.alt = m.name || 'Merch item';
-        img.loading = 'lazy';
-        pimg.appendChild(img);
-      }
-      const n = photosOf(m).length;
-      if (n > 1) { const c = document.createElement('span'); c.className = 'pcount'; c.textContent = n + ' photos'; pimg.appendChild(c); }
-      const h = document.createElement('h3');
-      h.textContent = m.name || 'Untitled item';
-      const meta = document.createElement('div');
-      meta.className = 'pmeta';
-      const pr = document.createElement('span');
-      pr.className = priced ? 'pprice' : 'lock';
-      pr.textContent = priced ? money(m.price) : 'Members only';
-      const view = document.createElement('span');
-      view.className = 'pview';
-      view.textContent = m.customisable ? 'Customisable · View' : 'View';
-      meta.append(pr, view);
-      card.append(pimg, h, meta);
-      const open = () => openProduct(m);
-      card.addEventListener('click', open);
-      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-      shop.appendChild(card);
+    shopSections().forEach(({ sec, items }, si) => {
+      const band = document.createElement('section');
+      band.className = 'shop-sec' + (sec.featured ? ' feature' : '');
+      band.setAttribute('aria-label', sec.name);
+      const wrap = document.createElement('div');
+      wrap.className = 'wrap';
+      const head = document.createElement('header');
+      head.className = 'shop-head';
+      head.innerHTML = '<p class="shop-kicker"></p><h2 class="shop-title"></h2>' + (sec.featured ? '<hr class="shop-rule">' : '') + (sec.blurb ? '<p class="shop-blurb"></p>' : '');
+      $('.shop-kicker', head).textContent = sec.featured ? 'The collection' : 'CUPTC shop';
+      $('.shop-title', head).textContent = sec.name;
+      if (sec.blurb) $('.shop-blurb', head).textContent = sec.blurb;
+      const grid = document.createElement('div');
+      grid.className = 'shop';
+      const panel = document.createElement('div');
+      panel.className = 'shop-panel';
+      panel.hidden = true;
+      let openCard = null, anim = null;
+      const closePanel = (instant) => {
+        if (!openCard) return;
+        openCard.setAttribute('aria-expanded', 'false');
+        openCard = null;
+        if (anim) anim.cancel();
+        if (instant || reduce) { panel.hidden = true; panel.style.height = '0px'; return; }
+        anim = panel.animate([{ height: panel.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
+        anim.onfinish = () => { panel.hidden = true; panel.style.height = '0px'; anim = null; };
+      };
+      const openPanel = (card, c) => {
+        if (openCard === card) return closePanel();
+        const was = !!openCard;
+        if (openCard) openCard.setAttribute('aria-expanded', 'false');
+        openCard = card;
+        card.setAttribute('aria-expanded', 'true');
+        panel.innerHTML = '<div class="shop-panel-in"><div class="shop-panel-top"><h3></h3><button class="shop-panel-close" type="button">Close</button></div><div class="shop"></div></div>';
+        $('h3', panel).textContent = c.group;
+        $('.shop-panel-close', panel).addEventListener('click', () => { closePanel(); card.focus({ preventScroll: true }); });
+        c.items.forEach((m) => $('.shop', panel).appendChild(itemCard(m)));
+        panel.hidden = false;
+        panel.style.height = 'auto';
+        const to = panel.offsetHeight;
+        if (anim) anim.cancel();
+        if (!reduce && !was) {
+          anim = panel.animate([{ height: '0px', opacity: 0 }, { height: to + 'px', opacity: 1 }], { duration: 620, easing: 'cubic-bezier(.16,1,.3,1)' });
+          anim.onfinish = () => { anim = null; };
+        }
+        setTimeout(() => {
+          const r = panel.getBoundingClientRect();
+          if (r.top > innerHeight - 160 || r.top < 0) window.scrollBy({ top: r.top - innerHeight * 0.18, behavior: reduce ? 'auto' : 'smooth' });
+        }, reduce ? 0 : 200);
+      };
+      const cards = cardsOf(items);
+      grid.dataset.n = String(cards.length);
+      cards.forEach((c) => {
+        if (c.item) { grid.appendChild(itemCard(c.item)); return; }
+        const cover = c.items.find((m) => m.image) || c.items[0];
+        const from = fromPrice(c.items);
+        const soon = c.items.filter((m) => m.comingSoon).length;
+        const card = makeCard({
+          title: c.group, image: cover, imageAlt: c.group,
+          tag: c.items.length + ' pieces' + (soon ? ' · ' + soon + ' coming soon' : ''),
+          priceText: priced ? (from != null ? 'From ' + money(from) : 'Coming soon') : 'Members only', priced: priced && from != null,
+          view: 'Explore the range', label: 'Show the ' + c.group + ' range', expandable: true,
+          onOpen: () => openPanel(card, c)
+        });
+        grid.appendChild(card);
+      });
+      wrap.append(head, grid, panel);
+      band.appendChild(wrap);
+      shop.appendChild(band);
     });
   }
 
@@ -1989,6 +2195,7 @@
       return im;
     });
     if (!photos.length) main.classList.add('none');
+    if (!photos.length && m.comingSoon) main.innerHTML = '<div class="ph-soon"><img src="img/emblem.png" alt=""><span>Coming soon</span></div>';
     const go = (i) => {
       if (!imgs.length) return;
       at = (i + imgs.length) % imgs.length;
@@ -2026,6 +2233,11 @@
     const chart = sizeTable(m.sizeChart);
     if (chart) { const h = document.createElement('h4'); h.textContent = 'Size chart'; $('.pd-chart', s.main).append(h, chart); }
     const buyBox = $('.pd-buy', s.main);
+    if (m.comingSoon) {
+      $('.pd-price', s.main).textContent = 'Coming soon';
+      buyBox.innerHTML = '<p class="lock">Not available to order yet. Check back soon.</p>';
+      return;
+    }
     if (!priced) {
       buyBox.innerHTML = '<p class="lock"></p><a class="btn sm" href="#members">Sign in</a>';
       $('p', buyBox).textContent = 'Sign in as a member to see the price and order.' + (m.customisable ? ' This item can be customised' + (m.customLabel ? ' (' + m.customLabel.toLowerCase() + ').' : '.') : '');
@@ -2159,7 +2371,26 @@
     }
   })));
 
+  // Section tick boxes and the list of existing collections, for the item form
+  function renderSectionChecks(selected) {
+    const box = $('#m-sections');
+    box.innerHTML = '';
+    (state.sections || []).forEach((sec) => {
+      const l = document.createElement('label');
+      l.className = 'check';
+      l.innerHTML = '<input type="checkbox"> <span></span>';
+      $('input', l).value = sec.id;
+      $('input', l).checked = (selected || []).includes(sec.id);
+      $('span', l).textContent = sec.name;
+      box.appendChild(l);
+    });
+    if (!box.children.length) box.innerHTML = '<span class="note">No sections yet: add one below.</span>';
+    const dl = $('#m-groups');
+    dl.innerHTML = '';
+    [...new Set((state.merch || []).map((m) => (m.group || '').trim()).filter(Boolean))].forEach((g) => { const o = document.createElement('option'); o.value = g; dl.appendChild(o); });
+  }
   function resetForm() {
+    renderSectionChecks([]);
     extra = [];
     renderExtra();
     useImage('');
@@ -2189,7 +2420,10 @@
       images: extra.slice(),
       sizeChart: $('#m-chart').value.trim(),
       customPrice: $('#m-custom-price').value,
-      customLabel: $('#m-custom-label').value.trim()
+      customLabel: $('#m-custom-label').value.trim(),
+      sections: $$('#m-sections input:checked').map((c) => c.value),
+      group: $('#m-group').value.trim(),
+      comingSoon: $('#m-soon').checked
     };
     if (!item.name) { msg.textContent = 'Give the item a name.'; return; }
     $('#m-save').disabled = true;
@@ -2267,6 +2501,63 @@
     if (res.data.error === 'not_found') loadBoardAdmin();
   }
 
+  // ---- committee: shop sections (names, blurbs, order, which one is the large showcase)
+  let secDraft = null, secDirty = false;
+  function renderSectionAdmin() {
+    if (!state.admin) return;
+    if (!secDirty || !secDraft) secDraft = (state.sections || []).map((x) => ({ ...x }));
+    if ($('#m-id') && !$('#m-id').value) renderSectionChecks($$('#m-sections input:checked').map((c) => c.value));
+    const list = $('#sec-list');
+    list.innerHTML = '';
+    secDraft.forEach((sec, i) => {
+      const row = document.createElement('div');
+      row.className = 'sec-row';
+      row.innerHTML = '<input class="input" maxlength="40" placeholder="Section name" aria-label="Section name">' +
+        '<input class="input" maxlength="160" placeholder="Short description (optional)" aria-label="Description">' +
+        '<label class="check"><input type="checkbox"> <span>Large showcase</span></label>' +
+        '<button type="button" aria-label="Move up">&uarr;</button><button type="button" aria-label="Move down">&darr;</button><button type="button" class="del">Remove</button>';
+      const [nameIn, blurbIn] = $$('.input', row);
+      const feat = $('input[type=checkbox]', row);
+      const [up, down, del] = $$('button', row);
+      nameIn.value = sec.name || '';
+      blurbIn.value = sec.blurb || '';
+      feat.checked = !!sec.featured;
+      const dirty = () => { secDirty = true; $('#sec-msg').className = 'msg'; $('#sec-msg').textContent = 'Unsaved changes.'; };
+      nameIn.addEventListener('input', () => { sec.name = nameIn.value; dirty(); });
+      blurbIn.addEventListener('input', () => { sec.blurb = blurbIn.value; dirty(); });
+      feat.addEventListener('change', () => { sec.featured = feat.checked; dirty(); });
+      up.disabled = i === 0;
+      down.disabled = i === secDraft.length - 1;
+      up.addEventListener('click', () => { secDraft.splice(i - 1, 0, secDraft.splice(i, 1)[0]); dirty(); renderSectionAdmin(); });
+      down.addEventListener('click', () => { secDraft.splice(i + 1, 0, secDraft.splice(i, 1)[0]); dirty(); renderSectionAdmin(); });
+      del.addEventListener('click', () => {
+        const n = (state.merch || []).filter((m) => (m.sections || []).includes(sec.id)).length;
+        if (n && !confirm('Remove "' + (sec.name || 'this section') + '"? Its ' + n + ' item' + (n === 1 ? '' : 's') + ' stay in the shop, under "More from the club" unless they are in another section.')) return;
+        secDraft.splice(i, 1); dirty(); renderSectionAdmin();
+      });
+      list.appendChild(row);
+    });
+  }
+  $('#sec-add').addEventListener('click', () => {
+    if (!secDraft) secDraft = [];
+    secDraft.push({ id: '', name: '', blurb: '', featured: false });
+    secDirty = true;
+    renderSectionAdmin();
+    const ins = $$('#sec-list .sec-row .input');
+    if (ins.length) ins[ins.length - 2].focus();
+  });
+  $('#sec-save').addEventListener('click', async () => {
+    const msg = $('#sec-msg');
+    const sections = (secDraft || []).map((x) => ({ ...x, name: (x.name || '').trim(), blurb: (x.blurb || '').trim() }));
+    if (!sections.length || sections.some((x) => !x.name)) { msg.className = 'msg err'; msg.textContent = 'Every section needs a name.'; return; }
+    $('#sec-save').disabled = true;
+    const res = await api('merch', { body: { sections } });
+    $('#sec-save').disabled = false;
+    msg.className = 'msg' + (res.ok ? '' : ' err');
+    msg.textContent = res.ok ? 'Saved. The shop is updated.' : errText(res, 'Couldn’t save the sections. Try again in a moment.');
+    if (res.ok) { secDirty = false; loadShop(); }
+  });
+
   function renderAdminList() {
     const list = $('#admin-list');
     list.innerHTML = '';
@@ -2275,7 +2566,9 @@
       const row = document.createElement('div');
       row.className = 'admin-row';
       const name = document.createElement('span');
-      name.textContent = (m.name || 'Untitled') + (m.customisable ? ' · customisable' : '');
+      const where = (m.sections || []).map((id) => ((state.sections || []).find((x) => x.id === id) || {}).name).filter(Boolean);
+      name.textContent = (m.name || 'Untitled') + (m.comingSoon ? ' · coming soon' : '') + (m.customisable ? ' · customisable' : '')
+        + ' · ' + (where.length ? where.join(', ') : 'no section') + (m.group ? ' (' + m.group + ')' : '');
       const price = document.createElement('span');
       price.textContent = '£' + Number(m.price || 0).toFixed(2);
       const edit = document.createElement('button');
@@ -2298,6 +2591,9 @@
         $('#m-custom-price').value = m.customPrice ?? 2;
         $('#m-custom-label').value = m.customLabel || '';
         $('#m-custom-price-f').hidden = $('#m-custom-label-f').hidden = !m.customisable;
+        renderSectionChecks(m.sections || []);
+        $('#m-group').value = m.group || '';
+        $('#m-soon').checked = !!m.comingSoon;
         $('#m-save').textContent = 'Save changes';
         $('#m-cancel').hidden = false;
         $('#m-name').focus();
