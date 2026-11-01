@@ -66,11 +66,12 @@ export default async function handler(req, res) {
   if (!same(key, want)) return fail(401, 'Wrong or missing key.');
   if (!env('STRIPE_SECRET_KEY')) return fail(503, 'Stripe is not connected (demo mode), so there are no orders to show.');
   try {
-    const [orders, stored] = await Promise.all([loadOrders(), readJSON('merch', DEFAULT_MERCH)]);
-    const items = withDefaults(stored).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    const [orders, stored, shop] = await Promise.all([loadOrders(), readJSON('merch', DEFAULT_MERCH), readJSON('shop', null)]);
+    // the same items the shop shows, including ones like the Canterbury trousers that it adds until the committee next saves
+    const items = withDefaults(stored, shop).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
     // items no longer in the shop still get a sheet if they were ever ordered
     for (const id of new Set(orders.map((o) => o.item))) {
-      if (id && !items.some((i) => i.id === id)) items.push({ id, name: id + ' (no longer in the shop)', sizes: '', parts: '' });
+      if (id && !items.some((i) => i.id === id)) items.push({ id, name: id.replace(/[-_]+/g, ' ').replace(/^./, (c) => c.toUpperCase()) + ' (no longer in the shop)', sizes: '', parts: '' });
     }
     if (q.get('format') !== 'csv') {
       const sheets = [{ id: 'all', name: 'All orders', count: orders.length }]
