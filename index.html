@@ -308,6 +308,7 @@
   .sponsors > .sponsor + .sponsor { border-left: 1px solid var(--line); }
   .sponsors .logo { height: 100px; display: grid; place-items: center; }
   .sponsors .logo img { max-height: 100px; width: auto; }
+  .sponsors .logo img.isam { max-height: 64px; }   /* its file has no white space around it, unlike mill's */
   .sponsors a { text-decoration: none; color: inherit; }
   .sponsors .logo img { transition: transform .5s var(--out), opacity .3s; }
   .sponsors .visit { font-size: 15px; font-style: italic; color: var(--green-dark); opacity: .75; transition: opacity .3s; }
@@ -1050,7 +1051,7 @@
       <div class="wrap">
         <div class="sponsors rv" style="--d:.1s">
           <a class="sponsor" href="https://www.millmediterraneancoffeespot.co.uk/" target="_blank" rel="noopener"><div class="logo"><img src="img/mill.png" alt="mill, Mediterranean coffee spot" width="250" height="96"></div><span class="visit">Visit Mill Mediterranean</span></a>
-          <a class="sponsor" href="https://mantissport.com/" target="_blank" rel="noopener"><div class="logo"><img src="img/mantis.png" alt="Mantis Sport" width="164" height="96"></div><span class="visit">Visit Mantis Sport</span></a>
+          <div class="sponsor"><div class="logo"><img class="isam" src="img/isam.svg" alt="iSAM" width="279" height="96"></div><span class="visit">iSAM</span></div>
         </div>
       </div>
     </section>
@@ -1658,7 +1659,7 @@
         </div>
       </div>
       <div class="foot-bottom">
-        <span>&copy; 2026 Cambridge University Padel Tennis Club. Sponsored by Mill Mediterranean and Mantis Sport.</span>
+        <span>&copy; 2026 Cambridge University Padel Tennis Club. Sponsored by Mill Mediterranean and iSAM.</span>
         <span class="foot-links"><a class="foot-admin" href="#committee">Committee sign-in</a><a class="back" href="#"><i aria-hidden="true">&uarr;</i>Back to the start</a></span>
       </div>
     </div>
